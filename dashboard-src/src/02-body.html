@@ -2342,7 +2342,12 @@
                 <input type="file" accept=".csv,text/csv" sc-camel-on-change="{{ onCsvFile }}" style="display:none;">
               </label>
             </sc-if>
-            <button sc-camel-on-click="{{ exportDefectsCsv }}" style="background:#ffffff1f; border:1px solid #ffffff33; border-radius:8px; padding:7px 12px; color:#fff; cursor:pointer; font-family:Rubik,sans-serif; font-size:11px; font-weight:600;">⤓ Export</button>
+            <span style="display:inline-flex; align-items:stretch; border:1px solid #ffffff33; border-radius:8px; overflow:hidden;">
+              <span style="display:flex; align-items:center; padding:0 9px; font-size:10px; font-weight:700; letter-spacing:0.07em; color:#ffffff99; background:#ffffff14; text-transform:uppercase;">Export</span>
+              <button sc-camel-on-click="{{ exportDefectsXlsx }}" title="Excel workbook — the filtered rows plus a summary sheet" style="background:#ffffff1f; border:none; border-left:1px solid #ffffff33; padding:7px 11px; color:#fff; cursor:pointer; font-family:Rubik,sans-serif; font-size:11px; font-weight:600;">Excel</button>
+              <button sc-camel-on-click="{{ exportDefectsPptx }}" title="PowerPoint — status slide plus the open defects, highest priority first" style="background:#ffffff1f; border:none; border-left:1px solid #ffffff33; padding:7px 11px; color:#fff; cursor:pointer; font-family:Rubik,sans-serif; font-size:11px; font-weight:600;">PowerPoint</button>
+              <button sc-camel-on-click="{{ exportDefectsCsv }}" title="Plain CSV of the filtered rows" style="background:#ffffff1f; border:none; border-left:1px solid #ffffff33; padding:7px 11px; color:#fff; cursor:pointer; font-family:Rubik,sans-serif; font-size:11px; font-weight:600;">CSV</button>
+            </span>
             <button sc-camel-on-click="{{ closeDefectModal }}" style="background:transparent; border:none; color:#ffffffcc; font-size:24px; cursor:pointer; padding:0 6px; line-height:1;">×</button>
           </div>
         </div>

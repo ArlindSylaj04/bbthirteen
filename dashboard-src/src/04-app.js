@@ -1883,6 +1883,176 @@ class Component extends DCLogic {
     reader.onerror = () => this.setState({ backlogError: 'Could not read file' });
     reader.readAsText(file);
   };
+  // Shared by every defect export so the three formats never drift apart.
+  _defectExportCols() {
+    return [
+      { k: 'key', h: 'Issue key', w: 14 },
+      { k: 'summary', h: 'Summary', w: 62 },
+      { k: 'status', h: 'Status', w: 16 },
+      { k: 'priority', h: 'Priority', w: 12 },
+      { k: 'assignee', h: 'Assignee', w: 20 },
+      { k: 'reporter', h: 'Reporter', w: 20 },
+      { k: 'created', h: 'Created', w: 18 },
+      { k: 'updated', h: 'Updated', w: 18 },
+      { k: 'resolved', h: 'Resolved', w: 18 },
+      { k: 'environment', h: 'Environment', w: 14 },
+      { k: 'component', h: 'Component', w: 18 },
+      { k: 'release', h: 'Fix version', w: 14 },
+      { k: 'labels', h: 'Labels', w: 20 },
+      { k: 'resolution', h: 'Resolution', w: 16 },
+      { k: 'rt', h: 'Retest', w: 12 },
+      { k: 'rtRuns', h: 'Retest runs', w: 12 },
+      { k: 'rtBasis', h: 'Retest basis', w: 18 },
+    ];
+  }
+  _defectExportName(ext) {
+    const c = this._defectCtx || {};
+    const d = new Date();
+    const stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+    return 'Defects_' + String(c.release || 'release').replace(/[^\w.-]/g, '') + '_' + stamp + '.' + ext;
+  }
+
+  exportDefectsXlsx = () => {
+    const list = this._filteredDefects || this.state.jiraDefects || [];
+    if (!window.XLSX) { this.setState({ jiraError: 'Spreadsheet engine not ready — try again in a moment.' }); return; }
+    if (!list.length) { this.setState({ jiraError: 'Nothing to export — no defects match the current filters.' }); return; }
+    const X = window.XLSX, c = this._defectCtx || {}, cols = this._defectExportCols();
+    const wb = X.utils.book_new();
+
+    // Sheet 1 — the rows exactly as filtered on screen
+    const aoa = [cols.map(x => x.h)].concat(list.map(d => cols.map(x => {
+      const v = d[x.k]; return v == null ? '' : String(v);
+    })));
+    const ws = X.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = cols.map(x => ({ wch: x.w }));
+    // (frozen panes are a SheetJS Pro feature — the bundled build ignores them)
+    ws['!autofilter'] = { ref: X.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: aoa.length - 1, c: cols.length - 1 } }) };
+    X.utils.book_append_sheet(wb, ws, 'Defects');
+
+    // Sheet 2 — the context, so the file still makes sense a month later
+    const sum = [
+      ['QA Defect Export'], [],
+      ['Release', c.release || '—'],
+      ['Environment', (c.environment || '—') + (c.phase ? ' · ' + c.phase : '')],
+      ['Exported', new Date().toLocaleString('en-GB')],
+      ['Source file', c.jiraFile || '—'],
+      ['Filters applied', c.filterNote || 'none'],
+      [],
+      ['Rows in this export', list.length],
+      ['Defects in release', c.total || 0],
+      ['Open', c.open || 0],
+      ['Closed', c.closed || 0],
+      [], ['By priority', 'Count'],
+      ['Critical / Highest', (c.prCnt && c.prCnt.Highest) || 0],
+      ['High', (c.prCnt && c.prCnt.High) || 0],
+      ['Medium', (c.prCnt && c.prCnt.Medium) || 0],
+      ['Low', (c.prCnt && c.prCnt.Low) || 0],
+    ];
+    if ((c.statusCounts || []).length) {
+      sum.push([], ['By status', 'Count']);
+      c.statusCounts.forEach(x => sum.push([x.name, x.count]));
+    }
+    const ws2 = X.utils.aoa_to_sheet(sum);
+    ws2['!cols'] = [{ wch: 26 }, { wch: 46 }];
+    X.utils.book_append_sheet(wb, ws2, 'Summary');
+
+    X.writeFile(wb, this._defectExportName('xlsx'));
+    this.setState({ jiraError: '' });
+  };
+
+  exportDefectsPptx = async () => {
+    const list = this._filteredDefects || this.state.jiraDefects || [];
+    if (!window.PptxGenJS) { this.setState({ jiraError: 'PowerPoint engine not loaded — check your connection and retry.' }); return; }
+    if (!list.length) { this.setState({ jiraError: 'Nothing to export — no defects match the current filters.' }); return; }
+    const c = this._defectCtx || {};
+    const P = new window.PptxGenJS();
+    P.layout = 'LAYOUT_WIDE';
+    P.author = this.state.editorName || 'QA Test Management';
+    P.company = 'QA Test Management';
+    P.title = 'Defect Status ' + (c.release || '');
+    const NAVY = '0F172A', SLATE = '64748B', LINE = 'E2E8F0', F = 'Arial';
+    let LOGO = '';
+    try { const li = document.querySelector('img[src^="data:image/png"]'); LOGO = (li && li.src) || ''; } catch (e) {}
+    const head = (s, t, sub) => {
+      s.background = { color: 'FFFFFF' };
+      s.addShape(P.ShapeType.rect, { x: 0, y: 0, w: 13.33, h: 1.0, fill: { color: NAVY } });
+      s.addShape(P.ShapeType.rect, { x: 0, y: 1.0, w: 13.33, h: 0.05, fill: { color: '95C11F' } });
+      s.addText(t, { x: 0.55, y: 0.16, w: 8.6, h: 0.38, fontFace: F, fontSize: 21, bold: true, color: 'FFFFFF', margin: 0, valign: 'middle' });
+      s.addText(sub, { x: 0.55, y: 0.56, w: 10.6, h: 0.3, fontFace: F, fontSize: 11, color: 'A8B4C8', margin: 0, valign: 'middle' });
+      if (LOGO) {
+        s.addShape(P.ShapeType.roundRect, { x: 11.68, y: 0.19, w: 1.15, h: 0.62, fill: { color: 'FFFFFF' }, rectRadius: 0.05 });
+        s.addImage({ data: LOGO, x: 11.87, y: 0.3, w: 0.76, h: 0.4 });
+      }
+    };
+    const ctx = (c.release || '—') + '  ·  ' + (c.environment || '—') + (c.phase ? ' · ' + c.phase : '')
+      + '  ·  ' + new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    // ── slide 1: the numbers ──
+    const s1 = P.addSlide();
+    head(s1, 'Defect Status', ctx + (c.filterNote ? '   ·   ' + c.filterNote : ''));
+    const kpi = [
+      { l: 'Total defects', v: c.total || 0, col: NAVY },
+      { l: 'Open', v: c.open || 0, col: 'DC2626' },
+      { l: 'Closed', v: c.closed || 0, col: '16A34A' },
+      { l: 'Critical', v: (c.prCnt && c.prCnt.Highest) || 0, col: 'B91C1C' },
+      { l: 'High', v: (c.prCnt && c.prCnt.High) || 0, col: 'EA580C' },
+    ];
+    kpi.forEach((k, i) => {
+      const x = 0.55 + i * 2.5;
+      s1.addShape(P.ShapeType.roundRect, { x, y: 1.5, w: 2.3, h: 1.5, fill: { color: 'F8FAFC' }, line: { color: LINE, width: 1 }, rectRadius: 0.08 });
+      s1.addText(String(k.v), { x, y: 1.68, w: 2.3, h: 0.72, fontFace: F, fontSize: 34, bold: true, color: k.col, align: 'center', margin: 0 });
+      s1.addText(k.l, { x, y: 2.42, w: 2.3, h: 0.3, fontFace: F, fontSize: 11, color: SLATE, align: 'center', margin: 0 });
+    });
+    const rows = [[
+      { text: 'Status', options: { bold: true, color: 'FFFFFF', fill: { color: NAVY } } },
+      { text: 'Count', options: { bold: true, color: 'FFFFFF', fill: { color: NAVY }, align: 'right' } },
+    ]].concat((c.statusCounts || []).filter(x => x.count > 0).map(x => [
+      { text: x.name, options: { color: '1F2937' } },
+      { text: String(x.count), options: { align: 'right', color: '1F2937' } },
+    ]));
+    if (rows.length > 1) {
+      s1.addText('Breakdown by status', { x: 0.55, y: 3.3, w: 6, h: 0.3, fontFace: F, fontSize: 13, bold: true, color: NAVY, margin: 0 });
+      s1.addTable(rows, { x: 0.55, y: 3.7, w: 6.0, fontFace: F, fontSize: 11, border: { pt: 0.5, color: LINE }, rowH: 0.3 });
+    }
+    s1.addText('Source: ' + (c.jiraFile || 'Jira import') + '  ·  ' + list.length + ' rows in this export',
+      { x: 0.55, y: 7.0, w: 12.2, h: 0.3, fontFace: F, fontSize: 9, color: SLATE, margin: 0 });
+
+    // ── slide 2+: the open defects that matter, worst first ──
+    const rank = { Highest: 0, High: 1, Medium: 2, Low: 3 };
+    const pOf = (d) => { const v = String(d.priority || '').toLowerCase();
+      return v.indexOf('highest') >= 0 || v.indexOf('critical') >= 0 || v.indexOf('blocker') >= 0 ? 'Highest'
+        : v.indexOf('high') >= 0 ? 'High' : v.indexOf('low') >= 0 ? 'Low' : 'Medium'; };
+    const top = list.slice().sort((a, b) => rank[pOf(a)] - rank[pOf(b)]).slice(0, 36);
+    const PER = 12;
+    for (let i = 0; i < top.length; i += PER) {
+      const chunk = top.slice(i, i + PER);
+      const s = P.addSlide();
+      head(s, 'Defects' + (top.length > PER ? '  ' + (Math.floor(i / PER) + 1) + '/' + Math.ceil(top.length / PER) : ''),
+        ctx + '   ·   highest priority first');
+      const body = [[
+        { text: 'Key', options: { bold: true, color: 'FFFFFF', fill: { color: NAVY } } },
+        { text: 'Summary', options: { bold: true, color: 'FFFFFF', fill: { color: NAVY } } },
+        { text: 'Priority', options: { bold: true, color: 'FFFFFF', fill: { color: NAVY } } },
+        { text: 'Status', options: { bold: true, color: 'FFFFFF', fill: { color: NAVY } } },
+        { text: 'Assignee', options: { bold: true, color: 'FFFFFF', fill: { color: NAVY } } },
+      ]].concat(chunk.map(d => {
+        const pb = pOf(d);
+        const pc = pb === 'Highest' ? 'B91C1C' : pb === 'High' ? 'EA580C' : pb === 'Medium' ? 'B45309' : '4D7C0F';
+        return [
+          { text: String(d.key || '—'), options: { color: '1D4ED8', bold: true } },
+          { text: String(d.summary || '—').slice(0, 110), options: { color: '1F2937' } },
+          { text: String(d.priority || '—'), options: { color: pc, bold: true } },
+          { text: String(d.status || '—'), options: { color: '374151' } },
+          { text: String(d.assignee || '—'), options: { color: '374151' } },
+        ];
+      }));
+      s.addTable(body, { x: 0.55, y: 1.35, w: 12.2, colW: [1.35, 6.2, 1.35, 1.75, 1.55],
+        fontFace: F, fontSize: 10, border: { pt: 0.5, color: LINE }, rowH: 0.36, valign: 'middle', autoPage: false });
+    }
+    try { await P.writeFile({ fileName: this._defectExportName('pptx') }); this.setState({ jiraError: '' }); }
+    catch (e) { this.setState({ jiraError: 'PowerPoint export failed: ' + e.message }); }
+  };
+
   exportDefectsCsv = () => {
     const list = this._filteredDefects || this.state.jiraDefects || [];
     const cols = ['key', 'summary', 'status', 'priority', 'assignee', 'reporter', 'created', 'updated', 'resolved', 'environment', 'component', 'release', 'labels', 'resolution', 'rt', 'rtRuns', 'rtBasis'];
@@ -2551,6 +2721,14 @@ class Component extends DCLogic {
       }
     };
     window.addEventListener('keydown', this._onKey);
+    // XLSX/PptxGenJS are injected by the bundler after the first render — refresh
+    // once they land so the "Excel unavailable" notice does not stick around.
+    if (typeof window.XLSX === 'undefined') {
+      let tries = 0;
+      this._libPoll = setInterval(() => {
+        if (typeof window.XLSX !== 'undefined' || ++tries > 40) { clearInterval(this._libPoll); this._libPoll = null; this.forceUpdate(); }
+      }, 250);
+    }
     this._wheel = (e) => {
       if ((this.state.module || 'test') !== 'test') return;
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 40) {
@@ -2567,7 +2745,7 @@ class Component extends DCLogic {
     const covHash = (window.location.hash || '').match(/^#coverage-([A-Za-z0-9]+)/);
     if (covHash) this.setState({ coverageEnv: covHash[1] });
   }
-  componentWillUnmount() { if (this._timer) clearInterval(this._timer); if (this._onKey) window.removeEventListener('keydown', this._onKey); if (this._defSync) window.removeEventListener('qa-defects-sync', this._defSync); if (this._modNav) window.removeEventListener('qa-module-nav', this._modNav); if (this._drillIn) window.removeEventListener('qa-drill-open', this._drillIn); if (this._wheel) window.removeEventListener('wheel', this._wheel); }
+  componentWillUnmount() { if (this._timer) clearInterval(this._timer); if (this._libPoll) clearInterval(this._libPoll); if (this._onKey) window.removeEventListener('keydown', this._onKey); if (this._defSync) window.removeEventListener('qa-defects-sync', this._defSync); if (this._modNav) window.removeEventListener('qa-module-nav', this._modNav); if (this._drillIn) window.removeEventListener('qa-drill-open', this._drillIn); if (this._wheel) window.removeEventListener('wheel', this._wheel); }
   focusPhase = (id) => {
     const all = {}; this.PHASES_SCHED.forEach(p => { all[p.id] = true; }); all[id] = false;
     this.setState({ collapsed: all }, () => setTimeout(() => { const el = document.getElementById('phase-' + id); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 90, behavior: 'smooth' }); }, 70));
@@ -3749,6 +3927,7 @@ class Component extends DCLogic {
     const jiraError = this.state.jiraError || ''; const jiraHasError = !!jiraError;
     const jiraWarn = this.state.jiraWarn || ''; const jiraHasWarn = !!jiraWarn && !jiraHasError;
     const onCsvFile = this.onCsvFile; const setJiraBase = this.setJiraBase; const exportDefectsCsv = this.exportDefectsCsv;
+    const exportDefectsXlsx = this.exportDefectsXlsx; const exportDefectsPptx = this.exportDefectsPptx;
     const clearDefects = this.clearDefects;
     // ── IR1 carry-over tickets (second CSV, kept fully separate from QC1 figures) ──
     const ir1All = Array.isArray(this.state.ir1Defects) ? this.state.ir1Defects : [];
@@ -5243,6 +5422,17 @@ class Component extends DCLogic {
     const relFormCurrentMark = relFormCurrent ? '☑' : '☐';
     const relStatusChoices = this.REL_STATUSES.map(v => ({ value: v, label: v, selected: v === relFormStatus }));
     const relSaveLabel = relFormIsNew ? 'Create release' : 'Save changes';
+    // Context for the Excel / PowerPoint defect exports, captured from the live
+    // view so the file matches exactly what is on screen.
+    this._defectCtx = {
+      release: relVersion, environment: relCurrentEnv, phase: relCurrentPhase,
+      total: defTotal, open: defOpen, closed: defClosed,
+      prCnt: { ...prCnt },
+      statusCounts: (statusBreakdown || []).map(x => ({ name: x.name, count: x.count })),
+      filterNote: [dfStatus !== 'All' ? 'Status: ' + dfStatus : '', dfPriority !== 'All' ? 'Priority: ' + dfPriority : '',
+        (dfArea && dfArea !== 'All') ? 'Area: ' + dfArea : '', dfSearch ? 'Search: ' + dfSearch : ''].filter(Boolean).join(' · '),
+      shown: defectRows.length, jiraFile: this.state.jiraFile || '',
+    };
     return {
       theme, toggleTheme, themeIcon, themeLabel,
       reportDate, overallStatus, headerAccent,
@@ -5283,7 +5473,7 @@ class Component extends DCLogic {
       execDaysLeftLabel, execEndLabel, execSuggest, execPctDone, execPctBar, execPaceLabel, execPaceColor,
       execVerdict, execVerdictColor, execVerdictBg,
       phaseScopeLabel, phaseScopeHidden, phaseScopeHasHidden,
-      defectKpis, hasDefects, noDefects, defTotal, defOpen, defClosed, openClosedPct, closedDeg, prCnt,      jiraBase, jiraHasBase, jiraFile, jiraHasFile, jiraError, jiraHasError, onCsvFile, setJiraBase, exportDefectsCsv,
+      defectKpis, hasDefects, noDefects, defTotal, defOpen, defClosed, openClosedPct, closedDeg, prCnt,      jiraBase, jiraHasBase, jiraFile, jiraHasFile, jiraError, jiraHasError, onCsvFile, setJiraBase, exportDefectsCsv, exportDefectsXlsx, exportDefectsPptx,
       openDefectModal, closeDefectModal, defectModalOpen, clearDefects, hasAnyData,
       ir1HasData, ir1Total, ir1OpenCnt, ir1File, ir1Error, ir1HasError, onIr1CsvFile, clearIr1,
       ir1ModalOpen, openIr1, closeIr1, ir1OpenOnly, toggleIr1OpenOnly, ir1OpenOnlyLabel,
