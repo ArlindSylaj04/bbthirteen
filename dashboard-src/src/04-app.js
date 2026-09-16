@@ -3983,14 +3983,26 @@ class Component extends DCLogic {
     const dcPeakLabel = dcRange ? (dcCreatedArr[dcPeakIx] + ' on ' + dcDays[dcPeakIx].toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })) : '\u2014';
     const dcPeak = Math.max(1, ...dcCreatedArr, ...dcResolvedArr, ...dcOpenArr);
     const dcTop = Math.max(4, Math.ceil(dcPeak / 4) * 4);
-    const DW = 1000, DH = 190, DL = 34, DR = 10, DT = 20, DB = 34;
+    // The chart lives in the ~310px side column, so the viewBox is kept close to
+    // its rendered size: one unit ≈ one CSS pixel, which is what keeps the axis
+    // labels readable instead of shrinking them to ~4px.
+    const DW = 300, DH = 206, DL = 26, DR = 6, DT = 16, DB = 30;
     const _plotH = DH - DT - DB, _base = DH - DB;
     const _slot = dcRange ? (DW - DL - DR) / dcRange : 1;
-    const _bw = Math.max(2, Math.min(14, _slot / 2.4));
+    const _bw = Math.max(1.5, Math.min(9, _slot / 2.6));
     const dcY = (v) => _base - (v / dcTop) * _plotH;
-    const dcGrid = [0, 0.5, 1].map(f => ({ y: (_base - f * _plotH).toFixed(1), label: Math.round(f * dcTop) }));
-    const _every = dcRange > 60 ? 7 : dcRange > 30 ? 3 : dcRange > 14 ? 2 : 1;
-    const _showVals = dcRange <= 45;
+    // Axis labels are drawn as HTML on top of the SVG, not as <text>: the
+    // template runtime wraps every interpolation in a <span>, and an HTML span
+    // inside an SVG <text> is never painted — which is why these labels were
+    // invisible. Percentages map straight onto the viewBox.
+    const dcGrid = [0, 0.5, 1].map(f => {
+      const y = _base - f * _plotH;
+      return { y: y.toFixed(1), topPct: (y / DH * 100).toFixed(2), label: Math.round(f * dcTop) };
+    });
+    // date ticks and value labels only where there is room for them
+    const _every = Math.max(1, Math.ceil(34 / Math.max(1, _slot)));
+    const _showVals = _slot >= 20;
+    const dcPlotL = DL, dcPlotR = DW - DR, dcTickY = (_base + 15).toFixed(1), dcAxisX = (DL - 5).toFixed(1);
     const dcBarW = _bw.toFixed(1);
     const dcPoints = dcDays.map((x, i) => {
       const mid = DL + _slot * i + _slot / 2;
@@ -3999,8 +4011,8 @@ class Component extends DCLogic {
         cx: mid.toFixed(1),
         cBarX: (mid - _bw - 0.6).toFixed(1), cBarY: dcY(c).toFixed(1), cBarH: Math.max(0, _base - dcY(c)).toFixed(1),
         rBarX: (mid + 0.6).toFixed(1), rBarY: dcY(r).toFixed(1), rBarH: Math.max(0, _base - dcY(r)).toFixed(1),
-        cLblX: (mid - _bw / 2 - 0.6).toFixed(1), cLblY: (dcY(c) - 4).toFixed(1),
-        rLblX: (mid + _bw / 2 + 0.6).toFixed(1), rLblY: (dcY(r) - 4).toFixed(1),
+        cLblX: (mid - _bw / 2 - 0.6).toFixed(1), cLblY: (dcY(c) - 3.5).toFixed(1),
+        rLblX: (mid + _bw / 2 + 0.6).toFixed(1), rLblY: (dcY(r) - 3.5).toFixed(1),
         c: c, r: r, cShow: _showVals && c > 0, rShow: _showVals && r > 0,
         tickShow: i % _every === 0 || i === dcRange - 1,
         tick: x.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
@@ -4011,6 +4023,24 @@ class Component extends DCLogic {
       ? dcDays.map((x, i) => (i ? 'L' : 'M') + (DL + _slot * i + _slot / 2).toFixed(1) + ' ' + dcY(dcOpenArr[i]).toFixed(1)).join(' ')
       : '';
     const dcOpenNow = dcOpenArr.length ? dcOpenArr[dcOpenArr.length - 1] : 0;
+    const dcGutterPct = (DL / DW * 100).toFixed(2);
+    const dcTickTopPct = ((_base + 6) / DH * 100).toFixed(2);
+    // Keep date ticks at least a label-width apart so they never collide — the
+    // "always show the last day" rule can otherwise land next to its neighbour.
+    const _tickGap = 36;
+    const dcTicks = [];
+    dcPoints.filter(p => p.tickShow).forEach(p => {
+      const x = parseFloat(p.cx);
+      const prev = dcTicks[dcTicks.length - 1];
+      if (prev && x - prev.x < _tickGap) return;
+      dcTicks.push({ x, label: p.tick });
+    });
+    const _lastPt = dcPoints[dcPoints.length - 1];
+    if (_lastPt) {
+      const lx = parseFloat(_lastPt.cx), last = dcTicks[dcTicks.length - 1];
+      if (last && lx - last.x >= _tickGap) dcTicks.push({ x: lx, label: _lastPt.tick });
+    }
+    dcTicks.forEach((t, i) => { t.key = 'dct' + i; t.leftPct = (t.x / DW * 100).toFixed(2); });
     const dcTableRows = dcDays.map((x, i) => ({
       key: 'dcd' + x.getTime(),
       day: x.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }),
@@ -5176,6 +5206,7 @@ class Component extends DCLogic {
         gngHasApps: !!(g && g.appRows.length), gngHasBlockers: !!(g && g.blockerList.length),
       }; })(),
       dcBarW, dcGrid, dcPoints, dcPhaseTabs, dcSub, dcOpenPath, dcOpenNow,
+      dcPlotL, dcPlotR, dcTickY, dcAxisX, dcGutterPct, dcTickTopPct, dcTicks,
       dcAvgCreated, dcAvgResolved, dcPeakLabel, dcShowTable, dcTableToggle, dcTableLabel, dcTableRows,
       dcCreatedTotal, dcResolvedTotal, dcNetLabel, dcNetColor, dcHasPhases,
       statusBreakdown, priorityCards, agingBars, releaseChecks, relColor, relLabel, openHighest, openHigh,

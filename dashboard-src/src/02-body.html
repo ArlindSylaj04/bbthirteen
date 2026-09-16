@@ -1313,12 +1313,12 @@
         </div>
 
         <div style="display:flex; align-items:stretch; gap:20px; margin-top:12px; flex-wrap:wrap;">
-          <div style="flex:1; min-width:420px;">
-            <svg sc-camel-view-box="0 0 1000 190" style="width:100%; height:auto; display:block; overflow:visible;">
+          <div style="flex:1 1 260px; min-width:0;">
+            <div style="position:relative;">
+            <svg sc-camel-view-box="0 0 300 206" style="width:100%; height:auto; display:block; overflow:visible;">
               <sc-for list="{{ dcGrid }}" as="g" hint-placeholder-count="3">
                 <g>
-                  <line x1="34" x2="990" y1="{{ g.y }}" y2="{{ g.y }}" stroke="var(--brd-sub)" stroke-width="1"></line>
-                  <text x="28" y="{{ g.y }}" text-anchor="end" dominant-baseline="middle" fill="var(--tx-mut)" style="font-family:Rubik,sans-serif; font-size:10px;">{{ g.label }}</text>
+                  <line x1="{{ dcPlotL }}" x2="{{ dcPlotR }}" y1="{{ g.y }}" y2="{{ g.y }}" stroke="var(--brd-sub)" stroke-width="1"></line>
                 </g>
               </sc-for>
               <sc-for list="{{ dcPoints }}" as="p" hint-placeholder-count="30">
@@ -1326,19 +1326,17 @@
                   <title>{{ p.title }}</title>
                   <rect x="{{ p.cBarX }}" y="{{ p.cBarY }}" width="{{ dcBarW }}" height="{{ p.cBarH }}" rx="1.5" fill="#dc2626"></rect>
                   <rect x="{{ p.rBarX }}" y="{{ p.rBarY }}" width="{{ dcBarW }}" height="{{ p.rBarH }}" rx="1.5" fill="#16a34a"></rect>
-                  <sc-if value="{{ p.cShow }}" hint-placeholder-val="{{ false }}">
-                    <text x="{{ p.cLblX }}" y="{{ p.cLblY }}" text-anchor="middle" fill="#dc2626" style="font-family:Rubik,sans-serif; font-size:8.5px; font-weight:700;">{{ p.c }}</text>
-                  </sc-if>
-                  <sc-if value="{{ p.rShow }}" hint-placeholder-val="{{ false }}">
-                    <text x="{{ p.rLblX }}" y="{{ p.rLblY }}" text-anchor="middle" fill="#16a34a" style="font-family:Rubik,sans-serif; font-size:8.5px; font-weight:700;">{{ p.r }}</text>
-                  </sc-if>
-                  <sc-if value="{{ p.tickShow }}" hint-placeholder-val="{{ true }}">
-                    <text x="{{ p.cx }}" y="172" text-anchor="middle" fill="var(--tx-mut)" style="font-family:Rubik,sans-serif; font-size:9.5px;">{{ p.tick }}</text>
-                  </sc-if>
                 </g>
               </sc-for>
-              <path d="{{ dcOpenPath }}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity="0.85"></path>
+              <path d="{{ dcOpenPath }}" fill="none" stroke="#2563eb" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"></path>
             </svg>
+            <sc-for list="{{ dcGrid }}" as="g" hint-placeholder-count="3">
+              <div style="position:absolute; left:0; top:{{ g.topPct }}%; width:{{ dcGutterPct }}%; transform:translateY(-50%); text-align:right; padding-right:5px; font-size:9px; line-height:1; color:var(--tx-faint); font-variant-numeric:tabular-nums; pointer-events:none;">{{ g.label }}</div>
+            </sc-for>
+            <sc-for list="{{ dcTicks }}" as="t" hint-placeholder-count="5">
+              <div style="position:absolute; left:{{ t.leftPct }}%; top:{{ dcTickTopPct }}%; transform:translateX(-50%); font-size:8.5px; line-height:1; color:var(--tx-faint); white-space:nowrap; pointer-events:none;">{{ t.label }}</div>
+            </sc-for>
+            </div>
             <div style="display:flex; align-items:center; gap:16px; margin-top:6px; font-size:10.5px; color:var(--tx-mut);">
               <span style="display:flex; align-items:center; gap:6px;"><span style="width:9px; height:9px; border-radius:2px; background:#dc2626;"></span>Created</span>
               <span style="display:flex; align-items:center; gap:6px;"><span style="width:9px; height:9px; border-radius:2px; background:#16a34a;"></span>Resolved</span>
