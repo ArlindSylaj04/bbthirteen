@@ -587,11 +587,37 @@
             <div><div style="font-size:19px; font-weight:700; color:#4caf2f;">{{ overallEnv.passedPct }}%</div><div style="font-size:8px; color:var(--tx-fnt); letter-spacing:0.06em;">PASSED</div></div>
           </div>
         </div>
-        <svg sc-camel-view-box="0 0 316 120" width="100%" height="110" sc-camel-preserve-aspect-ratio="none">
-          <polyline points="{{ overallEnv.idealPts }}" fill="none" stroke="var(--brd-2)" stroke-width="1.5" stroke-dasharray="4 3"></polyline>
-          <polyline points="{{ overallEnv.actualPts }}" fill="none" stroke="{{ overallEnv.lineColor }}" stroke-width="2.5" stroke-linejoin="round"></polyline>
-        </svg>
-        <div style="display:flex; justify-content:space-between; font-size:8px; color:var(--tx-fnt); margin-top:2px;"><span>Ideal (dashed)</span><span>Actual remaining (solid)</span></div>
+        <div style="position:relative;">
+          <svg sc-camel-view-box="0 0 316 120" width="100%" height="168" sc-camel-preserve-aspect-ratio="none">
+            <sc-for list="{{ overallEnv.bdGrid }}" as="g" hint-placeholder-count="3">
+              <line x1="{{ overallEnv.bdPlotL }}" x2="{{ overallEnv.bdPlotR }}" y1="{{ g.y }}" y2="{{ g.y }}" stroke="var(--brd-sub)" stroke-width="1" sc-camel-vector-effect="non-scaling-stroke"></line>
+            </sc-for>
+            <sc-if value="{{ overallEnv.bdTodayShow }}" hint-placeholder-val="{{ true }}">
+              <line x1="{{ overallEnv.bdTodayX }}" x2="{{ overallEnv.bdTodayX }}" y1="12" y2="104" stroke="#ef4444" stroke-width="1" stroke-dasharray="3 3" sc-camel-vector-effect="non-scaling-stroke"></line>
+            </sc-if>
+            <polyline points="{{ overallEnv.idealPts }}" fill="none" stroke="var(--brd-2)" stroke-width="1.5" stroke-dasharray="4 3" sc-camel-vector-effect="non-scaling-stroke"></polyline>
+            <polyline points="{{ overallEnv.actualPts }}" fill="none" stroke="{{ overallEnv.lineColor }}" stroke-width="2.5" stroke-linejoin="round" sc-camel-vector-effect="non-scaling-stroke"></polyline>
+          </svg>
+          <sc-for list="{{ overallEnv.bdGrid }}" as="g" hint-placeholder-count="3">
+            <div style="position:absolute; left:0; top:{{ g.topPct }}%; width:{{ overallEnv.bdGutterPct }}%; transform:translateY(-50%); text-align:right; padding-right:6px; font-size:10px; line-height:1; color:var(--tx-faint); font-variant-numeric:tabular-nums; pointer-events:none;">{{ g.label }}</div>
+          </sc-for>
+          <sc-if value="{{ overallEnv.bdTodayShow }}" hint-placeholder-val="{{ true }}">
+            <div style="position:absolute; left:{{ overallEnv.bdTodayPct }}%; top:0; transform:translateX(-50%); background:#ef4444; color:#fff; font-size:8px; font-weight:800; letter-spacing:0.08em; padding:1px 5px; border-radius:4px; pointer-events:none;">TODAY</div>
+          </sc-if>
+        </div>
+        <div style="position:relative; height:15px; margin-top:3px;">
+          <sc-for list="{{ overallEnv.bdTicks }}" as="t" hint-placeholder-count="5">
+            <div style="position:absolute; left:{{ t.leftPct }}%; transform:translateX(-50%); font-size:9.5px; line-height:1; color:var(--tx-faint); white-space:nowrap;">{{ t.label }}</div>
+          </sc-for>
+        </div>
+        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; font-size:10px; color:var(--tx-mut); margin-top:8px; padding-top:8px; border-top:1px solid var(--brd-sub);">
+          <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:0; border-top:2.5px solid {{ overallEnv.lineColor }};"></span>Tests still to run</span>
+          <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:0; border-top:2px dashed var(--brd-2);"></span>Ideal pace</span>
+          <sc-if value="{{ overallEnv.bdTodayShow }}" hint-placeholder-val="{{ true }}">
+            <span style="display:flex; align-items:center; gap:6px;"><span style="width:0; height:12px; border-left:2px dashed #ef4444;"></span>Today</span>
+          </sc-if>
+          <span style="margin-left:auto; color:var(--tx-soft); font-weight:600;">{{ overallEnv.bdRemainLabel }}</span>
+        </div>
       </div>
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px;">
         <sc-for list="{{ envCharts }}" as="e" hint-placeholder-count="0">
@@ -607,10 +633,28 @@
                 <div><div style="font-size:15px; font-weight:800; color:#4caf2f;">{{ e.passedPct }}%</div><div style="font-size:7px; color:var(--tx-fnt); letter-spacing:0.05em;">PASS</div></div>
               </div>
             </div>
-            <svg sc-camel-view-box="0 0 316 120" width="100%" height="{{ e.chartH }}" sc-camel-preserve-aspect-ratio="none">
-              <polyline points="{{ e.idealPts }}" fill="none" stroke="var(--brd-2)" stroke-width="1.5" stroke-dasharray="4 3"></polyline>
-              <polyline points="{{ e.actualPts }}" fill="none" stroke="{{ e.lineColor }}" stroke-width="2" stroke-linejoin="round"></polyline>
-            </svg>
+            <div style="position:relative;">
+              <svg sc-camel-view-box="0 0 316 120" width="100%" height="{{ e.chartH }}" sc-camel-preserve-aspect-ratio="none">
+                <sc-for list="{{ e.bdGrid }}" as="g" hint-placeholder-count="3">
+                  <line x1="{{ e.bdPlotL }}" x2="{{ e.bdPlotR }}" y1="{{ g.y }}" y2="{{ g.y }}" stroke="var(--brd-sub)" stroke-width="1" sc-camel-vector-effect="non-scaling-stroke"></line>
+                </sc-for>
+                <sc-if value="{{ e.bdTodayShow }}" hint-placeholder-val="{{ true }}">
+                  <line x1="{{ e.bdTodayX }}" x2="{{ e.bdTodayX }}" y1="12" y2="104" stroke="#ef4444" stroke-width="1" stroke-dasharray="3 3" sc-camel-vector-effect="non-scaling-stroke"></line>
+                </sc-if>
+                <polyline points="{{ e.idealPts }}" fill="none" stroke="var(--brd-2)" stroke-width="1.5" stroke-dasharray="4 3" sc-camel-vector-effect="non-scaling-stroke"></polyline>
+                <polyline points="{{ e.actualPts }}" fill="none" stroke="{{ e.lineColor }}" stroke-width="2" stroke-linejoin="round" sc-camel-vector-effect="non-scaling-stroke"></polyline>
+              </svg>
+              <sc-for list="{{ e.bdGrid }}" as="g" hint-placeholder-count="3">
+                <div style="position:absolute; left:0; top:{{ g.topPct }}%; width:{{ e.bdGutterPct }}%; transform:translateY(-50%); text-align:right; padding-right:5px; font-size:8.5px; line-height:1; color:var(--tx-faint); font-variant-numeric:tabular-nums; pointer-events:none;">{{ g.label }}</div>
+              </sc-for>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:8.5px; color:var(--tx-faint); margin-top:3px; padding-left:{{ e.bdGutterPct }}%;">
+              <span>{{ e.bdStartLabel }}</span>
+              <sc-if value="{{ e.bdTodayShow }}" hint-placeholder-val="{{ true }}">
+                <span style="color:#ef4444; font-weight:700;">today</span>
+              </sc-if>
+              <span>{{ e.bdEndLabel }}</span>
+            </div>
             <sc-if value="{{ e.open }}" hint-placeholder-val="{{ false }}">
               <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--brd-sub);">
                 <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:10px; color:var(--tx-mut); margin-bottom:11px;">

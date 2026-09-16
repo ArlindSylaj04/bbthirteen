@@ -3076,8 +3076,14 @@ class Component extends DCLogic {
       // ─── Burn-down charts per environment + overall ───────────────────────
       const PHD = this.relPhaseDates();
       const allCases = (this.state.importedCases || []).filter(c => !c.unex);
+      // A burn-down without axes is unreadable — you cannot tell a day from a
+      // month. The SVG carries the lines and gridlines; the number and date
+      // labels are HTML positioned by percentage of the same viewBox, because
+      // the template runtime cannot render interpolated text inside SVG <text>.
+      const BDW = 316, BDH = 120, _bx0 = 40, _bx1 = 296, _by0 = 12, _by1 = 104;
+      const _bdDay = (t) => new Date(t).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
       const mkChart = (planned, phaseCases, startMs, endMs, weekendsOff) => {
-        const x0 = 40, x1 = 296, y0 = 12, y1 = 104;
+        const x0 = _bx0, x1 = _bx1, y0 = _by0, y1 = _by1;
         const sx = (t) => { if (endMs === startMs) return x0; const c = Math.max(startMs, Math.min(endMs, t)); return x0 + (c - startMs) / (endMs - startMs) * (x1 - x0); };
         const sy = (v) => y0 + (1 - (planned ? v / planned : 0)) * (y1 - y0);
         const idealPts = `${x0},${sy(planned).toFixed(1)} ${x1},${sy(0).toFixed(1)}`;
@@ -3089,7 +3095,33 @@ class Component extends DCLogic {
         let timeBurnPct;
         if (weekendsOff) { const total = this.bizDays(startMs, endMs + 86400000) || 1; const elapsed = this.bizDays(startMs, Math.min(now, endMs + 86400000)); timeBurnPct = Math.max(0, Math.min(100, Math.round(elapsed / total * 100))); }
         else { timeBurnPct = endMs > startMs ? Math.max(0, Math.min(100, Math.round((now - startMs) / (endMs - startMs) * 100))) : (now >= endMs ? 100 : 0); }
-        return { idealPts, actualPts: pts.join(' '), remaining: rem, timeBurnPct };
+
+        // ── axes ──
+        const yPct = (v) => (sy(v) / BDH * 100).toFixed(2);
+        const xPct = (t) => (sx(t) / BDW * 100).toFixed(2);
+        const _round = (v) => { if (v <= 0) return 0; const mag = Math.pow(10, Math.floor(Math.log10(v))); return Math.round(v / mag) * mag; };
+        const gridVals = planned > 0
+          ? [planned, _round(planned * 0.5), 0].filter((v, i, a) => a.indexOf(v) === i)
+          : [0];
+        const bdGrid = gridVals.map(v => ({
+          key: 'g' + v, label: v >= 1000 ? (Math.round(v / 100) / 10) + 'k' : String(v),
+          y: sy(v).toFixed(1), topPct: yPct(v),
+        }));
+        const span = Math.max(1, endMs - startMs);
+        const nTicks = span > 86400000 * 45 ? 5 : span > 86400000 * 10 ? 4 : 3;
+        const bdTicks = [];
+        for (let i = 0; i < nTicks; i++) {
+          const t = startMs + span * (i / (nTicks - 1));
+          bdTicks.push({ key: 't' + i, label: _bdDay(t), leftPct: xPct(t),
+            align: i === 0 ? 'left' : (i === nTicks - 1 ? 'right' : 'center') });
+        }
+        const inWindow = now >= startMs && now <= endMs;
+        return { idealPts, actualPts: pts.join(' '), remaining: rem, timeBurnPct,
+          bdGrid, bdTicks, bdPlotL: _bx0, bdPlotR: _bx1,
+          bdGutterPct: (_bx0 / BDW * 100).toFixed(2),
+          bdTodayShow: inWindow, bdTodayPct: xPct(now), bdTodayX: sx(now).toFixed(1),
+          bdStartLabel: _bdDay(startMs), bdEndLabel: _bdDay(endMs),
+          bdRemainLabel: rem + ' of ' + planned + ' left' };
       };
       const _bdFd = (t) => { const dt = new Date(t); return String(dt.getDate()).padStart(2, '0') + '.' + String(dt.getMonth() + 1).padStart(2, '0') + '.' + dt.getFullYear(); };
       const bdOpen = this.state.bdOpen || null;
