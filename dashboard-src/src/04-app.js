@@ -34,6 +34,10 @@ class Component extends DCLogic {
     { color: '#15803d', headerBg: 'linear-gradient(90deg,#166534,#15803d)' },
   ];
   REL_STATUSES = ['Planned', 'In Progress', 'Completed', 'Archived'];
+  // Responsibilities are part of a release, not of the installation: a new
+  // release starts with none and they are filled in when it is created.
+  RESP_COLORS = ['#2563eb', '#7c3aed', '#4caf2f', '#ef4444', '#0891b2', '#d97706'];
+  RESP_SUGGEST = ['Release Management', 'Project Manager', 'Test Manager', 'Defect Manager'];
 
   // Keys that belong to ONE release. Everything not listed here (theme, users,
   // session, PINs, section layout, Jira base URL) stays global on purpose.
@@ -46,6 +50,7 @@ class Component extends DCLogic {
     'qa-comments': 1, 'qa-topics': 1, 'qa-defect-notes': 1, 'qa-qtest-links': 1,
     'qa-milestone': 1, 'qa-milestone-date': 1, 'qa-info': 1,
     'qa-req-baseline': 1, 'qa-suite-order': 1, 'qa-testing-start': 1, 'qa-app-map': 1,
+    // ('qa-resp-names' was the old global store — responsibilities now live on the release record)
   };
   relKeyIsScoped(k) { return !!this.REL_SCOPED[k] || String(k).indexOf('qa-bug-dump') === 0; }
   relKey(k) { const id = this.relSelectedId(); return this.relKeyIsScoped(k) ? (k + '@' + id) : k; }
@@ -74,6 +79,81 @@ class Component extends DCLogic {
     return String(x.getDate()).padStart(2, '0') + '.' + String(x.getMonth() + 1).padStart(2, '0'); }
   relIso(d) { const t = this.relParse(d); if (t == null) return ''; const x = new Date(t);
     return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); }
+
+  // ─── working time (an organisation-wide rule, not a per-release one) ──────
+  // Countdowns and pacing count only real working time: the configured weekdays
+  // between the configured start and end hour. Defaults to Mon–Fri 07:00–17:00.
+  WORK_STORE = 'qa-work-hours';
+  WORK_DEFAULT = { from: '07:00', to: '17:00', days: [1, 2, 3, 4, 5] };
+  WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  loadWork() {
+    try {
+      const w = JSON.parse(localStorage.getItem(this.WORK_STORE) || 'null');
+      if (w && w.from && w.to && Array.isArray(w.days)) return { from: w.from, to: w.to, days: w.days.slice() };
+    } catch (e) {}
+    return { from: this.WORK_DEFAULT.from, to: this.WORK_DEFAULT.to, days: this.WORK_DEFAULT.days.slice() };
+  }
+  workCfg() { return this.state.workHours || this.loadWork(); }
+  saveWork(w) {
+    if (!this.can('editor')) { console.warn('QA Cockpit: rejected — editor role required'); return; }
+    try { localStorage.setItem(this.WORK_STORE, JSON.stringify(w)); } catch (e) {}
+    this.setState({ workHours: w });
+  }
+  setWorkFrom = (e) => { const v = e.target.value; const w = { ...this.workCfg(), from: v || '07:00' }; if (this._hm(w.to) > this._hm(w.from)) this.saveWork(w); };
+  setWorkTo = (e) => { const v = e.target.value; const w = { ...this.workCfg(), to: v || '17:00' }; if (this._hm(w.to) > this._hm(w.from)) this.saveWork(w); };
+  toggleWorkDay = (d) => () => {
+    const w = this.workCfg();
+    const days = w.days.indexOf(d) >= 0 ? w.days.filter(x => x !== d) : w.days.concat([d]).sort();
+    if (!days.length) return;   // at least one working day
+    this.saveWork({ ...w, days });
+  };
+  resetWork = () => this.saveWork({ from: this.WORK_DEFAULT.from, to: this.WORK_DEFAULT.to, days: this.WORK_DEFAULT.days.slice() });
+  _hm(t) { const m = String(t || '').match(/^(\d{1,2}):(\d{2})$/); return m ? (+m[1]) * 60 + (+m[2]) : 0; }
+  workDayMinutes() { const w = this.workCfg(); return Math.max(1, this._hm(w.to) - this._hm(w.from)); }
+  isWorkDay(dayIdx) { const w = this.workCfg(); return (w.days && w.days.length ? w.days : [1, 2, 3, 4, 5]).indexOf(dayIdx) >= 0; }
+  workLabel() {
+    const w = this.workCfg();
+    const ds = (w.days && w.days.length ? w.days : [1, 2, 3, 4, 5]).slice().sort((a, b) => a - b);
+    // contiguous runs render as Mon–Fri rather than Mon, Tue, Wed, Thu, Fri
+    const parts = []; let i = 0;
+    while (i < ds.length) {
+      let j = i; while (j + 1 < ds.length && ds[j + 1] === ds[j] + 1) j++;
+      parts.push(j > i ? (this.WEEKDAY_LABELS[ds[i]] + '–' + this.WEEKDAY_LABELS[ds[j]]) : this.WEEKDAY_LABELS[ds[i]]);
+      i = j + 1;
+    }
+    return parts.join(', ') + ' ' + w.from + '–' + w.to;
+  }
+  // Working minutes between two instants, clipped to the configured windows.
+  workMinutesBetween(fromMs, toMs) {
+    if (!(toMs > fromMs)) return 0;
+    const w = this.workCfg();
+    const sMin = this._hm(w.from), eMin = this._hm(w.to);
+    if (eMin <= sMin) return 0;
+    let total = 0;
+    const cur = new Date(fromMs); cur.setHours(0, 0, 0, 0);
+    for (let guard = 0; guard < 3700; guard++) {
+      if (cur.getTime() > toMs) break;
+      if (this.isWorkDay(cur.getDay())) {
+        const ws = new Date(cur); ws.setHours(Math.floor(sMin / 60), sMin % 60, 0, 0);
+        const we = new Date(cur); we.setHours(Math.floor(eMin / 60), eMin % 60, 0, 0);
+        const a = Math.max(ws.getTime(), fromMs), b = Math.min(we.getTime(), toMs);
+        if (b > a) total += (b - a) / 60000;
+      }
+      cur.setDate(cur.getDate() + 1);
+    }
+    return Math.floor(total);
+  }
+  // Whole working days between two instants (calendar days that are working days).
+  workDaysBetween(aMs, bMs) {
+    let n = 0;
+    const cur = new Date(aMs); cur.setHours(0, 0, 0, 0);
+    const end = new Date(bMs); end.setHours(0, 0, 0, 0);
+    for (let guard = 0; guard < 3700 && cur < end; guard++) {
+      if (this.isWorkDay(cur.getDay())) n++;
+      cur.setDate(cur.getDate() + 1);
+    }
+    return n;
+  }
 
   relEnvMeta(name) {
     const n = String(name || '').trim();
@@ -116,9 +196,21 @@ class Component extends DCLogic {
       { name: 'IR3', testingStart: '2026-09-29', testingEnd: '2026-10-15', bugFixStart: '2026-10-16', bugFixEnd: '2026-10-22', retestStart: '', retestEnd: '', notes: '' },
       { name: 'PC1', testingStart: '2026-10-24', testingEnd: '2026-10-27', bugFixStart: '2026-10-28', bugFixEnd: '2026-10-31', retestStart: '', retestEnd: '', notes: '', includeWeekends: true },
     ].map(e => ({ id: this.relNewId(), ...e }));
+    // Responsibilities start empty; only names the user actually saved before
+    // the release layer existed are carried over.
+    let resp = [];
+    try {
+      const saved = JSON.parse(localStorage.getItem('qa-resp-names') || 'null');
+      if (saved && typeof saved === 'object') {
+        resp = Object.keys(saved)
+          .filter(k => String(saved[k] || '').trim())
+          .map((k, i) => ({ id: this.relNewId(), role: k, people: String(saved[k]).trim(),
+            color: this.RESP_COLORS[i % this.RESP_COLORS.length] }));
+      }
+    } catch (e) {}
     const rel = { id, version, status: 'In Progress', startDate: '2026-07-02', endDate: '2026-10-31',
       current: true, notes: 'GC SAP Upgrade — migrated from the previous single-release report.',
-      environments: envs, createdAt: Date.now(), updatedAt: Date.now() };
+      environments: envs, responsibilities: resp, createdAt: Date.now(), updatedAt: Date.now() };
     const store = { v: this.REL_MODEL_VERSION, selectedId: id, releases: [rel] };
     // Adopt pre-release-layer data so the existing report keeps its content.
     try {
@@ -145,6 +237,9 @@ class Component extends DCLogic {
       ...r,
       version: String(r.version || '').trim(),
       environments: (Array.isArray(r.environments) ? r.environments : []).map(e => ({ id: e.id || this.relNewId(), ...e })),
+      responsibilities: (Array.isArray(r.responsibilities) ? r.responsibilities : []).map((x, i) => ({
+        id: x.id || this.relNewId(), role: x.role || '', people: x.people || '',
+        color: x.color || this.RESP_COLORS[i % this.RESP_COLORS.length] })),
     }));
     s.releases.sort((a, b) => this.relCompare(a, b));
     this._relStore = s;
@@ -539,6 +634,8 @@ class Component extends DCLogic {
 
   // Reorderable / hideable page sections (CSS order inside their column)
   SECTIONS = [
+    { k: 'relovw',    label: 'Release Overview (KPIs)',    col: 'Main column' },
+    { k: 'reltl',     label: 'Release Timeline',           col: 'Main column' },
     { k: 'relsum',    label: 'Release Summary (schedule)', col: 'Main column' },
     { k: 'resp',      label: 'Responsibilities + Topics', col: 'Main column' },
     { k: 'phases',    label: 'Test Phase Timeline',       col: 'Main column' },
@@ -553,15 +650,25 @@ class Component extends DCLogic {
     { k: 'dump',      label: 'Bug Dump Report',           col: 'Side column' },
     { k: 'milestone', label: 'Next Milestone + Info',     col: 'Side column' },
   ];
+  // The release blocks are administration context, not day-to-day reporting —
+  // they are available in the layout settings but off by default.
+  LAYOUT_VERSION = 2;
+  DEFAULT_HIDDEN = { relovw: true, reltl: true, relsum: true };
   loadLayout() {
     let o = {};
     try { o = JSON.parse(this.lsGet('qa-section-layout') || '{}') || {}; } catch (e) { o = {}; }
     const order = Array.isArray(o.order) ? o.order.filter(k => this.SECTIONS.some(s => s.k === k)) : [];
     this.SECTIONS.forEach(s => { if (order.indexOf(s.k) < 0) order.push(s.k); });
-    return { order, hidden: (o.hidden && typeof o.hidden === 'object') ? o.hidden : {} };
+    let hidden = (o.hidden && typeof o.hidden === 'object') ? o.hidden : {};
+    if (o.v !== this.LAYOUT_VERSION) {
+      // one-time: apply the defaults on top of whatever the user already had
+      hidden = { ...this.DEFAULT_HIDDEN, ...hidden };
+      try { this.lsSet('qa-section-layout', JSON.stringify({ order, hidden, v: this.LAYOUT_VERSION })); } catch (e) {}
+    }
+    return { order, hidden };
   }
   saveLayout(l) {
-    try { this.lsSet('qa-section-layout', JSON.stringify(l)); } catch (e) {}
+    try { this.lsSet('qa-section-layout', JSON.stringify({ ...l, v: this.LAYOUT_VERSION })); } catch (e) {}
     this.setState({ layoutRev: (this.state.layoutRev || 0) + 1 });
   }
   moveSection = (k, dir) => {
@@ -582,7 +689,7 @@ class Component extends DCLogic {
     if (l.hidden[k]) delete l.hidden[k]; else l.hidden[k] = true;
     this.saveLayout(l);
   };
-  resetLayout = () => { if (!this.can('editor')) return; this.saveLayout({ order: this.SECTIONS.map(s => s.k), hidden: {} }); };
+  resetLayout = () => { if (!this.can('editor')) return; this.saveLayout({ order: this.SECTIONS.map(s => s.k), hidden: { ...this.DEFAULT_HIDDEN } }); };
   openLayout = () => this.setState({ layoutOpen: true });
   closeLayout = () => this.setState({ layoutOpen: false });
 
@@ -593,17 +700,19 @@ class Component extends DCLogic {
 
   state = { dark: true, module: 'test', collapsed: {}, commentOpen: false, commentText: '', commentSection: 'General', commenterName: '', importedRows: null, importInfo: 'No data imported yet', importError: '', role: 'viewer', editorName: '', comments: [], loginOpen: false, loginName: '', loginPin: '', loginError: '', inboxOpen: false, pinOpen: false, pinCurrent: '', pinNew1: '', pinNew2: '', pinMsg: 'idle', pinError: '', importedCases: [], tcModal: null, milestone: '', milestoneDate: '', infoNote: '', milestoneOpen: false, mMilestone: null, mDate: null, mInfo: null, topics: null, topicModal: null, history: [], historyOpen: false, viewingTs: null, calMonth: null };
 
-  RESP_DEFAULTS = [
-    { role: 'Release Management', people: 'Max Mustermann, Max Mustermann', color: '#2563eb' },
-    { role: 'Project Manager', people: 'Max Mustermann, Max Mustermann', color: '#7c3aed' },
-    { role: 'Test Manager', people: 'Max Mustermann', color: '#4caf2f' },
-    { role: 'Defect Manager', people: 'Arlind Sylaj', color: '#ef4444' },
-  ];
-  loadResp() { try { return JSON.parse(this.lsGet('qa-resp-names') || '{}') || {}; } catch (e) { return {}; } }
-  setResp = (role, val) => {
-    const next = { ...(this.state.respNames || {}), [role]: val };
-    try { this.lsSet('qa-resp-names', JSON.stringify(next)); } catch (e) {}
-    this.setState({ respNames: next });
+  // Editors may retype the people on the card; the role list itself is managed
+  // per release under Manage Releases.
+  setRespPeople = (respId) => (e) => {
+    if (!this.can('editor')) { console.warn('QA Cockpit: rejected — editor role required'); return; }
+    const val = e && e.target ? e.target.value : e;
+    const store = this.relStore();
+    const id = this.relSelectedId();
+    store.releases = store.releases.map(r => r.id !== id ? r : ({
+      ...r, updatedAt: Date.now(),
+      responsibilities: (r.responsibilities || []).map(x => x.id === respId ? { ...x, people: val } : x),
+    }));
+    this.relWrite(store);
+    this.forceUpdate();
   };
   moveSuite = (phaseId, names, idx, dir) => {
     const arr = names.slice();
@@ -2123,8 +2232,27 @@ class Component extends DCLogic {
   focusEnvironment = (name) => {
     const all = {}; this.relPhasesSched().forEach(p => { all[p.id] = true; }); all[name] = false;
     this.setState({ collapsed: all, navEnvFocus: name }, () => setTimeout(() => {
-      const el = document.getElementById('phase-' + name) || document.getElementById('relenv-' + name);
-      if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 90, behavior: 'smooth' });
+      // First visible anchor wins: the environment card when a qTest export
+      // exists, else its Release Summary row, else its card in the Test Phase
+      // Timeline strip. Sections switched off in the layout settings are still
+      // in the DOM but have no box, so they are skipped.
+      const visible = (id) => {
+        const n = document.getElementById(id);
+        if (!n) return null;
+        const r = n.getBoundingClientRect();
+        return (r.width > 0 || r.height > 0) ? n : null;
+      };
+      const el = visible('phase-' + name) || visible('relenv-' + name) || visible('phasecard-' + name);
+      if (!el) return;
+      const box = el.getBoundingClientRect();
+      window.scrollTo({ top: box.top + window.pageYOffset - 90, behavior: 'smooth' });
+      // the phase strip scrolls sideways — bring the card into view there too,
+      // without disturbing the vertical position
+      let strip = el.parentElement;
+      while (strip && strip.scrollWidth <= strip.clientWidth + 4) strip = strip.parentElement;
+      if (strip && strip !== document.body && strip !== document.documentElement) {
+        strip.scrollTo({ left: Math.max(0, el.offsetLeft - (strip.clientWidth - el.offsetWidth) / 2), behavior: 'smooth' });
+      }
     }, 80));
   };
   focusReleaseEnv = (relId, envName) => (e) => {
@@ -2144,6 +2272,13 @@ class Component extends DCLogic {
   toggleNavPanel = () => this.setState(s => ({ navCollapsed: !s.navCollapsed }));
 
   // ─── release administration (admin role only) ─────────────────────────────
+  relBlankResp(i) {
+    return { id: this.relNewId(), role: '', people: '', color: this.RESP_COLORS[(i || 0) % this.RESP_COLORS.length] };
+  }
+  relResponsibilities(rel) {
+    const r = rel || this.relSelected();
+    return (r && Array.isArray(r.responsibilities)) ? r.responsibilities : [];
+  }
   relBlankEnv(name) {
     return { id: this.relNewId(), name: name || '', testingStart: '', testingEnd: '',
       bugFixStart: '', bugFixEnd: '', retestStart: '', retestEnd: '', notes: '',
@@ -2151,7 +2286,7 @@ class Component extends DCLogic {
   }
   relBlankForm() {
     return { id: '', version: '', status: 'Planned', startDate: '', endDate: '',
-      current: false, notes: '', environments: [] };
+      current: false, notes: '', environments: [], responsibilities: [] };
   }
   openRelManager = () => {
     if (!this.can('admin')) { console.warn('QA Cockpit: rejected — admin role required'); return; }
@@ -2267,6 +2402,26 @@ class Component extends DCLogic {
     return { relForm: { ...f, environments: (f.environments || []).map(x => x.id === envId ? { ...x, [field]: !x[field] } : x) },
       relDirty: true, relFormErr: '' };
   });
+  relAddResp = (role) => () => this.setState(s => {
+    const f = s.relForm || this.relBlankForm();
+    const list = f.responsibilities || [];
+    if (role && list.some(x => x.role.toLowerCase() === String(role).toLowerCase())) return { relFormErr: 'Role "' + role + '" is already listed.' };
+    const row = this.relBlankResp(list.length);
+    if (role) row.role = role;
+    return { relForm: { ...f, responsibilities: list.concat([row]) }, relDirty: true, relFormErr: '' };
+  });
+  relRespSet = (rid, field) => (e) => {
+    const v = (e && e.target) ? e.target.value : e;
+    this.setState(s => {
+      const f = s.relForm || this.relBlankForm();
+      return { relForm: { ...f, responsibilities: (f.responsibilities || []).map(x => x.id === rid ? { ...x, [field]: v } : x) },
+        relDirty: true, relFormErr: '' };
+    });
+  };
+  relRemoveResp = (rid) => () => this.setState(s => {
+    const f = s.relForm || this.relBlankForm();
+    return { relForm: { ...f, responsibilities: (f.responsibilities || []).filter(x => x.id !== rid) }, relDirty: true, relFormErr: '' };
+  });
   setRelEnvNew = (e) => this.setState({ relEnvNew: e.target.value });
   relAddCustomEnv = () => {
     const name = String(this.state.relEnvNew || '').trim();
@@ -2291,6 +2446,15 @@ class Component extends DCLogic {
     if (bad(f.endDate)) return 'Release end date is not a valid date.';
     if (f.startDate && f.endDate && this.relParse(f.endDate) < this.relParse(f.startDate))
       return 'Release end date cannot be before the release start date.';
+    const seenRole = {};
+    for (const x of (f.responsibilities || [])) {
+      const rn = String(x.role || '').trim();
+      if (!rn && String(x.people || '').trim()) return 'Give every responsibility a role name.';
+      if (!rn) continue;
+      const rk = rn.toLowerCase();
+      if (seenRole[rk]) return 'Responsibility "' + rn + '" appears twice — roles must be unique within a release.';
+      seenRole[rk] = 1;
+    }
     const seen = {};
     for (const e of (f.environments || [])) {
       const n = String(e.name || '').trim();
@@ -2332,6 +2496,10 @@ class Component extends DCLogic {
       endDate: this.relIso(f.endDate),
       current: !!f.current,
       notes: f.notes || '',
+      responsibilities: (f.responsibilities || [])
+        .filter(x => String(x.role || '').trim() || String(x.people || '').trim())
+        .map((x, i) => ({ id: x.id || this.relNewId(), role: String(x.role || '').trim(),
+          people: String(x.people || '').trim(), color: x.color || this.RESP_COLORS[i % this.RESP_COLORS.length] })),
       environments: (f.environments || []).map(e => ({
         id: e.id || this.relNewId(), name: String(e.name).trim(),
         testingStart: this.relIso(e.testingStart), testingEnd: this.relIso(e.testingEnd),
@@ -2370,10 +2538,9 @@ class Component extends DCLogic {
       milestoneDate = this.lsGet('qa-milestone-date') || '';
       infoNote = this.lsGet('qa-info') || '';
     } catch (e) {}
-    const respNames = this.loadResp();
-    this.setState({ respNames, role, editorName });
+    this.setState({ role, editorName, workHours: this.loadWork() });
     this.loadReleaseData();
-    this._timer = setInterval(() => this.setState({ now: Date.now() }), 1000);
+    this._timer = setInterval(() => this.setState({ now: Date.now() }), 15000);
     this._onKey = (e) => {
       if (e.key === 'Escape') { if (this.state.coverageEnv) this.closeCoverage(); if (this.state.diagOpen) this.setState({ diagOpen: false }); }
       if (e.ctrlKey && e.altKey && (e.key === 'd' || e.key === 'D')) {
@@ -2408,7 +2575,7 @@ class Component extends DCLogic {
     const all = {}; this.PHASES_SCHED.forEach(p => { all[p.id] = true; }); all[id] = false;
     this.setState({ collapsed: all }, () => setTimeout(() => { const el = document.getElementById('phase-' + id); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 90, behavior: 'smooth' }); }, 70));
   };
-  bizDays(aMs, bMs) { let n = 0; const cur = new Date(aMs); cur.setHours(0, 0, 0, 0); const end = new Date(bMs); end.setHours(0, 0, 0, 0); while (cur < end) { const w = cur.getDay(); if (w !== 0 && w !== 6) n++; cur.setDate(cur.getDate() + 1); } return n; }
+  bizDays(aMs, bMs) { return this.workDaysBetween(aMs, bMs); }
   loadTextOv() { try { return JSON.parse(this.lsGet('qa-text-overrides') || '{}') || {}; } catch (e) { return {}; } }
   exportTexts = () => {
     const ov = this.loadTextOv();
@@ -2456,7 +2623,7 @@ class Component extends DCLogic {
     if (!this.can('admin')) { console.warn('QA Cockpit: rejected — admin role required'); return; }
     const next = !this.state.superEdit;
     if (next) { if (this._timer) { clearInterval(this._timer); this._timer = null; } }
-    else if (!this._timer) { this._timer = setInterval(() => this.setState({ now: Date.now() }), 1000); }
+    else if (!this._timer) { this._timer = setInterval(() => this.setState({ now: Date.now() }), 15000); }
     this.setState({ superEdit: next }, () => setTimeout(() => this.applyTexts(next), 40));
   };
   componentDidUpdate() { if (!this.state.superEdit && this._hasOv) this.applyTexts(false); }
@@ -3299,22 +3466,40 @@ class Component extends DCLogic {
     const SCHED = this.PHASES_SCHED, PC = this.PHASE_COLORS;
     let cdPhase = null; for (const ph of SCHED) { if (pEnd(ph.end) >= now) { cdPhase = ph; break; } }
     let countdown;
-    if (!cdPhase) { countdown = { active: false, id: '✓', label: 'Released', note: 'All phases complete', days: '00', hours: '00', mins: '00', secs: '00' }; }
+    const _workLabel = this.workLabel();
+    if (!cdPhase) {
+      // no environments at all is not the same as every phase being finished
+      countdown = SCHED.length
+        ? { active: false, id: '✓', label: 'Released', note: 'All phases complete', days: '00', hours: '00', mins: '00', dayWord: '', hint: _workLabel }
+        : { active: false, id: '—', label: 'Not scheduled', note: 'No test environments configured for this release', days: '00', hours: '00', mins: '00', dayWord: '', hint: 'Add environments under Manage Releases' };
+    }
     else {
       const started = pStart(cdPhase.start) <= now;
       const _tEnd = pEnd(cdPhase.testEnd || cdPhase.end);
       const inGrey = !!cdPhase.testEnd && now > _tEnd;
       const target = started ? (inGrey ? pEnd(cdPhase.end) : _tEnd) : pStart(cdPhase.start);
-      let diff = Math.max(0, target - now);
-      const calDd = Math.floor(diff / dayMs); let sub = diff - calDd * dayMs;
-      const dd = (this.relRunsWeekends(cdPhase.id) || !started) ? calDd : this.bizDays(now, target);
-      const hh = Math.floor(sub / 3600000); sub -= hh * 3600000;
-      const mm = Math.floor(sub / 60000); sub -= mm * 60000;
-      const ss = Math.floor(sub / 1000);
-      const dayWord = (this.relRunsWeekends(cdPhase.id) || !started) ? '' : ' work';
-      countdown = { active: true, id: cdPhase.id, label: cdPhase.label, started, dayWord,
+      // A cutover environment is worked round the clock; everything else counts
+      // only the configured working time, so the clock does not tick overnight.
+      const roundClock = this.relRunsWeekends(cdPhase.id);
+      let dd, hh, mm;
+      if (roundClock) {
+        let diff = Math.max(0, target - now);
+        dd = Math.floor(diff / dayMs); diff -= dd * dayMs;
+        hh = Math.floor(diff / 3600000); diff -= hh * 3600000;
+        mm = Math.floor(diff / 60000);
+      } else {
+        const perDay = this.workDayMinutes();
+        const wm = this.workMinutesBetween(now, target);
+        dd = Math.floor(wm / perDay);
+        const rest = wm - dd * perDay;
+        hh = Math.floor(rest / 60);
+        mm = rest % 60;
+      }
+      countdown = { active: true, id: cdPhase.id, label: cdPhase.label, started,
+        dayWord: roundClock ? '' : ' work',
+        hint: roundClock ? 'Round-the-clock cutover window' : _workLabel,
         note: started ? (inGrey ? ((cdPhase.greyNote || 'Fix & retest') + ' till ' + fmtD(cdPhase.end)) : ('Test execution ends ' + fmtD(cdPhase.testEnd || cdPhase.end))) : ('Starts ' + fmtD(cdPhase.start)),
-        days: pad2(dd), hours: pad2(hh), mins: pad2(mm), secs: pad2(ss) };
+        days: pad2(dd), hours: pad2(hh), mins: pad2(mm) };
     }
     const _relBounds = this.relWindow();
     const tlStart = SCHED.length ? pStart(SCHED[0].start) : (_relBounds.start == null ? now : _relBounds.start);
@@ -4553,10 +4738,8 @@ class Component extends DCLogic {
     // Daily export covers ONLY the phase currently under test (QC1) — IR1/IR3/DF1/PC1 are out of scope.
     const RPT_ONLY = (this.ACTIVE_PHASE_WINDOW && this.ACTIVE_PHASE_WINDOW.label) || 'QC1';
     const RPT_SKIP = {}; this.relOrder().forEach(p => { if (p !== RPT_ONLY) RPT_SKIP[p] = true; });
-    // names are edited in the Responsibilities card, stored locally, and reused in the PDF
-    const _respSaved = this.state.respNames || {};
-    const rptResp = this.RESP_DEFAULTS.map(d => ({ role: d.role, color: d.color,
-      people: (_respSaved[d.role] != null && String(_respSaved[d.role]).trim()) ? String(_respSaved[d.role]).trim() : d.people }));
+    // Responsibilities belong to the selected release and are reused in the PDF.
+    const rptResp = this.relResponsibilities().map(d => ({ id: d.id, role: d.role, color: d.color, people: d.people }));
     // One block per test type (Regressionstest IT / Business, Testautomation, Functional, E2E chains …), teams inside
     const _rptTests = [];
     const _noSmoke = (s) => !/smoke/i.test(String(s || ''));
@@ -4825,9 +5008,9 @@ class Component extends DCLogic {
     const relHighDefects = openHigh;
     const relDefectColor = relCritDefects > 0 ? '#ef4444' : (relOpenDefects > 0 ? '#d97706' : '#4caf2f');
     const relDaysLeft = _relWin.end == null || _relNow > _relWin.end ? 0
-      : Math.ceil((_relWin.end - _relNow) / 86400000);
+      : this.workDaysBetween(_relNow, _relWin.end) + 1;
     const relDaysLeftLabel = _relWin.end == null ? '—'
-      : (_relNow > _relWin.end ? 'Finished' : relDaysLeft + ' day' + (relDaysLeft === 1 ? '' : 's'));
+      : (_relNow > _relWin.end ? 'Finished' : relDaysLeft + ' work day' + (relDaysLeft === 1 ? '' : 's'));
     const relNotes = _relSel.notes || '';
     const relHasNotes = !!relNotes;
     const relLastUpdated = _relSel.updatedAt
@@ -4982,6 +5165,18 @@ class Component extends DCLogic {
       weekendMark: e.includeWeekends ? '☑' : '☐',
       onRemove: this.relRemoveEnv(e.id),
     }));
+    const _formResp = relFormOpen ? (relForm.responsibilities || []) : [];
+    const relFormResp = _formResp.map(r => ({
+      id: r.id, role: r.role, people: r.people, color: r.color,
+      setRole: this.relRespSet(r.id, 'role'), setPeople: this.relRespSet(r.id, 'people'),
+      onRemove: this.relRemoveResp(r.id),
+    }));
+    const relFormHasResp = relFormResp.length > 0;
+    const relFormNoResp = relFormResp.length === 0;
+    const relRespSuggest = this.RESP_SUGGEST
+      .filter(rn => !_formResp.some(x => String(x.role).toLowerCase() === rn.toLowerCase()))
+      .map(rn => ({ label: rn, onAdd: this.relAddResp(rn) }));
+    const relRespHasSuggest = relRespSuggest.length > 0;
     const relFormHasEnvs = relFormEnvs.length > 0;
     const relFormNoEnvs = relFormEnvs.length === 0;
     const relFormVersion = relFormOpen ? (relForm.version || '') : '';
@@ -5079,6 +5274,20 @@ class Component extends DCLogic {
       })(),
       ...this.chainVals(),
       layoutOpen: !!this.state.layoutOpen, openLayout: this.openLayout, closeLayout: this.closeLayout, resetLayout: this.resetLayout,
+      ...(() => {
+        const w = this.workCfg();
+        return {
+          workFrom: w.from, workTo: w.to, workLabel: this.workLabel(),
+          workHoursPerDay: (this.workDayMinutes() / 60).toFixed(1).replace('.0', ''),
+          setWorkFrom: this.setWorkFrom, setWorkTo: this.setWorkTo, resetWork: this.resetWork,
+          workDayChips: [1, 2, 3, 4, 5, 6, 0].map(d => {
+            const on = this.isWorkDay(d);
+            return { label: this.WEEKDAY_LABELS[d], on,
+              bg: on ? '#95c11f' : 'transparent', color: on ? '#16210a' : 'var(--tx-mut)',
+              brd: on ? '#95c11f' : 'var(--brd-2)', onToggle: this.toggleWorkDay(d) };
+          }),
+        };
+      })(),
       releaseVersion: relVersion,
       // ─── release management layer ───────────────────────────────────────
       navReleases, navCollapsed, navExpanded, navToggleIcon, navWidth, navReleaseCount, toggleNavPanel: this.toggleNavPanel,
@@ -5097,6 +5306,8 @@ class Component extends DCLogic {
       relFormVersion, relFormStatus, relFormStart, relFormEnd, relFormCurrent, relFormCurrentMark, relFormNotes,
       relStatusChoices, relSaveLabel, relEnvChoices, relFormEnvs, relFormHasEnvs, relFormNoEnvs,
       relEnvNew: this.state.relEnvNew || '', setRelEnvNew: this.setRelEnvNew, relAddCustomEnv: this.relAddCustomEnv,
+      relFormResp, relFormHasResp, relFormNoResp, relRespSuggest, relRespHasSuggest,
+      relAddRespBlank: this.relAddResp(''),
       relConfirmOpen, relConfirmVersion, relConfirmDelete: this.relConfirmDelete, relCancelDelete: this.relCancelDelete,
       setRelFormVersion: this.relFormSet('version'), setRelFormStatus: this.relFormSet('status'),
       setRelFormStart: this.relFormSet('startDate'), setRelFormEnd: this.relFormSet('endDate'),
@@ -5133,10 +5344,11 @@ class Component extends DCLogic {
       dumpRows, dumpShow, dumpEmpty, dumpToggleLabel, dumpSub, dumpCount, dumpQ, toggleDump, onDumpQ, dumpTabs, onDumpFile, exportDumpCsv, clearDump, dumpFile, dumpError, dumpHasError, dumpHasFile,
       dumpSlotTabs, dumpImportLabel, dumpClearLabel, dumpEmptyTitle, dumpEmptyHint,
       rptAllBugs, rptShowAllBugs, rptShowIntake, rptIntakeCount, rptIntakeEmpty, rptIntakeAny,
-      respCards: rptResp.map((r, i) => ({ key: 'resp' + i, role: r.role, people: r.people, color: r.color,
+      respCards: rptResp.map((r, i) => ({ key: r.id || ('resp' + i), role: r.role, people: r.people, color: r.color,
         padTop: i ? '12px' : '0px', brdTop: i ? '1px solid var(--brd-sub)' : 'none',
         editable: isEditor, readOnly: !isEditor,
-        onChange: (e) => this.setResp(r.role, e.target.value) })),
+        onChange: this.setRespPeople(r.id) })),
+      hasResp: rptResp.length > 0, noResp: rptResp.length === 0,
       rptEnvTotals: rptEnvTotalsFinal, rptHasEnv, rptBugPrios, rptEmpty, rptResp, ...tcfVals,
       reportDateDay, rptShowStatus,
       covRenameApp: this.covRenameApp, covAssignModule: this.covAssignModule,

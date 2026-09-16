@@ -183,6 +183,10 @@
   </sc-if>
 
 
+    <div style="display:grid; grid-template-columns:minmax(0,1fr) 372px; gap:16px; align-items:start;">
+  <div style="display:flex; flex-direction:column; gap:16px; min-width:0;">
+
+  <div style="order:{{ ord_relovw }}; display:{{ dsp_relovw }}; flex-direction:column; gap:16px; min-width:0;">
   <!-- ═══════════════ RELEASE OVERVIEW ═══════════════ -->
   <div style="background:var(--card-bg); border-radius:16px; padding:20px 24px; box-shadow:var(--shadow); transition:background 0.25s;">
     <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
@@ -260,7 +264,9 @@
       </sc-if>
     </sc-if>
   </div>
+  </div>
 
+  <div style="order:{{ ord_reltl }}; display:{{ dsp_reltl }}; flex-direction:column; gap:16px; min-width:0;">
   <!-- ═══════════════ RELEASE TIMELINE ═══════════════ -->
   <sc-if value="{{ relHasEnvs }}" hint-placeholder-val="{{ true }}">
   <div style="background:var(--card-bg); border-radius:16px; padding:20px 24px; box-shadow:var(--shadow); transition:background 0.25s;">
@@ -302,9 +308,7 @@
     </div>
   </div>
   </sc-if>
-
-    <div style="display:grid; grid-template-columns:minmax(0,1fr) 372px; gap:16px; align-items:start;">
-  <div style="display:flex; flex-direction:column; gap:16px; min-width:0;">
+  </div>
 
   <div style="order:{{ ord_relsum }}; display:{{ dsp_relsum }}; flex-direction:column; gap:16px; min-width:0;">
   <!-- ═══════════════ RELEASE SUMMARY — complete schedule ═══════════════ -->
@@ -362,7 +366,18 @@
   <!-- RESPONSIBILITIES + TOPICS -->
   <div style="display:grid; grid-template-columns:minmax(280px,0.62fr) 1.38fr; gap:16px; align-items:start;">
     <div style="background:var(--card-bg); border-radius:16px; padding:22px 26px; box-shadow:var(--shadow); transition:background 0.25s;">
-      <div style="font-size:10px; font-weight:600; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:16px;">Responsibilities</div>
+      <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+        <span style="font-size:10px; font-weight:600; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.12em;">Responsibilities</span>
+        <span style="font-size:9px; color:var(--tx-faint); font-variant-numeric:tabular-nums;">Rel. {{ relVersion }}</span>
+      </div>
+      <sc-if value="{{ noResp }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:22px 14px; text-align:center; border:1.5px dashed var(--brd-2); border-radius:11px; color:var(--tx-mut); font-size:11.5px; line-height:1.65;">
+          No responsibilities defined for this release.<br>
+          <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size:10.5px; color:var(--tx-faint);">Add them under <span style="color:var(--accent-tx); font-weight:600;">⚙ Manage Releases</span>.</span>
+          </sc-if>
+        </div>
+      </sc-if>
       <div style="display:flex; flex-direction:column; gap:14px;">
         <sc-for list="{{ respCards }}" as="rc" hint-placeholder-count="4">
           <div style="display:flex; flex-direction:column; gap:4px; padding-top:{{ rc.padTop }}; border-top:{{ rc.brdTop }};">
@@ -429,7 +444,7 @@
     </div>
     <div style="display:flex; align-items:stretch; gap:16px; overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:8px; -webkit-overflow-scrolling:touch;">
       <sc-for list="{{ phases }}" as="phase">
-        <div sc-camel-on-click="{{ phase.onFocus }}" title="Show this phase's results" style="scroll-snap-align:start; flex:0 0 clamp(240px, 22vw, 320px); background:{{ phase.bg }}; border:2px solid {{ phase.border }}; border-radius:16px; padding:20px 22px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:transform 0.15s, box-shadow 0.15s;" style-hover="transform:translateY(-3px); box-shadow:0 8px 20px rgba(15,23,42,0.12);">
+        <div id="phasecard-{{ phase.id }}" sc-camel-on-click="{{ phase.onFocus }}" title="Show this phase's results" style="scroll-margin-top:90px; scroll-snap-align:start; flex:0 0 clamp(240px, 22vw, 320px); background:{{ phase.bg }}; border:2px solid {{ phase.border }}; border-radius:16px; padding:20px 22px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:transform 0.15s, box-shadow 0.15s;" style-hover="transform:translateY(-3px); box-shadow:0 8px 20px rgba(15,23,42,0.12);">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
             <span style="font-size:28px; font-weight:800; color:{{ phase.color }}; line-height:1;">{{ phase.id }}</span>
             <span style="font-size:11px; font-weight:700; padding:4px 12px; border-radius:99px; background:{{ phase.badgeBg }}; color:{{ phase.color }}; letter-spacing:0.06em; white-space:nowrap;">{{ phase.status }}</span>
@@ -1185,8 +1200,8 @@
         <div style="flex:1; text-align:center; background:#ffffff1a; border-radius:9px; padding:9px 4px;"><div style="font-size:26px; font-weight:800; color:#fff; font-variant-numeric:tabular-nums; line-height:1;">{{ countdown.days }}</div><div style="font-size:7px; color:#cfd0d1; letter-spacing:0.1em; margin-top:4px;">DAYS{{ countdown.dayWord }}</div></div>
         <div style="flex:1; text-align:center; background:#ffffff1a; border-radius:9px; padding:9px 4px;"><div style="font-size:26px; font-weight:800; color:#fff; font-variant-numeric:tabular-nums; line-height:1;">{{ countdown.hours }}</div><div style="font-size:7px; color:#cfd0d1; letter-spacing:0.1em; margin-top:4px;">HRS</div></div>
         <div style="flex:1; text-align:center; background:#ffffff1a; border-radius:9px; padding:9px 4px;"><div style="font-size:26px; font-weight:800; color:#fff; font-variant-numeric:tabular-nums; line-height:1;">{{ countdown.mins }}</div><div style="font-size:7px; color:#cfd0d1; letter-spacing:0.1em; margin-top:4px;">MIN</div></div>
-        <div style="flex:1; text-align:center; background:#ffffff1a; border-radius:9px; padding:9px 4px;"><div style="font-size:26px; font-weight:800; color:#c7ea78; font-variant-numeric:tabular-nums; line-height:1;">{{ countdown.secs }}</div><div style="font-size:7px; color:#cfd0d1; letter-spacing:0.1em; margin-top:4px;">SEC</div></div>
       </div>
+      <div style="margin-top:10px; font-size:9px; color:#cfd0d1; letter-spacing:0.04em; display:flex; align-items:center; gap:5px;"><span style="opacity:0.75;">🕘</span>{{ countdown.hint }}</div>
     </div>
   </div>
   <div style="order:{{ ord_workflow }}; display:{{ dsp_workflow }}; flex-direction:column; gap:16px; min-width:0;">
@@ -1709,6 +1724,34 @@
                   <textarea value="{{ relFormNotes }}" sc-camel-on-change="{{ setRelFormNotes }}" rows="2" placeholder="Scope, goals or anything the team should know about this release…" style="width:100%; box-sizing:border-box; padding:9px 10px; border:1px solid var(--brd-2); border-radius:8px; background:var(--input-bg); color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:12px; outline:none; resize:vertical; min-height:58px;"></textarea>
                 </label>
 
+                <!-- responsibilities -->
+                <div>
+                  <div style="font-size:9.5px; font-weight:700; color:var(--tx-lbl); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:7px;">Responsibilities for this release</div>
+                  <sc-if value="{{ relFormNoResp }}" hint-placeholder-val="{{ true }}">
+                    <div style="padding:14px; text-align:center; border:1.5px dashed var(--brd-2); border-radius:10px; color:var(--tx-mut); font-size:11px; margin-bottom:9px;">None yet — add the roles that own this release.</div>
+                  </sc-if>
+                  <sc-if value="{{ relFormHasResp }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex; flex-direction:column; gap:7px; margin-bottom:9px;">
+                      <sc-for list="{{ relFormResp }}" as="fr" hint-placeholder-count="3">
+                        <div style="display:flex; align-items:center; gap:7px;">
+                          <span style="width:8px; height:8px; border-radius:50%; background:{{ fr.color }}; flex-shrink:0;"></span>
+                          <input value="{{ fr.role }}" sc-camel-on-input="{{ fr.setRole }}" placeholder="Role (e.g. Test Manager)" style="width:190px; box-sizing:border-box; background:var(--input-bg); border:1px solid var(--brd-2); border-radius:7px; padding:6px 9px; color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:11.5px; font-weight:600; outline:none;">
+                          <input value="{{ fr.people }}" sc-camel-on-input="{{ fr.setPeople }}" placeholder="Name, Name" style="flex:1; min-width:0; box-sizing:border-box; background:var(--input-bg); border:1px solid var(--brd-2); border-radius:7px; padding:6px 9px; color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:11.5px; outline:none;">
+                          <button sc-camel-on-click="{{ fr.onRemove }}" title="Remove this responsibility" style="background:transparent; border:1px solid #ef4444; border-radius:7px; padding:5px 9px; color:#ef4444; cursor:pointer; font-family:Rubik,sans-serif; font-size:10px; font-weight:600; flex-shrink:0;">Remove</button>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <div style="display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
+                    <sc-if value="{{ relRespHasSuggest }}" hint-placeholder-val="{{ true }}">
+                      <sc-for list="{{ relRespSuggest }}" as="rq" hint-placeholder-count="4">
+                        <button sc-camel-on-click="{{ rq.onAdd }}" title="Add {{ rq.label }}" style="background:transparent; border:1px dashed var(--brd-2); border-radius:7px; padding:5px 10px; color:var(--tx-mut); cursor:pointer; font-family:Rubik,sans-serif; font-size:10.5px; font-weight:600;">+ {{ rq.label }}</button>
+                      </sc-for>
+                    </sc-if>
+                    <button sc-camel-on-click="{{ relAddRespBlank }}" style="background:transparent; border:1px solid var(--brd-2); border-radius:7px; padding:5px 11px; color:var(--tx-soft); cursor:pointer; font-family:Rubik,sans-serif; font-size:10.5px; font-weight:600;">+ Custom role</button>
+                  </div>
+                </div>
+
                 <!-- environment selection -->
                 <div>
                   <div style="font-size:9.5px; font-weight:700; color:var(--tx-lbl); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:7px;">Test environments in this release</div>
@@ -1797,8 +1840,8 @@
       <div style="background:var(--card-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.4); width:520px; max-width:100%; max-height:calc(100vh - 48px); overflow-y:auto; border:1px solid var(--brd-2);">
         <div style="background:linear-gradient(135deg,#0f1e3c,#1a3360); padding:18px 20px; display:flex; align-items:center; justify-content:space-between;">
           <div>
-            <div style="font-size:15px; font-weight:600; color:#fff;">⇅ Page layout</div>
-            <div style="font-size:11px; color:#8fa3cc; margin-top:2px;">Move sections up or down, or hide what is not relevant</div>
+            <div style="font-size:15px; font-weight:600; color:#fff;">⇅ Layout &amp; settings</div>
+            <div style="font-size:11px; color:#8fa3cc; margin-top:2px;">Show, hide or reorder sections · set the working time used by countdowns and pacing</div>
           </div>
           <button sc-camel-on-click="{{ closeLayout }}" style="background:transparent; border:none; color:#ffffffcc; font-size:20px; cursor:pointer; padding:0 6px; line-height:1;">×</button>
         </div>
@@ -1822,6 +1865,34 @@
             <span style="font-size:11px; color:var(--tx-mut);">Saved on this device · <span>{{ hiddenCount }}</span> hidden</span>
             <button sc-camel-on-click="{{ resetLayout }}" style="background:transparent; border:1px solid var(--brd-2); border-radius:9px; padding:8px 13px; color:var(--tx-soft); cursor:pointer; font-family:Rubik,sans-serif; font-size:11.5px; font-weight:600;">Reset order</button>
           </div>
+
+          <!-- ── WORKING TIME ── -->
+          <sc-if value="{{ isEditor }}" hint-placeholder-val="{{ false }}">
+            <div data-noedit="" style="margin-top:8px; padding-top:14px; border-top:1px solid var(--brd-sub);">
+              <div style="font-size:9.5px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:4px;">Working time</div>
+              <div style="font-size:10.5px; color:var(--tx-faint); margin-bottom:11px; line-height:1.55;">Countdowns, remaining days and the pacing figures count only this time — the clock does not run overnight or at the weekend. A cutover environment marked <em>incl. weekends</em> still counts round the clock.</div>
+              <div style="display:flex; align-items:flex-end; gap:9px; flex-wrap:wrap; margin-bottom:10px;">
+                <label style="display:flex; flex-direction:column; gap:4px;">
+                  <span style="font-size:8.5px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.07em;">From</span>
+                  <input type="time" value="{{ workFrom }}" sc-camel-on-change="{{ setWorkFrom }}" style="box-sizing:border-box; background:var(--input-bg); border:1px solid var(--brd-2); border-radius:8px; padding:7px 9px; color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:12.5px; outline:none;">
+                </label>
+                <label style="display:flex; flex-direction:column; gap:4px;">
+                  <span style="font-size:8.5px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.07em;">To</span>
+                  <input type="time" value="{{ workTo }}" sc-camel-on-change="{{ setWorkTo }}" style="box-sizing:border-box; background:var(--input-bg); border:1px solid var(--brd-2); border-radius:8px; padding:7px 9px; color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:12.5px; outline:none;">
+                </label>
+                <span style="font-size:11px; color:var(--tx-mut); padding-bottom:9px;">= <strong style="color:var(--tx-strong);">{{ workHoursPerDay }} h</strong> per working day</span>
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px;">
+                <sc-for list="{{ workDayChips }}" as="wd" hint-placeholder-count="7">
+                  <button sc-camel-on-click="{{ wd.onToggle }}" style="background:{{ wd.bg }}; border:1px solid {{ wd.brd }}; border-radius:7px; padding:5px 11px; color:{{ wd.color }}; cursor:pointer; font-family:Rubik,sans-serif; font-size:10.5px; font-weight:700;">{{ wd.label }}</button>
+                </sc-for>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <span style="font-size:11px; color:var(--tx-mut);">Currently: <strong style="color:var(--tx-strong);">{{ workLabel }}</strong></span>
+                <button sc-camel-on-click="{{ resetWork }}" style="background:transparent; border:1px solid var(--brd-2); border-radius:9px; padding:7px 12px; color:var(--tx-soft); cursor:pointer; font-family:Rubik,sans-serif; font-size:11px; font-weight:600;">Reset to Mon–Fri 07:00–17:00</button>
+              </div>
+            </div>
+          </sc-if>
         </div>
       </div>
     </div>

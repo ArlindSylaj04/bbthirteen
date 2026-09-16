@@ -878,7 +878,15 @@ class Component extends DCLogic {
   normPrio(p) { const x = String(p || '').toLowerCase(); if (x.indexOf('highest') >= 0 || x.indexOf('critical') >= 0 || x.indexOf('blocker') >= 0) return 'Highest'; if (x.indexOf('high') >= 0) return 'High'; if (x.indexOf('medium') >= 0 || x.indexOf('normal') >= 0) return 'Medium'; if (x.indexOf('low') >= 0 || x.indexOf('minor') >= 0 || x.indexOf('trivial') >= 0) return 'Low'; return p ? 'Medium' : 'Medium'; }
   applyExternalDefects(list) {
     if (!Array.isArray(list)) return;
-    if (list.length) this.setState({ imported: true, importedN: list.length });
+    // remember the pre-import placeholder distribution so switching to a
+    // release that has no defects resets cleanly instead of keeping the
+    // previous release's numbers
+    this._seedStatus = this._seedStatus || this.state.statusData;
+    if (!list.length) {
+      this.setState({ imported: false, importedN: 0, defects: [], statusData: this._seedStatus });
+      return;
+    }
+    this.setState({ imported: true, importedN: list.length });
     if (this._extSig === list.length + ':' + (list[0] && (list[0].key || list[0].id) || '')) { /* allow */ }
     const defects = list.map((d, i) => ({
       id: d.key || d.id || ('DEF-' + (5000 + i)),
