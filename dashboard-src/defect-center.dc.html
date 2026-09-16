@@ -159,7 +159,7 @@
                 </div>
                 <div style="background:var(--tile-bg); border:1px solid var(--brd-sub); border-top:2px solid #34d359; border-radius:13px; padding:14px 15px;">
                   <div style="font-size:30px; font-weight:800; color:#34d359; line-height:1;">{{ guideClosed }}</div>
-                  <div style="font-size:10.5px; color:var(--tx-lbl); text-transform:uppercase; letter-spacing:0.08em; margin-top:6px;">Closed</div>
+                  <div style="font-size:10.5px; color:var(--tx-lbl); text-transform:uppercase; letter-spacing:0.08em; margin-top:6px;" title="Closed &amp; Ready for Transport">Closed &amp; RfT</div>
                 </div>
               </div>
               <div style="font-size:10.5px; font-weight:700; color:var(--tx-lbl); letter-spacing:0.08em; text-transform:uppercase; margin:20px 0 10px;">By status</div>
@@ -382,7 +382,7 @@
               </div>
             </div>
             <div class="dmc-card" style="background:var(--card-bg); border:1px solid var(--card-brd); border-radius:16px; padding:20px 22px; box-shadow:0 12px 32px rgba(0,0,0,0.38); display:flex; flex-direction:column;">
-              <div style="font-size:15px; font-weight:700; color:var(--tx-strong); margin-bottom:2px;">Open vs Closed</div>
+              <div style="font-size:15px; font-weight:700; color:var(--tx-strong); margin-bottom:2px;">Open vs Closed &amp; Ready for Transport</div>
               <div style="font-size:12px; color:var(--tx-lbl);">Resolution ratio</div>
               <div style="flex:1; display:flex; align-items:center; justify-content:center; gap:26px; padding:10px 0;">
                 <div style="position:relative; width:190px; height:190px; flex-shrink:0;">
@@ -1114,7 +1114,7 @@ class Component extends DCLogic {
     const closedPct = total ? Math.round((closed / total) * 100) : 0;
     const circ = 2 * Math.PI * 70;
     const donutSegs = [
-      { label:'Closed', value: closed, pct:(closed/total)*100, color:'#34d359' },
+      { label:'Closed & RfT', value: closed, pct:(closed/total)*100, color:'#34d359' },
       { label:'Open', value: open, pct:(open/total)*100, color:'#f6b73c' },
       { label:'Dump', value: dumped, pct:(dumped/total)*100, color:'#e879f9' },
       { label:'Rejected', value: rejected, pct:(rejected/total)*100, color:'#8b95ab' },
@@ -1351,7 +1351,7 @@ class Component extends DCLogic {
       { label:'Total Defects', value: total, sub:'all statuses', color:'#b6df3f', glow:'rgba(149,193,31,0.25)', onClick: this.openDrillList('All Defects', '#b6df3f', s.defects || []) },
       { label:'Open Bugs', value: open, sub:'active workload', color:'#f6b73c', glow:'rgba(246,183,60,0.25)', onClick: this.openDrillList('Open Bugs', '#f6b73c', (s.defects||[]).filter(d=>this.drillBucket(d)==='Open')) },
       { label:'Critical Open', value: highestOpen, sub:'highest priority', color:'#ff6b6b', glow:'rgba(240,68,68,0.25)', onClick: this.openDrillList('Critical Open', '#ff6b6b', (s.defects||[]).filter(d=>d.priority==='Highest'&&this.drillBucket(d)==='Open')) },
-      { label:'Closed', value: closed, sub:closedPct+'% resolution', color:'#34d359', glow:'rgba(52,211,89,0.25)', onClick: this.openDrillList('Closed', '#34d359', (s.defects||[]).filter(d=>this.drillBucket(d)==='Closed')) },
+      { label:'Closed & Ready for Transport', value: closed, sub:closedPct+'% resolution', color:'#34d359', glow:'rgba(52,211,89,0.25)', onClick: this.openDrillList('Closed', '#34d359', (s.defects||[]).filter(d=>this.drillBucket(d)==='Closed')) },
       { label:'Blocked', value: (s.statusData.find(x=>x.name==='Blocked')?.count||0), sub:'awaiting dependency', color:'#f0446e', glow:'rgba(240,68,110,0.25)', onClick: this.openDrillList('Blocked', '#f0446e', (s.defects||[]).filter(d=>String(d.status).toLowerCase().indexOf('block')>=0)) },
     ];
 

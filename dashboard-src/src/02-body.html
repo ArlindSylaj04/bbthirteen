@@ -1304,20 +1304,9 @@
           <label style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:10px; padding:10px 16px; color:var(--tx); cursor:pointer; font-family:Rubik,sans-serif; font-size:12px; font-weight:700; display:flex; align-items:center; gap:7px;">⬆ Import Jira CSV
             <input type="file" accept=".csv,text/csv" sc-camel-on-change="{{ onCsvFile }}" style="display:none;">
           </label>
-          <label title="Second CSV: the Jira export of IR1 tickets that are still open — kept out of all QC1 figures" style="background:var(--card-bg2); border:1px dashed #7c3aed80; border-radius:10px; padding:10px 16px; color:#7c3aed; cursor:pointer; font-family:Rubik,sans-serif; font-size:12px; font-weight:700; display:flex; align-items:center; gap:7px;">⬆ Import IR1 CSV
-            <input type="file" accept=".csv,text/csv" sc-camel-on-change="{{ onIr1CsvFile }}" style="display:none;">
-          </label>
           <sc-if value="{{ hasAnyData }}" hint-placeholder-val="{{ false }}">
             <button sc-camel-on-click="{{ clearDefects }}" title="Remove imported Jira defects, test-run history and reset all counts to 0" style="background:transparent; border:1px solid var(--brd-2); border-radius:10px; padding:10px 14px; color:var(--tx-mut); cursor:pointer; font-family:Rubik,sans-serif; font-size:12px; font-weight:700;">✕ Clear all data</button>
           </sc-if>
-        </sc-if>
-        <sc-if value="{{ ir1HasData }}" hint-placeholder-val="{{ false }}">
-          <div style="display:flex; align-items:stretch; border:1px solid #7c3aed; border-radius:12px; overflow:hidden; background:var(--card-bg2);">
-            <button sc-camel-on-click="{{ openIr1 }}" title="Open IR1 tickets carried over from the previous phase" style="background:transparent; border:none; padding:14px 20px; color:#7c3aed; cursor:pointer; font-family:Rubik,sans-serif; font-size:14px; font-weight:800; display:flex; align-items:center; gap:9px;" style-hover="background:rgba(124,58,237,0.1);">🗂 IR1 <span style="font-size:11px; font-weight:800; background:#7c3aed; color:#fff; border-radius:99px; padding:2px 8px;">{{ ir1OpenCnt }} open</span></button>
-            <sc-if value="{{ isEditor }}" hint-placeholder-val="{{ false }}">
-              <button sc-camel-on-click="{{ clearIr1 }}" title="Remove the IR1 import and hide this button" style="background:transparent; border:none; border-left:1px solid #7c3aed40; padding:0 12px; color:var(--tx-mut); cursor:pointer; font-family:Rubik,sans-serif; font-size:15px; font-weight:700;" style-hover="color:#ef4444;">✕</button>
-            </sc-if>
-          </div>
         </sc-if>
         <button sc-camel-on-click="{{ openTriage }}" title="Bugs that need discussion in today’s defect call" style="background:var(--card-bg2); border:1px solid #ef4444; border-radius:12px; padding:14px 22px; color:#ef4444; cursor:pointer; font-family:Rubik,sans-serif; font-size:14px; font-weight:800; display:flex; align-items:center; gap:9px;" style-hover="background:rgba(239,68,68,0.1);">🔥 {{ triageBtnLabel }}</button>
         <button sc-camel-on-click="{{ goDefects }}" style="background:linear-gradient(180deg,#a3d024,#7ba00f); border:1px solid rgba(255,255,255,0.18); border-radius:var(--r-md); padding:13px 24px; color:#16210a; cursor:pointer; font-family:Rubik,sans-serif; font-size:14.5px; font-weight:700; display:flex; align-items:center; gap:10px; box-shadow:0 2px 10px rgba(149,193,31,0.4);">🐞 Defect Manager Dashboard →</button>
@@ -1328,9 +1317,6 @@
     </sc-if>
     <sc-if value="{{ jiraHasWarn }}" hint-placeholder-val="{{ false }}">
       <div style="margin-bottom:14px; padding:9px 14px; background:var(--soft-warn); border:1px solid var(--soft-warn-brd); border-radius:8px; color:#b45309; font-size:11px;">⚠ Import OK — column mapping needs a look: {{ jiraWarn }}</div>
-    </sc-if>
-    <sc-if value="{{ ir1HasError }}" hint-placeholder-val="{{ false }}">
-      <div style="margin-bottom:14px; padding:9px 14px; background:var(--soft-purple); border:1px solid var(--soft-purple-brd); border-radius:8px; color:#7c3aed; font-size:11px;">⚠ {{ ir1Error }}</div>
     </sc-if>
     <sc-if value="{{ hasDefects }}" hint-placeholder-val="{{ false }}">
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px;">
@@ -2276,54 +2262,6 @@
     
   
 
-  <!-- IR1 CARRY-OVER TICKETS MODAL -->
-  <sc-if value="{{ ir1ModalOpen }}" hint-placeholder-val="{{ false }}">
-    <div style="position:fixed; inset:0; background:rgba(8,15,30,0.62); z-index:1300; display:flex; align-items:center; justify-content:center; padding:24px;">
-      <div style="background:var(--bg-deep); border-radius:16px; width:100%; max-width:1180px; max-height:calc(100vh - 48px); display:flex; flex-direction:column; overflow:hidden; box-shadow:0 30px 70px rgba(0,0,0,0.5);">
-        <div style="background:linear-gradient(135deg,#5b21b6,#7c3aed); padding:16px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-shrink:0;">
-          <div>
-            <div style="font-size:16px; font-weight:700; color:#fff;">IR1 Carry-Over Tickets</div>
-            <div style="font-size:11px; color:#e2d9ff; margin-top:3px;">{{ ir1Sub }} · separate import, excluded from every QC1 figure</div>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <input value="{{ ir1Search }}" sc-camel-on-input="{{ onIr1Search }}" placeholder="Search key / summary / assignee…" style="background:#ffffff1f; border:1px solid #ffffff33; border-radius:8px; padding:8px 12px; color:#fff; font-family:Rubik,sans-serif; font-size:12px; min-width:210px;">
-            <button sc-camel-on-click="{{ toggleIr1OpenOnly }}" style="background:#ffffff1f; border:1px solid #ffffff33; border-radius:8px; padding:8px 13px; color:#fff; cursor:pointer; font-family:Rubik,sans-serif; font-size:12px; font-weight:700;">{{ ir1OpenOnlyLabel }}</button>
-            <button sc-camel-on-click="{{ closeIr1 }}" style="background:transparent; border:none; color:#ffffffcc; font-size:24px; cursor:pointer; padding:0 6px; line-height:1;">×</button>
-          </div>
-        </div>
-        <div style="flex:1; overflow-y:auto; padding:18px 22px 24px;">
-          <sc-if value="{{ ir1HasRows }}" hint-placeholder-val="{{ true }}">
-            <div style="border:1px solid var(--brd-sub); border-radius:12px; overflow:hidden; background:var(--card-bg);">
-              <div style="display:grid; grid-template-columns:110px minmax(0,1fr) 150px 100px 160px 110px 70px; background:var(--card-bg2); border-bottom:1px solid var(--brd-sub);">
-                <div style="padding:10px 12px; font-size:9px; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.06em;">Key</div>
-                <div style="padding:10px 12px; font-size:9px; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.06em;">Summary</div>
-                <div style="padding:10px 12px; font-size:9px; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.06em;">Status</div>
-                <div style="padding:10px 12px; font-size:9px; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.06em;">Priority</div>
-                <div style="padding:10px 12px; font-size:9px; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.06em;">Assignee</div>
-                <div style="padding:10px 12px; font-size:9px; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.06em;">Created</div>
-                <div style="padding:10px 12px; font-size:9px; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.06em;">Age</div>
-              </div>
-              <sc-for list="{{ ir1Rows }}" as="d" hint-placeholder-count="8">
-                <div style="display:grid; grid-template-columns:110px minmax(0,1fr) 150px 100px 160px 110px 70px; border-top:1px solid var(--brd-sub);" style-hover="background:var(--card-bg2);">
-                  <div style="padding:11px 12px; font-size:12px; font-weight:700;"><a href="{{ d.href }}" sc-camel-on-click="{{ d.onOpen }}" target="_blank" rel="noopener" style="color:#7c3aed;">{{ d.key }}</a></div>
-                  <div style="padding:11px 12px; font-size:12px; color:var(--tx); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ d.summary }}</div>
-                  <div style="padding:11px 12px; font-size:11px; font-weight:700; color:{{ d.statusColor }};">{{ d.status }}</div>
-                  <div style="padding:11px 12px;"><span style="font-size:10px; font-weight:800; padding:3px 9px; border-radius:99px; background:{{ d.priBg }}; color:{{ d.priColor }};">{{ d.priority }}</span></div>
-                  <div style="padding:11px 12px; font-size:11.5px; color:var(--tx-mut); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ d.assignee }}</div>
-                  <div style="padding:11px 12px; font-size:11px; color:var(--tx-mut);">{{ d.created }}</div>
-                  <div style="padding:11px 12px; font-size:11px; font-weight:700; color:var(--tx-mut);">{{ d.age }}</div>
-                </div>
-              </sc-for>
-            </div>
-          </sc-if>
-          <sc-if value="{{ ir1RowsEmpty }}" hint-placeholder-val="{{ false }}">
-            <div style="padding:44px 20px; text-align:center; border:1.5px dashed var(--brd-2); border-radius:12px; color:var(--tx-mut); font-size:12.5px;">No IR1 tickets match the current filter.</div>
-          </sc-if>
-        </div>
-      </div>
-    </div>
-  </sc-if>
-
   <!-- DEFECT MANAGEMENT WORKSPACE MODAL -->
   <sc-if value="{{ defectModalOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed; inset:0; background:rgba(8,15,30,0.62); z-index:1200; display:flex; align-items:stretch; justify-content:center; padding:20px;">
@@ -2331,7 +2269,7 @@
         <div style="background:linear-gradient(135deg,#4d4e50,#6d6e71); padding:16px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-shrink:0; border-bottom:3px solid #95c11f;">
           <div>
             <div style="font-size:16px; font-weight:700; color:#fff;">Defect Management Workspace</div>
-            <div style="font-size:11px; color:#d9dadb; margin-top:2px;">{{ defTotal }} defects · {{ defOpen }} open · {{ defClosed }} closed</div>
+            <div style="font-size:11px; color:#d9dadb; margin-top:2px;">{{ defTotal }} defects · {{ defOpen }} open · {{ defClosed }} closed &amp; ready for transport</div>
           </div>
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
@@ -2354,17 +2292,17 @@
         <div style="padding:20px 24px; overflow-y:auto; display:flex; flex-direction:column; gap:18px;">
           <div style="display:grid; grid-template-columns:1.1fr 1fr 1.2fr; gap:16px;">
             <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-radius:12px; padding:18px 20px;">
-              <div style="font-size:10px; font-weight:600; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:14px;">Open vs Closed</div>
+              <div style="font-size:10px; font-weight:600; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:14px;">Open vs Closed &amp; Ready for Transport</div>
               <div style="display:flex; align-items:center; gap:18px;">
                 <div style="position:relative; width:104px; height:104px; border-radius:50%; flex-shrink:0; background:conic-gradient(#4caf2f {{ closedDeg }}deg, var(--track) 0deg);">
                   <div style="position:absolute; inset:12px; border-radius:50%; background:var(--card-bg); display:flex; flex-direction:column; align-items:center; justify-content:center;">
                     <div style="font-size:22px; font-weight:700; color:var(--tx-strong); line-height:1; font-variant-numeric:tabular-nums;">{{ openClosedPct }}%</div>
-                    <div style="font-size:8px; font-weight:600; color:var(--tx-fnt); letter-spacing:0.08em; margin-top:3px;">CLOSED</div>
+                    <div style="font-size:8px; font-weight:600; color:var(--tx-fnt); letter-spacing:0.08em; margin-top:3px;" title="Closed &amp; Ready for Transport">CLOSED</div>
                   </div>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:12px; flex:1;">
                   <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:12px; color:var(--tx); display:flex; align-items:center; gap:7px;"><span style="width:10px; height:10px; border-radius:3px; background:#ef4444;"></span>Open</span><span style="font-size:20px; font-weight:700; color:#ef4444;">{{ defOpen }}</span></div>
-                  <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:12px; color:var(--tx); display:flex; align-items:center; gap:7px;"><span style="width:10px; height:10px; border-radius:3px; background:#7ba00f;"></span>Closed</span><span style="font-size:20px; font-weight:700; color:#7ba00f;">{{ defClosed }}</span></div>
+                  <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:12px; color:var(--tx); display:flex; align-items:center; gap:7px;"><span style="width:10px; height:10px; border-radius:3px; background:#7ba00f;"></span>Closed &amp; Ready for Transport</span><span style="font-size:20px; font-weight:700; color:#7ba00f;">{{ defClosed }}</span></div>
                 </div>
               </div>
             </div>

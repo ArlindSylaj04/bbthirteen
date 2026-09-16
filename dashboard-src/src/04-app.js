@@ -43,7 +43,6 @@ class Component extends DCLogic {
   // session, PINs, section layout, Jira base URL) stays global on purpose.
   REL_SCOPED = {
     'qa-jira-defects': 1, 'qa-jira-file': 1, 'qa-jira-sync': 1,
-    'qa-ir1-defects': 1, 'qa-ir1-file': 1, 'qa-ir1-sync': 1,
     'qa-jira-backlog': 1, 'qa-jira-backlog-file': 1, 'qa-jira-backlog-flags': 1,
     'qa-tcf-issues': 1, 'qa-tcf-file': 1,
     'qa-cases-latest': 1, 'qa-history': 1, 'qa-exec-ledger': 1, 'qa-chain-claims': 1,
@@ -1752,28 +1751,6 @@ class Component extends DCLogic {
     reader.onerror = () => this.setState({ jiraError: 'Could not read file' });
     reader.readAsText(file);
   };
-  // IR1 carry-over: a second, separate Jira export kept out of every QC1 figure.
-  loadIr1() { try { const s = JSON.parse(this.lsGet('qa-ir1-defects') || 'null'); return Array.isArray(s) ? s : []; } catch (e) { return []; } }
-  onIr1CsvFile = (e) => {
-    if (!this.can('editor')) { console.warn('QA Cockpit: rejected — editor role required'); return; }
-    const file = e.target.files && e.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const defects = this.jiraDefectsFromText(ev.target.result).defects;
-        const sync = Date.now();
-        try { this.lsSet('qa-ir1-defects', JSON.stringify(defects)); this.lsSet('qa-ir1-file', file.name); this.lsSet('qa-ir1-sync', String(sync)); } catch (er) {}
-        this.setState({ ir1Defects: defects, ir1File: file.name, ir1Sync: sync, ir1Error: '' });
-      } catch (err) { this.setState({ ir1Error: 'IR1 import failed: ' + err.message }); }
-    };
-    reader.onerror = () => this.setState({ ir1Error: 'Could not read IR1 file' });
-    reader.readAsText(file);
-  };
-  clearIr1 = () => {
-    if (!this.can('editor')) { console.warn('QA Cockpit: rejected — editor role required'); return; }
-    try { this.lsDel('qa-ir1-defects'); this.lsDel('qa-ir1-file'); this.lsDel('qa-ir1-sync'); } catch (e) {}
-    this.setState({ ir1Defects: [], ir1File: '', ir1Sync: 0, ir1Error: '', ir1Modal: false, ir1OpenOnly: true, ir1Search: '' });
-  };
   loadBacklog() { try { const s = JSON.parse(this.lsGet('qa-jira-backlog') || 'null'); return Array.isArray(s) ? s : []; } catch (e) { return []; } }
   loadBacklogFlags() { try { const s = JSON.parse(this.lsGet('qa-jira-backlog-flags') || 'null'); return (s && typeof s === 'object') ? s : {}; } catch (e) { return {}; } }
   toggleBacklogFlag = (key) => {
@@ -1941,7 +1918,7 @@ class Component extends DCLogic {
       ['Rows in this export', list.length],
       ['Defects in release', c.total || 0],
       ['Open', c.open || 0],
-      ['Closed', c.closed || 0],
+      ['Closed & Ready for Transport', c.closed || 0],
       [], ['By priority', 'Count'],
       ['Critical / Highest', (c.prCnt && c.prCnt.Highest) || 0],
       ['High', (c.prCnt && c.prCnt.High) || 0],
@@ -1993,7 +1970,7 @@ class Component extends DCLogic {
     const kpi = [
       { l: 'Total defects', v: c.total || 0, col: NAVY },
       { l: 'Open', v: c.open || 0, col: 'DC2626' },
-      { l: 'Closed', v: c.closed || 0, col: '16A34A' },
+      { l: 'Closed & Ready for Transport', v: c.closed || 0, col: '16A34A' },
       { l: 'Critical', v: (c.prCnt && c.prCnt.Highest) || 0, col: 'B91C1C' },
       { l: 'High', v: (c.prCnt && c.prCnt.High) || 0, col: 'EA580C' },
     ];
@@ -2001,7 +1978,7 @@ class Component extends DCLogic {
       const x = 0.55 + i * 2.5;
       s1.addShape(P.ShapeType.roundRect, { x, y: 1.5, w: 2.3, h: 1.5, fill: { color: 'F8FAFC' }, line: { color: LINE, width: 1 }, rectRadius: 0.08 });
       s1.addText(String(k.v), { x, y: 1.68, w: 2.3, h: 0.72, fontFace: F, fontSize: 34, bold: true, color: k.col, align: 'center', margin: 0 });
-      s1.addText(k.l, { x, y: 2.42, w: 2.3, h: 0.3, fontFace: F, fontSize: 11, color: SLATE, align: 'center', margin: 0 });
+      s1.addText(k.l, { x, y: 2.42, w: 2.3, h: 0.5, fontFace: F, fontSize: 11, color: SLATE, align: 'center', valign: 'top', margin: 0 });
     });
     const rows = [[
       { text: 'Status', options: { bold: true, color: 'FFFFFF', fill: { color: NAVY } } },
@@ -2347,8 +2324,6 @@ class Component extends DCLogic {
     const latest = history[0];
     const jf = this.lsGet('qa-jira-file') || '';
     const jsSync = parseInt(this.lsGet('qa-jira-sync')) || 0;
-    const i1f = this.lsGet('qa-ir1-file') || '';
-    const i1s = parseInt(this.lsGet('qa-ir1-sync')) || 0;
     const jiraDefects = this.loadDefects();
     this.setState({
       milestone, milestoneDate, infoNote, suiteOrder: suiteOrder || {},
@@ -2362,7 +2337,6 @@ class Component extends DCLogic {
       defectNotes: this.loadDefectNotes(), chainClaims: this.loadClaims(),
       importInfo: latest ? `${latest.file} · ${latest.tested}/${latest.planned} · ${new Date(latest.ts).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}` : 'No data imported yet',
       jiraDefects, jiraBase: this.loadJiraBase(), jiraFile: jf, jiraSync: jsSync, now: Date.now(),
-      ir1Defects: this.loadIr1(), ir1File: i1f, ir1Sync: i1s,
       jiraError: '', importError: '', backlogError: '', tcfError: '', dumpError: '',
       // drop drill-downs that belonged to the previous release
       tcModal: null, coverageEnv: null, dmdDrill: null, execCalModal: false, bdOpen: null,
@@ -2694,6 +2668,12 @@ class Component extends DCLogic {
   };
 
   componentDidMount() {
+    // One-off cleanup: the separate IR1 carry-over import was replaced by the single Jira CSV import.
+    try {
+      const stale = [];
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.indexOf('qa-ir1-') === 0) stale.push(k); }
+      stale.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+    } catch (e) {}
     try { const t = this.lsGet('qa-theme'); if (t === 'dark' || t === 'light') this.setState({ dark: t === 'dark' }); } catch (e) {}
     try { const o = JSON.parse(this.lsGet('qa-suite-order') || 'null'); if (o) this.setState({ suiteOrder: o }); } catch (e) {}
     this._themeSync = (ev) => { const t = ev && ev.detail; if (t === 'dark' || t === 'light') this.setState(s => (s.dark === (t === 'dark') ? null : { dark: t === 'dark' })); };
@@ -3914,7 +3894,7 @@ class Component extends DCLogic {
     const defectKpis = [
       { label: 'Total', value: defTotal, color: 'var(--tx-strong)', accent: '#94a3b8', onClick: drill({}) },
       { label: 'Open', value: defOpen, color: '#ef4444', accent: '#ef4444', onClick: drill({ dfState: 'Open' }) },
-      { label: 'Closed', value: defClosed, color: '#4caf2f', accent: '#4caf2f', onClick: drill({ dfState: 'Closed' }) },
+      { label: 'Closed & Ready for Transport', value: defClosed, color: '#4caf2f', accent: '#4caf2f', onClick: drill({ dfState: 'Closed' }) },
       { label: 'Highest', value: prCnt.Highest, color: '#b91c1c', accent: '#b91c1c', onClick: drill({ dfPriority: 'Highest' }) },
       { label: 'High', value: prCnt.High, color: '#ea580c', accent: '#ea580c', onClick: drill({ dfPriority: 'High' }) },
       { label: 'Medium', value: prCnt.Medium, color: '#d97706', accent: '#d97706', onClick: drill({ dfPriority: 'Medium' }) },
@@ -3929,42 +3909,6 @@ class Component extends DCLogic {
     const onCsvFile = this.onCsvFile; const setJiraBase = this.setJiraBase; const exportDefectsCsv = this.exportDefectsCsv;
     const exportDefectsXlsx = this.exportDefectsXlsx; const exportDefectsPptx = this.exportDefectsPptx;
     const clearDefects = this.clearDefects;
-    // ── IR1 carry-over tickets (second CSV, kept fully separate from QC1 figures) ──
-    const ir1All = Array.isArray(this.state.ir1Defects) ? this.state.ir1Defects : [];
-    const ir1Total = ir1All.length;
-    const ir1OpenCnt = ir1All.filter(d => !isClosed(d.status)).length;
-    const ir1HasData = ir1Total > 0;
-    const ir1File = this.state.ir1File || '';
-    const ir1Error = this.state.ir1Error || ''; const ir1HasError = !!ir1Error;
-    const onIr1CsvFile = this.onIr1CsvFile; const clearIr1 = this.clearIr1;
-    const ir1ModalOpen = !!this.state.ir1Modal;
-    const openIr1 = () => this.setState({ ir1Modal: true });
-    const closeIr1 = () => this.setState({ ir1Modal: false });
-    const ir1OpenOnly = this.state.ir1OpenOnly !== false;
-    const toggleIr1OpenOnly = () => this.setState({ ir1OpenOnly: !ir1OpenOnly });
-    const ir1OpenOnlyLabel = ir1OpenOnly ? 'Open only' : 'All tickets';
-    const ir1Search = this.state.ir1Search || '';
-    const onIr1Search = (ev) => this.setState({ ir1Search: ev.target.value });
-    const _ir1Rank = { Highest: 0, High: 1, Medium: 2, Low: 3 };
-    const ir1Rows = ir1All
-      .filter(d => (!ir1OpenOnly || !isClosed(d.status)))
-      .filter(d => { const q = ir1Search.trim().toLowerCase(); return !q || (String(d.key) + ' ' + String(d.summary) + ' ' + String(d.assignee)).toLowerCase().indexOf(q) >= 0; })
-      .sort((a, b) => (isClosed(a.status) - isClosed(b.status)) || (_ir1Rank[prBucket(a.priority)] - _ir1Rank[prBucket(b.priority)]) || String(a.key).localeCompare(String(b.key)))
-      .map(d => { const pb = prBucket(d.priority); const st = defPriStyle(pb); const closed = isClosed(d.status);
-        const cr = d.created ? new Date(String(d.created).replace(/(\d{2})\/(\w{3})\/(\d{2})/, '$2 $1 20$3')) : null;
-        const age = (cr && !isNaN(cr.getTime())) ? Math.max(0, Math.round((Date.now() - cr.getTime()) / 86400000)) + 'd' : '\u2014';
-        return { key: d.key || '\u2014',
-          href: (jiraBase && d.key) ? this.jiraTicketUrl(jiraBase, d.key) : '#',
-          onOpen: (e) => { if (!jiraBase) { if (e && e.preventDefault) e.preventDefault(); this.openJira(d.key); } },
-          summary: d.summary || '\u2014',
-          status: d.status || 'Unknown', statusColor: closed ? '#4caf2f' : '#ef4444',
-          priority: pb, priColor: st.priColor, priBg: st.priBg,
-          assignee: d.assignee || 'Unassigned', created: d.created || '\u2014', age };
-      });
-    const ir1Shown = ir1Rows.length;
-    const ir1RowsEmpty = ir1Shown === 0;
-    const ir1HasRows = ir1Shown > 0;
-    const ir1Sub = ir1OpenCnt + ' open \u00b7 ' + (ir1Total - ir1OpenCnt) + ' closed \u00b7 ' + ir1Total + ' imported' + (ir1File ? (' \u00b7 ' + ir1File) : '');
     const hasAnyData = hasDefects || !!(this.state.importedRows && this.state.importedRows.length) || (this.loadHistory().length > 0);
     const openDefectModal = () => this.setState({ defectModal: true });
     const closeDefectModal = () => this.setState({ defectModal: false });
@@ -5475,9 +5419,6 @@ class Component extends DCLogic {
       phaseScopeLabel, phaseScopeHidden, phaseScopeHasHidden,
       defectKpis, hasDefects, noDefects, defTotal, defOpen, defClosed, openClosedPct, closedDeg, prCnt,      jiraBase, jiraHasBase, jiraFile, jiraHasFile, jiraError, jiraHasError, onCsvFile, setJiraBase, exportDefectsCsv, exportDefectsXlsx, exportDefectsPptx,
       openDefectModal, closeDefectModal, defectModalOpen, clearDefects, hasAnyData,
-      ir1HasData, ir1Total, ir1OpenCnt, ir1File, ir1Error, ir1HasError, onIr1CsvFile, clearIr1,
-      ir1ModalOpen, openIr1, closeIr1, ir1OpenOnly, toggleIr1OpenOnly, ir1OpenOnlyLabel,
-      ir1Search, onIr1Search, ir1Rows, ir1RowsEmpty, ir1HasRows, ir1Shown, ir1Sub,
       ...(() => { const g = this.state.gngOpen ? this.gngModel() : null; return {
         gngOpen: !!this.state.gngOpen, openGng: this.openGng, closeGng: this.closeGng,
         gngPhaseTabs: this.gngPhases().map(id => ({ label: id, onClick: () => this.setGngPhase(id),
