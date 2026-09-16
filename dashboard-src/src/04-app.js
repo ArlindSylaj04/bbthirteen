@@ -925,7 +925,7 @@ class Component extends DCLogic {
   doLogout = () => {
     this.saveSession('', 'viewer');
     try { window.dispatchEvent(new CustomEvent('qa-role-sync', { detail: { name: '', role: 'viewer' } })); } catch (e) {}
-    this.setState({ role: 'viewer', editorName: '', inboxOpen: false, pinOpen: false, superEdit: false, diagOpen: false });
+    this.setState({ role: 'viewer', editorName: '', inboxOpen: false, pinOpen: false, diagOpen: false });
   };
   changePin = async () => {
     if (!this.can('admin')) { console.warn('QA Cockpit: rejected — admin role required'); return; }
@@ -2566,9 +2566,6 @@ class Component extends DCLogic {
     window.addEventListener('qa-drill-open', this._drillIn);
     const covHash = (window.location.hash || '').match(/^#coverage-([A-Za-z0-9]+)/);
     if (covHash) this.setState({ coverageEnv: covHash[1] });
-    this._hasOv = Object.keys(this.loadTextOv()).length > 0;
-    this._onEditOut = (e) => { const el = e.target; if (el && el.getAttribute && el.getAttribute('contenteditable') === 'true' && el.getAttribute('data-tk')) { const ov = this.loadTextOv(); ov[el.getAttribute('data-tk')] = el.textContent; try { this.lsSet('qa-text-overrides', JSON.stringify(ov)); } catch (er) {} this._hasOv = true; } };
-    setTimeout(() => { const r = document.getElementById('report-root'); if (r) r.addEventListener('focusout', this._onEditOut); this.applyTexts(false); }, 60);
   }
   componentWillUnmount() { if (this._timer) clearInterval(this._timer); if (this._onKey) window.removeEventListener('keydown', this._onKey); if (this._defSync) window.removeEventListener('qa-defects-sync', this._defSync); if (this._modNav) window.removeEventListener('qa-module-nav', this._modNav); if (this._drillIn) window.removeEventListener('qa-drill-open', this._drillIn); if (this._wheel) window.removeEventListener('wheel', this._wheel); }
   focusPhase = (id) => {
@@ -2576,57 +2573,10 @@ class Component extends DCLogic {
     this.setState({ collapsed: all }, () => setTimeout(() => { const el = document.getElementById('phase-' + id); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 90, behavior: 'smooth' }); }, 70));
   };
   bizDays(aMs, bMs) { return this.workDaysBetween(aMs, bMs); }
-  loadTextOv() { try { return JSON.parse(this.lsGet('qa-text-overrides') || '{}') || {}; } catch (e) { return {}; } }
-  exportTexts = () => {
-    const ov = this.loadTextOv();
-    const payload = { kind: 'qa-report-texts', version: 1, exported: new Date().toISOString(), texts: ov };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'QA_Report_Texts_' + new Date().toISOString().slice(0, 10) + '.json';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-    this.setState({ textIoMsg: Object.keys(ov).length + ' text(s) exported.' });
-  };
-  importTexts = (e) => {
-    const f = e.target.files && e.target.files[0];
-    if (!f) return;
-    const r = new FileReader();
-    r.onload = () => {
-      try {
-        const d = JSON.parse(String(r.result));
-        const texts = d && d.texts && typeof d.texts === 'object' ? d.texts : null;
-        if (!texts) throw new Error('bad file');
-        const merged = { ...this.loadTextOv(), ...texts };
-        this.lsSet('qa-text-overrides', JSON.stringify(merged));
-        this._hasOv = Object.keys(merged).length > 0;
-        this.applyTexts(!!this.state.superEdit);
-        this.setState({ textIoMsg: Object.keys(texts).length + ' text(s) imported.' });
-      } catch (err) {
-        this.setState({ textIoMsg: 'Could not read that file — expected a QA texts JSON.' });
-      }
-    };
-    r.readAsText(f);
-    e.target.value = '';
-  };
-  applyTexts(editable) {
-    const root = document.getElementById('report-root'); if (!root) return;
-    const ov = this.loadTextOv(); const leaves = [];
-    const walk = (el) => { for (const c of Array.from(el.children)) { if (c.nodeType !== 1) continue; if (c.hasAttribute('data-noedit')) continue; if (c.children.length === 0) { if (c.textContent.trim()) leaves.push(c); } else walk(c); } };
-    walk(root);
-    leaves.forEach((el, idx) => { const key = 'tk' + idx; el.setAttribute('data-tk', key);
-      if (ov[key] != null && el.textContent !== ov[key]) el.textContent = ov[key];
-      if (editable) { el.setAttribute('contenteditable', 'true'); el.style.outline = '1px dashed #95c11f'; el.style.outlineOffset = '2px'; el.style.borderRadius = '3px'; }
-      else { el.removeAttribute('contenteditable'); el.style.outline = ''; } });
-  }
-  toggleSuperEdit = () => {
-    if (!this.can('admin')) { console.warn('QA Cockpit: rejected — admin role required'); return; }
-    const next = !this.state.superEdit;
-    if (next) { if (this._timer) { clearInterval(this._timer); this._timer = null; } }
-    else if (!this._timer) { this._timer = setInterval(() => this.setState({ now: Date.now() }), 15000); }
-    this.setState({ superEdit: next }, () => setTimeout(() => this.applyTexts(next), 40));
-  };
-  componentDidUpdate() { if (!this.state.superEdit && this._hasOv) this.applyTexts(false); }
+  // The index-based "edit any text" override layer was removed: report texts now
+  // come from the release model and the imported data, so an override keyed by
+  // DOM position could only ever drift. The old qa-text-overrides key is left
+  // untouched in storage and simply ignored.
 
   renderVals() {
     const dark = this.state.dark;
@@ -2955,14 +2905,7 @@ class Component extends DCLogic {
     }); };
     const editorName = this.state.editorName || '';
     const editors = this.getUsers().map(u => u.name);
-    const superEdit = !!this.state.superEdit;
-    const superEditLabel = superEdit ? '✔ Done editing' : '✎ Edit texts';
-    const exportTexts = this.exportTexts;
-    const importTexts = this.importTexts;
-    const textIoMsg = this.state.textIoMsg || '';
-    const hasTextIoMsg = !!this.state.textIoMsg;
-    const superEditBg = superEdit ? '#95c11f' : '#ffffff1a';
-    const superEditColor = superEdit ? '#1c2a05' : '#c8d8f0';
+
     const toggleSuperEdit = this.toggleSuperEdit;
     const focusPhase = this.focusPhase;
 
@@ -5313,14 +5256,13 @@ class Component extends DCLogic {
       setRelFormStart: this.relFormSet('startDate'), setRelFormEnd: this.relFormSet('endDate'),
       setRelFormCurrent: this.relToggleForm('current'), setRelFormNotes: this.relFormSet('notes'),
       relCancelForm: () => this.setState({ relForm: null, relDirty: false, relFormErr: '' }),
-      role, isEditor, isViewer, isAdmin, roleBadge, editorName, editors, superEdit, superEditLabel, superEditBg, superEditColor, toggleSuperEdit, focusPhase,
+      role, isEditor, isViewer, isAdmin, roleBadge, editorName, editors, focusPhase,
       qtestUrl: this.state.qtestUrl || '', setQtestUrl: this.setQtestUrl, refreshFromQtest: this.refreshFromQtest,
       qHasUrl: !!(this.state.qtestUrl && this.state.qtestUrl.trim()),
       qActualiseIcon: this.state.qsyncing ? '\u2026' : '\u27f3', qActualiseLabel: this.state.qsyncing ? 'Actualising\u2026' : 'Actualise',
       qsyncMsg: this.state.qsyncMsg || '', qsyncMsgColor: this.state.qsyncErr ? '#ef4444' : '#22c55e',
       panelMax, sumExpanded, sumCollapsed, bdExpanded, bdCollapsed, sumFlex, bdFlex, maximizeSummary, maximizeBurndown, panelDown, panelUp, noCharts, bdTimeBurn,
       loginOpen, openLogin, closeLogin, loginName, loginPin, loginError, loginHasError, setLoginName, setLoginPin, doLogin, doLogout,
-      exportTexts, importTexts, textIoMsg, hasTextIoMsg,
       resetLocalPins, pinOpen, openPin, closePin, pinCurrent, pinNew1, pinNew2, setPinCurrent, setPinNew1, setPinNew2, changePin, pinSuccess, pinHasError, pinError,
       isSuperAdmin, managedUsers, hasManagedUsers, noManagedUsers, nuName, nuPin, nuRole, setNuName, setNuPin, setNuRole, addUser, nuHasError, nuSuccess, nuError, nuOk,
       // Inbox

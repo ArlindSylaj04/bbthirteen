@@ -290,21 +290,46 @@
     a { color: var(--accent-tx, #5f7d10); text-decoration: none; }
     a:hover { filter: brightness(1.15); }
     /* ── Shared theme tokens — single source (Defect Management design system), mirrored verbatim in every view ── */
+    :root {
+      /* brand */
+      --brand:#95c11f; --brand-deep:#7ba00f; --brand-dark:#5f7d10; --brand-light:#b6df3f;
+      /* radii + motion — one scale for the whole cockpit */
+      --r-xs:6px; --r-sm:8px; --r-md:10px; --r-lg:14px; --r-xl:18px; --r-pill:999px;
+      --ease:cubic-bezier(.4,0,.2,1); --dur:0.18s;
+      /* the masthead is a dark brand surface in both themes */
+      --hd-bg:linear-gradient(135deg,#232830 0%,#15181e 60%,#111419 100%);
+      --hd-brd:rgba(255,255,255,0.13); --hd-brd-2:rgba(255,255,255,0.22);
+      --hd-soft:rgba(255,255,255,0.07); --hd-soft-2:rgba(255,255,255,0.12);
+      --hd-tx:#e8ecf2; --hd-tx-mut:#a4adbb; --hd-tx-faint:#7d8795;
+    }
     [data-theme="light"] {
-      --card-bg:#ffffff; --card-bg2:#f3f6fb; --card-brd:#e6ebf2;
-      --brd-2:#d8dfe9; --brd-sub:#eef2f7; --track:#e9edf3;
-      --input-bg:#f1f5f9; --tile-bg:#f6f8fc; --bg-deep:#eef1f6;
-      --tx:#26303f; --tx-strong:#0e1626; --tx-mut:#5b6a80; --tx-lbl:#6d7b92; --tx-soft:#33415a;
-      --tx-val:#243247; --tx-fnt:#8592a6; --tx-faint:#9aa7bb; --accent-tx:#5f7d10;
-      --shadow:0 4px 18px rgba(20,30,55,0.07);
+      --card-bg:#ffffff; --card-bg2:#f5f7fb; --card-brd:#e3e8f0;
+      --brd-2:#d5dce7; --brd-sub:#edf1f7; --track:#e8ecf3;
+      --input-bg:#f4f7fb; --tile-bg:#f7f9fc; --bg-deep:#eceff5;
+      --tx:#2a3442; --tx-strong:#111926; --tx-mut:#5b6879; --tx-lbl:#6b7889; --tx-soft:#36445a;
+      --tx-val:#25314a; --tx-fnt:#86929f; --tx-faint:#9ba6b5; --accent-tx:#5f7d10;
+      --shadow:0 1px 2px rgba(18,28,48,0.05), 0 6px 20px rgba(18,28,48,0.06);
+      --shadow-lg:0 2px 4px rgba(18,28,48,0.06), 0 18px 44px rgba(18,28,48,0.12);
+      --ring:rgba(149,193,31,0.30);
+      /* soft semantic tints — the one place a status surface is defined */
+      --soft-ok:#f0fdf4; --soft-bad:#fef2f2; --soft-warn:#fffbeb;
+      --soft-info:#eff6ff; --soft-purple:#f5f3ff; --soft-neutral:#f6f8fc;
+      --soft-ok-brd:#bbf7d0; --soft-bad-brd:#fecaca; --soft-warn-brd:#fde68a;
+      --soft-info-brd:#bfdbfe; --soft-purple-brd:#ddd6fe;
     }
     [data-theme="dark"] {
-      --card-bg:rgba(255,255,255,0.045); --card-bg2:rgba(255,255,255,0.05); --card-brd:rgba(255,255,255,0.09);
-      --brd-2:rgba(255,255,255,0.13); --brd-sub:rgba(255,255,255,0.08); --track:rgba(255,255,255,0.06);
-      --input-bg:rgba(0,0,0,0.3); --tile-bg:rgba(0,0,0,0.2); --bg-deep:#070a12;
-      --tx:#e9eefb; --tx-strong:#ffffff; --tx-mut:#9fb0d0; --tx-lbl:#8397ba; --tx-soft:#c6d2ea;
-      --tx-val:#dbe6ff; --tx-fnt:#7488ac; --tx-faint:#5f7295; --accent-tx:#b6df3f;
-      --shadow:0 12px 32px rgba(0,0,0,0.38);
+      --card-bg:rgba(255,255,255,0.042); --card-bg2:rgba(255,255,255,0.055); --card-brd:rgba(255,255,255,0.085);
+      --brd-2:rgba(255,255,255,0.135); --brd-sub:rgba(255,255,255,0.07); --track:rgba(255,255,255,0.065);
+      --input-bg:rgba(0,0,0,0.28); --tile-bg:rgba(255,255,255,0.035); --bg-deep:#080b12;
+      --tx:#e7ecf7; --tx-strong:#ffffff; --tx-mut:#a3b1c9; --tx-lbl:#8b9ab4; --tx-soft:#c9d4e8;
+      --tx-val:#dde6f7; --tx-fnt:#7b8ba6; --tx-faint:#66748d; --accent-tx:#b6df3f;
+      --shadow:0 1px 2px rgba(0,0,0,0.30), 0 10px 28px rgba(0,0,0,0.34);
+      --shadow-lg:0 2px 6px rgba(0,0,0,0.38), 0 24px 56px rgba(0,0,0,0.46);
+      --ring:rgba(182,223,63,0.32);
+      --soft-ok:rgba(76,175,47,0.12); --soft-bad:rgba(239,68,68,0.12); --soft-warn:rgba(217,119,6,0.13);
+      --soft-info:rgba(59,130,246,0.13); --soft-purple:rgba(168,85,247,0.13); --soft-neutral:rgba(255,255,255,0.045);
+      --soft-ok-brd:rgba(76,175,47,0.34); --soft-bad-brd:rgba(239,68,68,0.34); --soft-warn-brd:rgba(217,119,6,0.36);
+      --soft-info-brd:rgba(59,130,246,0.36); --soft-purple-brd:rgba(168,85,247,0.36);
     }
     body { background: var(--bg-deep, #eef1f6); min-height: 100vh; padding: 28px 24px; transition: background 0.25s; }
     html[data-theme="dark"] body {
@@ -352,6 +377,65 @@
       #report-root div[data-summary-grid] > div[style*="min-height"] { display: none; }
       #report-root div[data-summary-grid] > div[style*="150px"] { grid-column: 1 / -1; }
     }
+    /* ══ COMPONENT LAYER ══════════════════════════════════════════════════
+       One button, card and chip vocabulary. The report's inline styles still
+       win where they are set, so these classes are used by the new chrome
+       (masthead, toolbars) and supply the shared hover/focus behaviour. */
+    .qb {
+      font-family:'Rubik',sans-serif; font-size:12.5px; font-weight:600; line-height:1;
+      border-radius:var(--r-md); padding:9px 14px; cursor:pointer; white-space:nowrap;
+      display:inline-flex; align-items:center; justify-content:center; gap:7px;
+      border:1px solid transparent; background:transparent; color:inherit;
+      transition:background var(--dur) var(--ease), border-color var(--dur) var(--ease),
+                 color var(--dur) var(--ease), transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+    }
+    .qb:hover { transform:translateY(-1px); }
+    .qb:active { transform:translateY(0); }
+    .qb-ico { font-size:13px; line-height:1; }
+    /* masthead variants — always on the dark brand surface */
+    .qb-primary { background:linear-gradient(180deg,var(--brand) 0%,var(--brand-deep) 100%); color:#141d06; box-shadow:0 1px 0 rgba(255,255,255,0.22) inset, 0 6px 16px rgba(149,193,31,0.28); }
+    .qb-primary:hover { box-shadow:0 1px 0 rgba(255,255,255,0.28) inset, 0 10px 22px rgba(149,193,31,0.38); }
+    .qb-soft { background:var(--hd-soft); border-color:var(--hd-brd); color:var(--hd-tx); }
+    .qb-soft:hover { background:var(--hd-soft-2); border-color:var(--hd-brd-2); }
+    .qb-quiet { background:transparent; border-color:var(--hd-brd); color:var(--hd-tx-mut); }
+    .qb-quiet:hover { background:var(--hd-soft); color:var(--hd-tx); border-color:var(--hd-brd-2); }
+    .qb-accent { background:rgba(149,193,31,0.12); border-color:rgba(149,193,31,0.45); color:var(--brand-light); }
+    .qb-accent:hover { background:rgba(149,193,31,0.2); border-color:var(--brand); }
+    .qb-gate { background:rgba(234,88,12,0.14); border-color:rgba(251,146,60,0.5); color:#fdba74; }
+    .qb-gate:hover { background:rgba(234,88,12,0.24); border-color:#fb923c; }
+    .qb-sm { font-size:11.5px; padding:7px 11px; }
+    .qb-icon { padding:0; width:32px; height:32px; }
+    /* a segmented pair reads as one control */
+    .qb-group { display:inline-flex; align-items:stretch; border:1px solid var(--hd-brd); border-radius:var(--r-md); overflow:hidden; }
+    .qb-group > .qb { border-radius:0; border:none; }
+    .qb-group > .qb:hover { transform:none; }
+    .qb-group > .qb + .qb { border-left:1px solid var(--hd-brd); }
+    /* masthead meta chips */
+    .qchip {
+      display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+      background:var(--hd-soft); border:1px solid var(--hd-brd); border-radius:var(--r-sm);
+      padding:5px 11px; font-size:11.5px; font-weight:500; color:var(--hd-tx-mut);
+    }
+    .qchip b { font-weight:650; color:var(--hd-tx); }
+    .qchip .on { color:var(--brand-light); font-weight:650; }
+    .qchip-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+    /* shared interaction polish across the whole report */
+    #report-root button, #report-root label[style*="cursor:pointer"], #report-root a {
+      transition:background var(--dur) var(--ease), border-color var(--dur) var(--ease),
+                 color var(--dur) var(--ease), opacity var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+    }
+    #report-root button:not(.qb):not([data-flat]):hover { filter:brightness(1.07); }
+    #report-root input:focus, #report-root textarea:focus, #report-root select:focus {
+      border-color:var(--brand) !important; box-shadow:0 0 0 3px var(--ring);
+    }
+    :focus-visible { outline:2px solid var(--brand); outline-offset:2px; border-radius:var(--r-xs); }
+    /* quieter scrollbars everywhere */
+    #report-root *::-webkit-scrollbar { width:9px; height:9px; }
+    #report-root *::-webkit-scrollbar-track { background:transparent; }
+    #report-root *::-webkit-scrollbar-thumb { background:var(--brd-2); border-radius:var(--r-pill); border:2px solid transparent; background-clip:content-box; }
+    #report-root *::-webkit-scrollbar-thumb:hover { background:var(--tx-faint); background-clip:content-box; }
+    #report-root { scrollbar-width:thin; }
+
     /* ── Release navigation: sticky beside the report, stacked on small screens ── */
     #release-nav { scrollbar-width: thin; }
     #release-nav ::-webkit-scrollbar, #release-nav::-webkit-scrollbar { width: 7px; }

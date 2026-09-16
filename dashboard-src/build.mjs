@@ -1,4 +1,5 @@
-// Rebuilds Testing_Report_Dashboard_v3.html from the editable sources in src/.
+// Rebuilds Testing_Report_Dashboard_v4.html from the editable sources in src/.
+// v3 stays frozen in the repo as the previous release.
 //
 // The dashboard ships as a single self-contained HTML file that carries its own
 // asset bundle (fonts, SheetJS, PptxGenJS, React UMD and the imported "Defect
@@ -16,7 +17,7 @@ import path from 'path';
 import zlib from 'zlib';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
-const OUT = process.argv[2] || path.join(HERE, '..', 'Testing_Report_Dashboard_v3.html');
+const OUT = process.argv[2] || path.join(HERE, '..', 'Testing_Report_Dashboard_v4.html');
 const BASE = process.env.DASHBOARD_BASE || OUT;   // the built file is its own base
 const DEFECT_UUID = 'cc17f2bf-3fcd-47a7-96b5-144f0b707ca2';
 const MANIFEST_LINE = 375;   // 0-indexed

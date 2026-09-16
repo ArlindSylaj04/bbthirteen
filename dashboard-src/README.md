@@ -1,6 +1,11 @@
 # QA Release Management Cockpit — source
 
-`../Testing_Report_Dashboard_v3.html` is a single self-contained file: it carries
+**These sources build `../Testing_Report_Dashboard_v4.html`.**
+`../Testing_Report_Dashboard_v3.html` is the previous version, kept frozen in the
+repo so you can always fall back to it; its sources are in this directory's git
+history.
+
+`../Testing_Report_Dashboard_v4.html` is a single self-contained file: it carries
 its own asset bundle (Rubik fonts, SheetJS, PptxGenJS, React UMD and the imported
 *Defect Center* view) as a gzip+base64 manifest, and the page itself is inlined as
 a JSON string. That makes it awkward to edit directly, so the editable pieces live
@@ -19,7 +24,7 @@ defect-center.dc.html   the embedded Defect Manager view
 
 ```sh
 node check.mjs    # syntax-check src/04-app.js
-node build.mjs    # rewrite ../Testing_Report_Dashboard_v3.html in place
+node build.mjs    # rewrite ../Testing_Report_Dashboard_v4.html in place
 ```
 
 `build.mjs` uses the existing built file as its asset base, so it only ever
@@ -88,6 +93,35 @@ hand-maintained.
 structure* (which test suites and teams an environment runs) used before a qTest
 export is imported; an environment not listed there starts with one generic
 suite, and a real import replaces all of it.
+
+## Design system (v4)
+
+`src/01-head.html` holds the whole visual vocabulary and is the only place to
+change it:
+
+- **Tokens on `:root`** — brand colours, a radius scale (`--r-xs` … `--r-pill`),
+  motion (`--ease`, `--dur`) and the masthead surface (`--hd-*`).
+- **Theme tokens** under `[data-theme="light"|"dark"]` — surfaces, borders, text
+  ramp, two shadow levels, and the **soft semantic tints** (`--soft-ok`,
+  `--soft-bad`, `--soft-warn`, `--soft-info`, `--soft-purple` plus `-brd`
+  variants). Status surfaces use those tokens rather than hardcoded pastels, so
+  they are correct in dark mode instead of glowing white.
+- **Component layer** — `.qb` buttons (`qb-primary`, `qb-soft`, `qb-quiet`,
+  `qb-accent`, `qb-gate`, `qb-sm`, `qb-icon`, `.qb-group` for segmented pairs)
+  and `.qchip` meta chips, used by the masthead. Plus shared hover, focus-ring
+  and scrollbar rules for the whole report.
+
+Typography: main-column section titles are `15.5px / 650 / --tx-strong`;
+side-column panels keep the small uppercase label. Large numerals are weight 700.
+
+The masthead is a dark brand surface in both themes, laid out as three
+full-width rows — identity, toolbar, live context — so it stays tidy at any
+width instead of ragging.
+
+**Removed in v4:** the "Edit texts / ↓ Texts / ↑ Texts" override layer. It keyed
+overrides by DOM position (`tk0`, `tk1`, …), so any layout change silently
+reassigned them; report text now comes from the release model and the imported
+data. The old `qa-text-overrides` key is left untouched in storage and ignored.
 
 ## What stays global on purpose
 
