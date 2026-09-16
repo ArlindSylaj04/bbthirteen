@@ -3405,7 +3405,44 @@ class Component extends DCLogic {
     const _tcExec = tcModalOpen ? _allCases.filter(c => _tcScope(c) && (!tcSel.status || c.status === tcSel.status)) : [];
     // a status drill-down (Passed/Failed/…) is by definition executed — unexecuted only in the unfiltered list
     const _tcUnex = (tcModalOpen && !tcSel.status && tcShowUnex) ? _unexCases.filter(_tcScope) : [];
-    const tcCases = _tcExec.concat(_tcUnex).map(c => { const bugs = _bugsFor(c); const unex = !!c.unex; return { ...c, ...tcStatusStyle(unex ? 'Unexecuted' : c.status), ..._histFor(c), unex, executed: !unex, statusLabel: unex ? 'Not executed' : (c.status || '—'), bugs, hasBugs: bugs.length > 0, noBugs: bugs.length === 0 }; });
+    const _tcAll = _tcExec.concat(_tcUnex).map(c => { const bugs = _bugsFor(c); const unex = !!c.unex; return { ...c, ...tcStatusStyle(unex ? 'Unexecuted' : c.status), ..._histFor(c), unex, executed: !unex, statusLabel: unex ? 'Not executed' : (c.status || '—'), bugs, hasBugs: bugs.length > 0, noBugs: bugs.length === 0 }; });
+
+    // ─── filters over the opened list ────────────────────────────────────
+    // Options are built from the rows actually in scope, so a dropdown never
+    // offers a value that would return nothing.
+    const trfQ = String(this.state.trfQ || '').trim().toLowerCase();
+    const trfStatus = this.state.trfStatus || 'All statuses';
+    const trfTeam = this.state.trfTeam || 'All teams';
+    const trfTester = this.state.trfTester || 'All testers';
+    const trfRuns = this.state.trfRuns || 'Any runs';
+    const trfBug = this.state.trfBug || 'Any bug';
+    const _uniq = (arr) => arr.filter(v => v && String(v).trim()).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => String(a).localeCompare(String(b)));
+    const trfStatusOpts = ['All statuses'].concat(_uniq(_tcAll.map(c => c.statusLabel)));
+    const trfTeamOpts = ['All teams'].concat(_uniq(_tcAll.map(c => c.team)));
+    const trfTesterOpts = ['All testers'].concat(_uniq(_tcAll.map(c => c.tester)));
+    const trfRunsOpts = ['Any runs', 'Not executed', 'Executed once', 'Retried (2+)'];
+    const trfBugOpts = ['Any bug', 'With linked bug', 'Without bug'];
+    const _trfMatchRuns = (c) => trfRuns === 'Any runs' ? true
+      : trfRuns === 'Not executed' ? c.unex
+      : trfRuns === 'Executed once' ? (!c.unex && (c.runCount || 0) <= 1)
+      : (c.runCount || 0) > 1;
+    const _trfMatchQ = (c) => !trfQ || [c.name, c.test, c.team, c.tester, c.id, (c.bugs || []).map(b => b.key).join(' ')]
+      .some(v => String(v == null ? '' : v).toLowerCase().indexOf(trfQ) >= 0);
+    const tcCases = _tcAll.filter(c =>
+      (trfStatus === 'All statuses' || c.statusLabel === trfStatus) &&
+      (trfTeam === 'All teams' || c.team === trfTeam) &&
+      (trfTester === 'All testers' || c.tester === trfTester) &&
+      (trfBug === 'Any bug' || (trfBug === 'With linked bug' ? c.hasBugs : !c.hasBugs)) &&
+      _trfMatchRuns(c) && _trfMatchQ(c));
+    const trfActive = !!trfQ || trfStatus !== 'All statuses' || trfTeam !== 'All teams'
+      || trfTester !== 'All testers' || trfRuns !== 'Any runs' || trfBug !== 'Any bug';
+    const trfClear = () => this.setState({ trfQ: '', trfStatus: 'All statuses', trfTeam: 'All teams', trfTester: 'All testers', trfRuns: 'Any runs', trfBug: 'Any bug' });
+    const trfCountLabel = trfActive
+      ? (tcCases.length + ' of ' + _tcAll.length + ' runs')
+      : (_tcAll.length + ' run' + (_tcAll.length === 1 ? '' : 's'));
+    const trfHasTeams = trfTeamOpts.length > 2;
+    const trfHasTesters = trfTesterOpts.length > 2;
+
     const tcTitle = tcModalOpen ? [tcSel.phase, tcSel.test, tcSel.team, tcSel.module, tcSel.status].filter(Boolean).join(' · ') : '';
     const tcCount = _tcExec.length;
     const tcUnexTotal = tcModalOpen && !tcSel.status ? _unexCases.filter(_tcScope).length : 0;
@@ -3414,7 +3451,10 @@ class Component extends DCLogic {
     const toggleTcUnex = () => this.setState({ tcShowUnex: !tcShowUnex });
     const tcHasCases = tcCases.length > 0;
     const tcNoCases = tcModalOpen && tcCases.length === 0;
-    const closeTcModal = () => this.setState({ tcModal: null });
+    const tcNoMatch = tcModalOpen && tcCases.length === 0 && _tcAll.length > 0;
+    const tcTrulyEmpty = tcModalOpen && _tcAll.length === 0;
+    const closeTcModal = () => this.setState({ tcModal: null, tcHistKey: null,
+      trfQ: '', trfStatus: 'All statuses', trfTeam: 'All teams', trfTester: 'All testers', trfRuns: 'Any runs', trfBug: 'Any bug' });
 
     // ─── qTEST LINKS MANAGER ──────────────────────────────────────────────
     const qtestModalOpen = !!this.state.qtestModal;
@@ -3944,6 +3984,16 @@ class Component extends DCLogic {
       pd.barPassed = (pa / base * 100).toFixed(2); pd.barFailed = (fa / base * 100).toFixed(2);
       pd.barBlocked = (bl / base * 100).toFixed(2); pd.barNr = (nr / base * 100).toFixed(2); pd.barPend = (pend / base * 100).toFixed(2);
       pd.cntPassed = pa; pd.cntFailed = fa; pd.cntBlocked = bl; pd.cntNr = nr; pd.cntPend = pend;
+      // The card header leads with the planned run count rather than the long
+      // environment name, and splits the schedule onto two lines so it stops
+      // eating the header width.
+      pd.plannedRuns = pl;
+      pd.plannedLabel = pl >= 10000 ? (Math.round(pl / 100) / 10) + 'k' : String(pl);
+      const _sched = RELSCHED.find(x => x.id === pd.id);
+      pd.dateMain = _sched ? (this.relFmtShort(_sched.start) + ' – ' + this.relFmt(_sched.testEnd || _sched.end)) : (pd.dateRange || '');
+      pd.dateSub = (_sched && _sched.testEnd && _sched.end && _sched.end !== _sched.testEnd)
+        ? ((_sched.greyNote || 'Fix & retest') + ' till ' + this.relFmt(_sched.end)) : '';
+      pd.hasDateSub = !!pd.dateSub;
       pd.hasBar = (pa + fa + bl + nr) > 0;
       pd.ariaExpanded = pd.expanded ? 'true' : 'false';
       pd.onOpenCoverage = (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.openCoverage(pd.id); };
@@ -5210,7 +5260,16 @@ class Component extends DCLogic {
       historyOpen, openHistory, closeHistory, historyList, historyCount, hasHistory, noHistory, viewingLabel,
       calCells, weekDays, monthName, prevMonth, nextMonth,
       tcModalOpen, tcCases, tcTitle, tcCount, tcHasCases, tcNoCases, closeTcModal,
-      tcUnexTotal, tcHasUnex, tcUnexLabel, toggleTcUnex,
+      tcUnexTotal, tcHasUnex, tcUnexLabel, toggleTcUnex, tcNoMatch, tcTrulyEmpty,
+      trfQ, trfStatus, trfTeam, trfTester, trfRuns, trfBug,
+      trfStatusOpts, trfTeamOpts, trfTesterOpts, trfRunsOpts, trfBugOpts,
+      trfActive, trfClear, trfCountLabel, trfHasTeams, trfHasTesters,
+      setTrfQ: (e) => this.setState({ trfQ: e.target.value }),
+      setTrfStatus: (e) => this.setState({ trfStatus: e.target.value }),
+      setTrfTeam: (e) => this.setState({ trfTeam: e.target.value }),
+      setTrfTester: (e) => this.setState({ trfTester: e.target.value }),
+      setTrfRuns: (e) => this.setState({ trfRuns: e.target.value }),
+      setTrfBug: (e) => this.setState({ trfBug: e.target.value }),
       qtestModalOpen, qtestGroups, qtestHasSuites, qtestNoSuites, openQtestManager, closeQtestManager, saveQtestManager,
       countdown,
       timeline, todayPct, todayInRange, openTimelineModal, closeTimelineModal, timelineModalOpen, calDays, weekDayNames,

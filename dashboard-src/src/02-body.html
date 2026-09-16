@@ -706,12 +706,12 @@
       <div sc-camel-on-click="{{ pd.onToggle }}" sc-camel-on-key-down="{{ pd.onKey }}" sc-camel-on-touch-start="{{ pd.onCovTouchStart }}" sc-camel-on-touch-end="{{ pd.onCovTouchEnd }}" role="button" tabindex="0" aria-expanded="{{ pd.ariaExpanded }}" style="background:{{ pd.headerBg }}; padding:12px 26px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; cursor:pointer; user-select:none;">
         <div style="display:flex; align-items:center; gap:12px;">
           <span style="display:inline-block; color:#ffffffcc; font-size:11px; transform:rotate({{ pd.chevronRotate }}deg); transition:transform 0.2s; width:14px; text-align:center;">▼</span>
-          <span style="font-size:18px; font-weight:700; color:#fff;">{{ pd.id }}</span>
-          <div style="width:1px; height:20px; background:#ffffff40;"></div>
-          <span style="font-size:11px; color:#ffffffcc; font-weight:500;">{{ pd.label }}</span>
-          <sc-if value="{{ pd.alias }}" hint-placeholder-val="{{ false }}">
-            <span style="font-size:10px; color:#ffffff88;">· {{ pd.alias }}</span>
-          </sc-if>
+          <span title="{{ pd.label }}" style="font-size:18px; font-weight:700; color:#fff;">{{ pd.id }}</span>
+          <div style="width:1px; height:22px; background:#ffffff40;"></div>
+          <div title="{{ pd.label }} · {{ pd.plannedRuns }} planned test runs" style="display:flex; align-items:baseline; gap:5px;">
+            <span style="font-size:19px; font-weight:700; color:#fff; line-height:1; font-variant-numeric:tabular-nums;">{{ pd.plannedLabel }}</span>
+            <span style="font-size:9px; font-weight:700; color:#ffffffaa; letter-spacing:0.09em; text-transform:uppercase; white-space:nowrap;">planned runs</span>
+          </div>
         </div>
         <div style="flex:1 1 260px; min-width:150px; margin:0 8px;">
           <div style="display:flex; height:22px; border-radius:11px; overflow:hidden; background:#ffffff2e; box-shadow:inset 0 0 0 1px #ffffff33;">
@@ -752,7 +752,12 @@
               <span style="font-size:8px; font-weight:700; color:#fff; letter-spacing:0.08em; margin-top:1px;">PASSED</span>
             </div>
           </div>
-          <span style="font-size:11px; color:#ffffffbb;">{{ pd.dateRange }}</span>
+          <div style="display:flex; flex-direction:column; gap:2px; text-align:right; white-space:nowrap;">
+            <span style="font-size:11px; font-weight:600; color:#ffffffdd; font-variant-numeric:tabular-nums;">{{ pd.dateMain }}</span>
+            <sc-if value="{{ pd.hasDateSub }}" hint-placeholder-val="{{ true }}">
+              <span style="font-size:9.5px; color:#ffffff99; font-variant-numeric:tabular-nums;">{{ pd.dateSub }}</span>
+            </sc-if>
+          </div>
           <sc-if value="{{ pd.hasExecDates }}" hint-placeholder-val="{{ false }}">
             <button sc-camel-on-click="{{ pd.onOpenCalendar }}" title="Execution calendar — tests executed per day in this environment" aria-label="Open execution calendar" style="background:#ffffff1f; border:1px solid #ffffff33; border-radius:8px; padding:4px 10px; color:#fff; cursor:pointer; font-family:Rubik,sans-serif; font-size:13px; line-height:1;">📅</button>
           </sc-if>
@@ -1578,7 +1583,7 @@
 
   <!-- VIEWER: COMMENT SUBMIT PANEL -->
   <sc-if value="{{ commentOpen }}" hint-placeholder-val="{{ false }}">
-    <div style="position:fixed; bottom:24px; right:24px; background:var(--card-bg); border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,0.3); width:400px; max-width:calc(100vw - 48px); z-index:1000; border:1px solid var(--brd-2); overflow:hidden;">
+    <div style="position:fixed; bottom:24px; right:24px; background:var(--modal-bg); border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,0.3); width:400px; max-width:calc(100vw - 48px); z-index:1000; border:1px solid var(--brd-2); overflow:hidden;">
       <div style="background:linear-gradient(135deg,#95c11f,#7ba00f); padding:14px 18px; display:flex; align-items:center; justify-content:space-between;">
         <div style="font-size:14px; font-weight:600; color:#1c2a05; display:flex; align-items:center; gap:8px;">💬 Leave a Comment</div>
         <button sc-camel-on-click="{{ closeComment }}" style="background:transparent; border:none; color:#1c2a05cc; font-size:20px; cursor:pointer; padding:0 6px; line-height:1;">×</button>
@@ -1617,7 +1622,7 @@
 
   <!-- EDITOR: COMMENTS INBOX -->
   <sc-if value="{{ inboxOpen }}" hint-placeholder-val="{{ false }}">
-    <div style="position:fixed; bottom:24px; right:24px; background:var(--card-bg); border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,0.35); width:440px; max-width:calc(100vw - 48px); z-index:1000; border:1px solid var(--brd-2); overflow:hidden;">
+    <div style="position:fixed; bottom:24px; right:24px; background:var(--modal-bg); border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,0.35); width:440px; max-width:calc(100vw - 48px); z-index:1000; border:1px solid var(--brd-2); overflow:hidden;">
       <div style="background:linear-gradient(135deg,#0f1e3c,#1a3360); padding:14px 18px; display:flex; align-items:center; justify-content:space-between;">
         <div style="font-size:14px; font-weight:600; color:#fff; display:flex; align-items:center; gap:8px;">📥 Comments <span style="font-size:11px; font-weight:500; color:#8fa3cc;">{{ inboxCountLabel }}</span></div>
         <button sc-camel-on-click="{{ closeInbox }}" style="background:transparent; border:none; color:#ffffffcc; font-size:20px; cursor:pointer; padding:0 6px; line-height:1;">×</button>
@@ -1648,7 +1653,7 @@
   <!-- EDITOR LOGIN MODAL -->
   <sc-if value="{{ loginOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed; inset:0; background:rgba(8,15,30,0.55); z-index:1100; display:flex; align-items:center; justify-content:center; padding:24px;">
-      <div style="background:var(--card-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.4); width:360px; max-width:100%; overflow:hidden; border:1px solid var(--brd-2);">
+      <div style="background:var(--modal-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.4); width:360px; max-width:100%; overflow:hidden; border:1px solid var(--brd-2);">
         <div style="background:linear-gradient(135deg,#0f1e3c,#1a3360); padding:18px 20px; display:flex; align-items:center; justify-content:space-between;">
           <div style="font-size:15px; font-weight:600; color:#fff; display:flex; align-items:center; gap:8px;">🔒 Editor / Admin Login</div>
           <button sc-camel-on-click="{{ closeLogin }}" style="background:transparent; border:none; color:#ffffffcc; font-size:20px; cursor:pointer; padding:0 6px; line-height:1;">×</button>
@@ -1680,7 +1685,7 @@
   <!-- ═══════════════ MANAGE RELEASES MODAL (admin only) ═══════════════ -->
   <sc-if value="{{ relModalOpen }}" hint-placeholder-val="{{ false }}">
     <div data-noedit="" style="position:fixed; inset:0; background:rgba(8,15,30,0.62); z-index:1200; display:flex; align-items:center; justify-content:center; padding:20px;">
-      <div style="background:var(--card-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.45); width:1080px; max-width:100%; max-height:calc(100vh - 40px); display:flex; flex-direction:column; border:1px solid var(--brd-2); overflow:hidden;">
+      <div style="background:var(--modal-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.45); width:1080px; max-width:100%; max-height:calc(100vh - 40px); display:flex; flex-direction:column; border:1px solid var(--brd-2); overflow:hidden;">
         <div style="background:linear-gradient(135deg,#0f1e3c,#1a3360); padding:17px 22px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
           <div>
             <div style="font-size:15px; font-weight:600; color:#fff;">⚙ Manage Releases</div>
@@ -1858,7 +1863,7 @@
   <!-- DELETE RELEASE CONFIRMATION -->
   <sc-if value="{{ relConfirmOpen }}" hint-placeholder-val="{{ false }}">
     <div data-noedit="" style="position:fixed; inset:0; background:rgba(8,15,30,0.7); z-index:1300; display:flex; align-items:center; justify-content:center; padding:24px;">
-      <div style="background:var(--card-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.5); width:460px; max-width:100%; border:1px solid #ef4444; overflow:hidden;">
+      <div style="background:var(--modal-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.5); width:460px; max-width:100%; border:1px solid #ef4444; overflow:hidden;">
         <div style="background:linear-gradient(135deg,#7f1d1d,#b91c1c); padding:16px 20px;">
           <div style="font-size:15px; font-weight:700; color:#fff;">Delete release {{ relConfirmVersion }}?</div>
         </div>
@@ -1877,7 +1882,7 @@
   <!-- SECTION LAYOUT MODAL -->
   <sc-if value="{{ layoutOpen }}" hint-placeholder-val="{{ false }}">
     <div data-noedit="" style="position:fixed; inset:0; background:rgba(8,15,30,0.55); z-index:1100; display:flex; align-items:center; justify-content:center; padding:24px;">
-      <div style="background:var(--card-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.4); width:520px; max-width:100%; max-height:calc(100vh - 48px); overflow-y:auto; border:1px solid var(--brd-2);">
+      <div style="background:var(--modal-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.4); width:520px; max-width:100%; max-height:calc(100vh - 48px); overflow-y:auto; border:1px solid var(--brd-2);">
         <div style="background:linear-gradient(135deg,#0f1e3c,#1a3360); padding:18px 20px; display:flex; align-items:center; justify-content:space-between;">
           <div>
             <div style="font-size:15px; font-weight:600; color:#fff;">⇅ Layout &amp; settings</div>
@@ -1941,7 +1946,7 @@
   <!-- CHANGE PIN MODAL -->
   <sc-if value="{{ pinOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed; inset:0; background:rgba(8,15,30,0.55); z-index:1100; display:flex; align-items:center; justify-content:center; padding:24px;">
-      <div style="background:var(--card-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.4); width:420px; max-width:100%; max-height:calc(100vh - 48px); overflow-y:auto; border:1px solid var(--brd-2);">
+      <div style="background:var(--modal-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.4); width:420px; max-width:100%; max-height:calc(100vh - 48px); overflow-y:auto; border:1px solid var(--brd-2);">
         <div style="background:linear-gradient(135deg,#0f1e3c,#1a3360); padding:18px 20px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0;">
           <div style="font-size:15px; font-weight:600; color:#fff; display:flex; align-items:center; gap:8px;">🔑 Access &amp; Users — Admin</div>
           <button sc-camel-on-click="{{ closePin }}" style="background:transparent; border:none; color:#ffffffcc; font-size:20px; cursor:pointer; padding:0 6px; line-height:1;">×</button>
@@ -2011,7 +2016,7 @@
   <!-- EDIT MILESTONE / INFO MODAL -->
   <sc-if value="{{ milestoneOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed; inset:0; background:rgba(8,15,30,0.55); z-index:1100; display:flex; align-items:center; justify-content:center; padding:24px;">
-      <div style="background:var(--card-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.4); width:440px; max-width:100%; overflow:hidden; border:1px solid var(--brd-2);">
+      <div style="background:var(--modal-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.4); width:440px; max-width:100%; overflow:hidden; border:1px solid var(--brd-2);">
         <div style="background:linear-gradient(135deg,#0f1e3c,#1a3360); padding:18px 20px; display:flex; align-items:center; justify-content:space-between;">
           <div style="font-size:15px; font-weight:600; color:#fff;">✎ Edit Milestone &amp; Info</div>
           <button sc-camel-on-click="{{ closeMilestone }}" style="background:transparent; border:none; color:#ffffffcc; font-size:20px; cursor:pointer; padding:0 6px; line-height:1;">×</button>
@@ -2044,7 +2049,7 @@
   <!-- HISTORY + CALENDAR MODAL -->
   <sc-if value="{{ historyOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed; inset:0; background:rgba(8,15,30,0.6); z-index:1100; display:flex; align-items:center; justify-content:center; padding:24px;">
-      <div style="background:var(--card-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.45); width:860px; max-width:100%; max-height:calc(100vh - 48px); overflow:hidden; border:1px solid var(--brd-2); display:flex; flex-direction:column;">
+      <div style="background:var(--modal-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.45); width:860px; max-width:100%; max-height:calc(100vh - 48px); overflow:hidden; border:1px solid var(--brd-2); display:flex; flex-direction:column;">
         <div style="background:linear-gradient(135deg,#0f1e3c,#1a3360); padding:16px 20px; display:flex; align-items:center; justify-content:space-between;">
           <div>
             <div style="font-size:15px; font-weight:600; color:#fff;">🗓 Import History &amp; Calendar</div>
@@ -2101,7 +2106,7 @@
   <!-- ADD / EDIT TOPIC MODAL -->
   <sc-if value="{{ topicModalOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed; inset:0; background:rgba(8,15,30,0.55); z-index:1100; display:flex; align-items:center; justify-content:center; padding:24px;">
-      <div style="background:var(--card-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.4); width:440px; max-width:100%; overflow:hidden; border:1px solid var(--brd-2);">
+      <div style="background:var(--modal-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.4); width:440px; max-width:100%; overflow:hidden; border:1px solid var(--brd-2);">
         <div style="background:linear-gradient(135deg,#0f1e3c,#1a3360); padding:18px 20px; display:flex; align-items:center; justify-content:space-between;">
           <sc-if value="{{ tmIsEdit }}" hint-placeholder-val="{{ false }}"><div style="font-size:15px; font-weight:600; color:#fff;">✎ Edit Topic</div></sc-if>
           <sc-if value="{{ tmIsNew }}" hint-placeholder-val="{{ true }}"><div style="font-size:15px; font-weight:600; color:#fff;">+ Add Topic</div></sc-if>
@@ -2543,7 +2548,7 @@
   <!-- qTEST LINKS MANAGER MODAL -->
   <sc-if value="{{ qtestModalOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed; inset:0; background:rgba(8,15,30,0.6); z-index:1100; display:flex; align-items:center; justify-content:center; padding:24px;">
-      <div style="background:var(--card-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.45); width:720px; max-width:100%; max-height:calc(100vh - 48px); overflow:hidden; border:1px solid var(--brd-2); display:flex; flex-direction:column;">
+      <div style="background:var(--modal-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.45); width:720px; max-width:100%; max-height:calc(100vh - 48px); overflow:hidden; border:1px solid var(--brd-2); display:flex; flex-direction:column;">
         <div style="background:linear-gradient(135deg,#0f1e3c,#1a3360); padding:16px 20px; display:flex; align-items:center; justify-content:space-between;">
           <div>
             <div style="font-size:15px; font-weight:700; color:#fff;">qTest Links</div>
@@ -2582,7 +2587,7 @@
   <!-- TESTED TEST-CASES MODAL -->
   <sc-if value="{{ tcModalOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed; inset:0; background:rgba(8,15,30,0.6); z-index:1100; display:flex; align-items:center; justify-content:center; padding:24px;">
-      <div style="background:var(--card-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.45); width:820px; max-width:100%; max-height:calc(100vh - 48px); overflow:hidden; border:1px solid var(--brd-2); display:flex; flex-direction:column;">
+      <div style="background:var(--modal-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.45); width:820px; max-width:100%; max-height:calc(100vh - 48px); overflow:hidden; border:1px solid var(--brd-2); display:flex; flex-direction:column;">
         <div style="background:linear-gradient(135deg,#0f1e3c,#1a3360); padding:16px 20px; display:flex; align-items:center; justify-content:space-between;">
           <div>
             <div style="font-size:15px; font-weight:600; color:#fff;">Test Runs</div>
@@ -2595,6 +2600,34 @@
           <button sc-camel-on-click="{{ closeTcModal }}" style="background:transparent; border:none; color:#ffffffcc; font-size:22px; cursor:pointer; padding:0 6px; line-height:1;">×</button>
           </div>
         </div>
+        <!-- filter bar -->
+        <div data-noedit="" style="padding:10px 18px; border-bottom:1px solid var(--brd-sub); background:var(--card-bg2); display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
+          <input value="{{ trfQ }}" sc-camel-on-input="{{ setTrfQ }}" placeholder="Search test case, test, team, tester or bug…" style="flex:1 1 220px; min-width:0; box-sizing:border-box; background:var(--input-bg); border:1px solid var(--brd-2); border-radius:var(--r-sm); padding:6px 10px; color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:11.5px; outline:none;">
+          <sc-raw-select value="{{ trfStatus }}" sc-camel-on-change="{{ setTrfStatus }}" title="Filter by status" style="padding:6px 9px; border:1px solid var(--brd-2); border-radius:var(--r-sm); background:var(--input-bg); color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:11px; cursor:pointer; max-width:150px;">
+            <sc-for list="{{ trfStatusOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o }}">{{ o }}</option></sc-for>
+          </sc-raw-select>
+          <sc-raw-select value="{{ trfRuns }}" sc-camel-on-change="{{ setTrfRuns }}" title="Filter by how many times the case was run" style="padding:6px 9px; border:1px solid var(--brd-2); border-radius:var(--r-sm); background:var(--input-bg); color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:11px; cursor:pointer; max-width:150px;">
+            <sc-for list="{{ trfRunsOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o }}">{{ o }}</option></sc-for>
+          </sc-raw-select>
+          <sc-if value="{{ trfHasTeams }}" hint-placeholder-val="{{ true }}">
+            <sc-raw-select value="{{ trfTeam }}" sc-camel-on-change="{{ setTrfTeam }}" title="Filter by team" style="padding:6px 9px; border:1px solid var(--brd-2); border-radius:var(--r-sm); background:var(--input-bg); color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:11px; cursor:pointer; max-width:150px;">
+              <sc-for list="{{ trfTeamOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o }}">{{ o }}</option></sc-for>
+            </sc-raw-select>
+          </sc-if>
+          <sc-if value="{{ trfHasTesters }}" hint-placeholder-val="{{ true }}">
+            <sc-raw-select value="{{ trfTester }}" sc-camel-on-change="{{ setTrfTester }}" title="Filter by assigned tester" style="padding:6px 9px; border:1px solid var(--brd-2); border-radius:var(--r-sm); background:var(--input-bg); color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:11px; cursor:pointer; max-width:150px;">
+              <sc-for list="{{ trfTesterOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o }}">{{ o }}</option></sc-for>
+            </sc-raw-select>
+          </sc-if>
+          <sc-raw-select value="{{ trfBug }}" sc-camel-on-change="{{ setTrfBug }}" title="Filter by linked Jira bug" style="padding:6px 9px; border:1px solid var(--brd-2); border-radius:var(--r-sm); background:var(--input-bg); color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:11px; cursor:pointer; max-width:150px;">
+            <sc-for list="{{ trfBugOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o }}">{{ o }}</option></sc-for>
+          </sc-raw-select>
+          <span style="font-size:11px; font-weight:600; color:var(--tx-mut); white-space:nowrap; margin-left:auto;">{{ trfCountLabel }}</span>
+          <sc-if value="{{ trfActive }}" hint-placeholder-val="{{ false }}">
+            <button sc-camel-on-click="{{ trfClear }}" style="background:transparent; border:1px solid var(--brd-2); border-radius:var(--r-sm); padding:6px 11px; color:var(--tx-soft); cursor:pointer; font-family:Rubik,sans-serif; font-size:11px; font-weight:600; white-space:nowrap;">Clear filters</button>
+          </sc-if>
+        </div>
+
         <div style="padding:14px 18px; overflow-y:auto;">
           <sc-if value="{{ tcHasCases }}" hint-placeholder-val="{{ false }}">
             <div style="display:flex; flex-direction:column; gap:6px;">
@@ -2650,8 +2683,14 @@
               </sc-for>
             </div>
           </sc-if>
-          <sc-if value="{{ tcNoCases }}" hint-placeholder-val="{{ true }}">
+          <sc-if value="{{ tcTrulyEmpty }}" hint-placeholder-val="{{ true }}">
             <div style="padding:30px; text-align:center; color:var(--tx-mut); font-size:12px;">No executed test cases yet for this test.</div>
+          </sc-if>
+          <sc-if value="{{ tcNoMatch }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:30px; text-align:center; color:var(--tx-mut); font-size:12px; line-height:1.7;">
+              No test run matches these filters.<br>
+              <button sc-camel-on-click="{{ trfClear }}" style="margin-top:9px; background:transparent; border:1px solid var(--brd-2); border-radius:var(--r-sm); padding:7px 13px; color:var(--tx-soft); cursor:pointer; font-family:Rubik,sans-serif; font-size:11.5px; font-weight:600;">Clear filters</button>
+            </div>
           </sc-if>
         </div>
       </div>
