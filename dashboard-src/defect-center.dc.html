@@ -65,7 +65,7 @@
         </div>
         <div style="width:4px; height:58px; background:#95c11f; border-radius:4px; flex-shrink:0; box-shadow:0 0 14px rgba(149,193,31,0.6);"></div>
         <div style="flex:1 1 auto; min-width:170px; display:flex; flex-direction:column; gap:2px;">
-          <div style="font-size:11px; font-weight:600; letter-spacing:0.16em; color:#95c11f; text-transform:uppercase; margin-bottom:4px;">GC SAP Upgrade · Rel. 26.02.00</div>
+          <div style="font-size:11px; font-weight:600; letter-spacing:0.16em; color:#95c11f; text-transform:uppercase; margin-bottom:4px;">GC SAP Upgrade · Rel. {{ relVersion }}</div>
           <sc-if value="{{ showOvNav }}" hint-placeholder-val="{{ true }}">
             <div style="font-size:27px; font-weight:700; color:#fff; letter-spacing:-0.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Jira Dashboard</div>
           </sc-if>
@@ -761,7 +761,7 @@
   <!-- SHARED FOOTER (standalone only — the cockpit renders its own when this page is embedded) -->
   <sc-if value="{{ showFooter }}" hint-placeholder-val="{{ false }}">
   <div data-noedit="" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; padding:10px 30px 16px;">
-    <div style="font-size:11px; color:var(--tx-fnt);">GC SAP Upgrade Rel. 26.02.00 · QA Test Management Cockpit</div><div style="font-size:11px; color:var(--tx-fnt);">© {{ reportDate }} · Arlind Sylaj · <span style="color:#3b82f6;">Confidential</span></div>
+    <div style="font-size:11px; color:var(--tx-fnt);">GC SAP Upgrade Rel. {{ relVersion }} · QA Test Management Cockpit</div><div style="font-size:11px; color:var(--tx-fnt);">© {{ reportDate }} · Arlind Sylaj · <span style="color:#3b82f6;">Confidential</span></div>
   </div>
   </sc-if>
 
@@ -1411,6 +1411,7 @@ class Component extends DCLogic {
     ];
 
     return {
+      relVersion: this.props.releaseVersion || '\u2014',
       reportDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }),
       theme: s.theme,
       toggleTheme: () => this.setState(st => { const nt = st.theme === 'light' ? 'dark' : 'light'; try { localStorage.setItem('qa-theme', nt); } catch (e) {} try { window.dispatchEvent(new CustomEvent('qa-theme-sync', { detail: nt })); } catch (e) {} return { theme: nt }; }),
