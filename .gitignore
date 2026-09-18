@@ -47,3 +47,8 @@ next-env.d.ts
 
 # Local temp files
 temp/
+
+# guide build artefacts
+guide/node_modules/
+guide/slide-*.jpg
+guide/*.pdf

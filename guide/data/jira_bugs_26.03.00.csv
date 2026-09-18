@@ -1,0 +1,13 @@
+Issue key,Summary,Issue Type,Status,Priority,Assignee,Reporter,Created,Updated,Component/s,Environment,Fix Version/s,Description
+GCSAP-2101,Posting date not derived from document date,Bug,Closed,Highest,A. Sylaj,A. Sylaj,08/Sep/26,12/Sep/26,SAP FI,QC1,26.03.00,Found in test run TR-68003
+GCSAP-2102,GR/IR clearing shows wrong currency,Bug,Closed,High,M. Brinkmann,A. Sylaj,09/Sep/26,13/Sep/26,SAP EWM,QC1,26.03.00,Found in test run TR-68010
+GCSAP-2103,Batch determination times out on large deliveries,Bug,Closed,Medium,L. Haas,A. Sylaj,10/Sep/26,14/Sep/26,SAP SD,QC1,26.03.00,Found in test run TR-68017
+GCSAP-2104,Pricing condition missing after upgrade,Bug,Ready for Transport,Low,R. Petrov,A. Sylaj,11/Sep/26,15/Sep/26,SAP MM,QC1,26.03.00,Found in test run TR-68024
+GCSAP-2105,Invoice PDF cuts off tax line,Bug,Ready for Transport,Highest,S. Weber,A. Sylaj,12/Sep/26,16/Sep/26,SAP FI,QC1,26.03.00,Found in test run TR-68031
+GCSAP-2106,Customer master sync fails for DE plants,Bug,In Progress,High,K. Ergün,A. Sylaj,13/Sep/26,17/Sep/26,SAP EWM,QC1,26.03.00,Found in test run TR-68038
+GCSAP-2107,Storage bin search returns no result,Bug,In Progress,Medium,A. Sylaj,A. Sylaj,14/Sep/26,12/Sep/26,SAP SD,QC1,26.03.00,Found in test run TR-68045
+GCSAP-2108,Order confirmation mail not sent,Bug,In Progress,Low,M. Brinkmann,A. Sylaj,15/Sep/26,13/Sep/26,SAP MM,QC1,26.03.00,Found in test run TR-68052
+GCSAP-2109,Asset depreciation run aborts,Bug,Open,Highest,L. Haas,A. Sylaj,16/Sep/26,14/Sep/26,SAP FI,QC1,26.03.00,Found in test run TR-68059
+GCSAP-2110,Material valuation rounding difference,Bug,Open,High,R. Petrov,A. Sylaj,17/Sep/26,15/Sep/26,SAP EWM,QC1,26.03.00,Found in test run TR-68066
+GCSAP-2111,Vendor bank data not transferred,Bug,Analyse,Medium,S. Weber,A. Sylaj,18/Sep/26,16/Sep/26,SAP SD,QC1,26.03.00,Found in test run TR-68073
+GCSAP-2112,Goods issue posts to wrong period,Bug,Retest,Low,K. Ergün,A. Sylaj,19/Sep/26,17/Sep/26,SAP MM,QC1,26.03.00,Found in test run TR-68080
