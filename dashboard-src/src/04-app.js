@@ -4840,9 +4840,6 @@ class Component extends DCLogic {
     const _isStory = (d) => /story|epic|task|requirement/i.test(d.issueType || '');
     const _isBug = (d) => /bug|defect/i.test(d.issueType || '') || !_isStory(d);
     const _hasQaLabel = (d) => /qa\+|qaplus|testfrei|test-free|testfree/i.test(d.labels || '');
-    // Jira label that says "this ticket still needs a qTest case" — written by the team,
-    // as opposed to "No test link", which the dashboard infers from the absence of a link.
-    const _hasMissingLabel = (d) => /qtest[\s_-]*missing|missing[\s_-]*qtest|ohne[\s_-]*qtest/i.test(d.labels || '');
     // Use the SAME run index as Defect Overview (Defect column, TR-/TC-id, sibling runs of a
     // linked test case) — not just the requirement links / links column.
     const _runsForKey = (d) => {
@@ -4868,15 +4865,14 @@ class Component extends DCLogic {
     const linkedQtestN = _backlog.filter(_linkedQtest).length;
     const qaLabelN = _backlog.filter(_hasQaLabel).length;
     const olderBugsN = _backlog.filter(_isOlderBug).length;
-    const notLinkedN = _backlog.filter(d => !_linkedQtest(d) && !_hasQaLabel(d) && !_hasMissingLabel(d)).length;
-    const qtestMissingN = _backlog.filter(_hasMissingLabel).length;
-    const _relColor = (d) => _linkedQtest(d) ? '#4caf2f' : (_hasMissingLabel(d) ? '#e11d48' : (_hasQaLabel(d) ? '#38bdf8' : (_isOlderBug(d) ? '#f6b73c' : '#8b95ab')));
-    const _relTag = (d) => _linkedQtest(d) ? (_runsForKey(d) ? _runsForKey(d) + ' qTest run' + (_runsForKey(d) > 1 ? 's' : '') : 'qTest linked') : (_hasMissingLabel(d) ? 'qTest missing' : (_hasQaLabel(d) ? (/(testfrei|test-?free)/i.test(d.labels) ? 'Testfrei' : 'QA+') : (_isOlderBug(d) ? 'Pre-existing' : 'No test link')));
-    const backlogFilterOpts = ['All', 'qTest linked', 'qTest-missing', 'QA+ / Testfrei', 'Pre-existing bugs', 'No test link', 'Flagged'];
+    const notLinkedN = _backlog.filter(d => !_linkedQtest(d) && !_hasQaLabel(d)).length;
+    const _relColor = (d) => _linkedQtest(d) ? '#4caf2f' : (_hasQaLabel(d) ? '#38bdf8' : (_isOlderBug(d) ? '#f6b73c' : '#8b95ab'));
+    const _relTag = (d) => _linkedQtest(d) ? (_runsForKey(d) ? _runsForKey(d) + ' qTest run' + (_runsForKey(d) > 1 ? 's' : '') : 'qTest linked') : (_hasQaLabel(d) ? (/(testfrei|test-?free)/i.test(d.labels) ? 'Testfrei' : 'QA+') : (_isOlderBug(d) ? 'Pre-existing' : 'No test link'));
+    const backlogFilterOpts = ['All', 'qTest linked', 'QA+ / Testfrei', 'Pre-existing bugs', 'No test link', 'Flagged'];
     const backlogFilter = this.state.backlogFilter || 'All';
     const _flags = this.loadBacklogFlags();
     const _isFlagged = (d) => !!_flags[d.key];
-    const _matchBF = (d) => backlogFilter === 'All' ? true : backlogFilter === 'qTest linked' ? _linkedQtest(d) : backlogFilter === 'QA+ / Testfrei' ? _hasQaLabel(d) : backlogFilter === 'Pre-existing bugs' ? _isOlderBug(d) : backlogFilter === 'qTest-missing' ? _hasMissingLabel(d) : backlogFilter === 'No test link' ? (!_linkedQtest(d) && !_hasQaLabel(d) && !_hasMissingLabel(d)) : backlogFilter === 'Flagged' ? _isFlagged(d) : true;
+    const _matchBF = (d) => backlogFilter === 'All' ? true : backlogFilter === 'qTest linked' ? _linkedQtest(d) : backlogFilter === 'QA+ / Testfrei' ? _hasQaLabel(d) : backlogFilter === 'Pre-existing bugs' ? _isOlderBug(d) : backlogFilter === 'No test link' ? (!_linkedQtest(d) && !_hasQaLabel(d)) : backlogFilter === 'Flagged' ? _isFlagged(d) : true;
     const backlogStatusOpts = ['All statuses'].concat(Array.from(new Set(_backlog.map(d => d.status || 'Unknown'))).sort());
     const backlogStatus = this.state.backlogStatus || 'All statuses';
     const _matchStatus = (d) => backlogStatus === 'All statuses' ? true : (d.status || 'Unknown') === backlogStatus;
@@ -4897,7 +4893,7 @@ class Component extends DCLogic {
     const setBacklogFilter = (e) => this.setState({ backlogFilter: e.target.value });
     const setBacklogStatus = (e) => this.setState({ backlogStatus: e.target.value });
     const pickBacklog = (v) => () => this.setState({ backlogFilter: v });
-    const pickAll = pickBacklog('All'), pickLinked = pickBacklog('qTest linked'), pickQa = pickBacklog('QA+ / Testfrei'), pickOlder = pickBacklog('Pre-existing bugs'), pickNone = pickBacklog('No test link'), pickFlagged = pickBacklog('Flagged'), pickMissing = pickBacklog('qTest-missing');
+    const pickAll = pickBacklog('All'), pickLinked = pickBacklog('qTest linked'), pickQa = pickBacklog('QA+ / Testfrei'), pickOlder = pickBacklog('Pre-existing bugs'), pickNone = pickBacklog('No test link'), pickFlagged = pickBacklog('Flagged');
     const onBacklogCsvFile = this.onBacklogCsvFile; const clearBacklog = this.clearBacklog;
     const setTestStart = (e) => { if (!this.can('editor')) return; const v = e.target.value; try { this.lsSet('qa-testing-start', v); } catch (er) {} this.setState({ testStart: v }); };
     const backlogTotal = _backlog.length;
@@ -5639,7 +5635,7 @@ class Component extends DCLogic {
       backlogHasData, backlogStories, backlogBugs, linkedQtestN, qaLabelN, olderBugsN, notLinkedN,
       backlogRows, backlogFilterOpts, backlogFilter, setBacklogFilter, testStart, setTestStart, backlogTotal,
       onBacklogCsvFile, clearBacklog, backlogFile, backlogError, backlogShow, backlogNoData, backlogFileInfo, pickBacklog,
-      pickAll, pickLinked, pickQa, pickOlder, pickNone, pickFlagged, pickMissing, flaggedN, qtestMissingN, backlogStatusOpts, backlogStatus, setBacklogStatus,
+      pickAll, pickLinked, pickQa, pickOlder, pickNone, pickFlagged, flaggedN, backlogStatusOpts, backlogStatus, setBacklogStatus,
       backlogQuery, setBacklogQuery, clearBacklogQuery, backlogShownN: backlogRows.length, backlogHasQuery: !!_bq,
       exportPdf, exportPdfEnv, exportPdfOverall, rptTitle, rptIsEnv,
       rptPaceShow, rptPaceRows, rptPaceSub, rptPaceNote, rptPaceDaysLeft, rptPaceOpen, rptPaceTotal, rptPacePerDay,
