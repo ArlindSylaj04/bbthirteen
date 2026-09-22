@@ -1,0 +1,8 @@
+Issue key,Issue Type,Summary,Status,Priority,Assignee,Reporter,Created,Labels,Component/s,Fix Version/s,Description
+GCSAP-4001,Story,Post invoice with new tax code,In Progress,Medium,A. Sylaj,A. Sylaj,05/Aug/26,,SAP FI,26.02.00,
+GCSAP-4002,Story,Vendor master extension,Open,Medium,A. Sylaj,A. Sylaj,06/Aug/26,qTest-missing,SAP FI,26.02.00,
+GCSAP-4003,Story,Dunning run layout,Open,Medium,A. Sylaj,A. Sylaj,07/Aug/26,qtest_missing,SAP FI,26.02.00,
+GCSAP-4004,Story,Bank statement import,Open,Medium,A. Sylaj,A. Sylaj,08/Aug/26,QA+,SAP FI,26.02.00,
+GCSAP-4005,Bug,Rounding difference on credit memo,Open,Medium,A. Sylaj,A. Sylaj,10/Aug/26,testfrei,SAP FI,26.02.00,
+GCSAP-4006,Bug,GR/IR mismatch,Open,Medium,A. Sylaj,A. Sylaj,11/Aug/26,,SAP FI,26.02.00,
+GCSAP-4007,Story,Asset transfer posting,Open,Medium,A. Sylaj,A. Sylaj,12/Aug/26,"qTest-Missing, finance",SAP FI,26.02.00,
