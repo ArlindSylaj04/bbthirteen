@@ -1187,6 +1187,9 @@
       <sc-raw-select value="{{ backlogStatus }}" sc-camel-on-change="{{ setBacklogStatus }}" style="padding:8px 12px; border:1px solid var(--brd-2); border-radius:9px; background:var(--card-bg); color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:12px; cursor:pointer;">
         <sc-for list="{{ backlogStatusOpts }}" as="opt"><option value="{{ opt }}">{{ opt }}</option></sc-for>
       </sc-raw-select>
+      <sc-raw-select value="{{ backlogAsg }}" sc-camel-on-change="{{ setBacklogAsg }}" title="Show only the tickets assigned to one person" style="padding:8px 12px; border:1px solid var(--brd-2); border-radius:9px; background:var(--card-bg); color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:12px; max-width:210px;">
+        <sc-for list="{{ backlogAsgOpts }}" as="opt"><option value="{{ opt }}">{{ opt }}</option></sc-for>
+      </sc-raw-select>
       <div style="display:flex; align-items:center; gap:7px; padding:7px 11px; border:1px solid var(--brd-2); border-radius:9px; background:var(--card-bg); min-width:250px;">
         <span style="font-size:12px; color:var(--tx-mut);">🔍</span>
         <input type="text" value="{{ backlogQuery }}" sc-camel-on-input="{{ setBacklogQuery }}" placeholder="Search summary, label, key…" style="border:none; outline:none; background:transparent; color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:12px; flex:1; min-width:120px;">
@@ -1202,7 +1205,7 @@
       </sc-if>
     </div>
     <div style="overflow-x:auto; max-height:360px; overflow-y:auto; border:1px solid var(--brd-sub); border-radius:12px;">
-        <div style="display:grid; grid-template-columns:34px 96px 1.7fr 84px 130px 130px 100px 100px 120px; gap:0; position:sticky; top:0; background:var(--card-bg2); z-index:1; border-bottom:1px solid var(--brd-2);">
+        <div style="display:grid; grid-template-columns:34px 92px minmax(230px,1.7fr) 78px 110px 118px 96px 120px 92px 112px; gap:0; position:sticky; top:0; background:var(--card-bg2); z-index:1; border-bottom:1px solid var(--brd-2);">
           <div style="padding:9px 6px;"></div>
           <div style="padding:9px 10px; font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em;">Ticket</div>
           <div style="padding:9px 10px; font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em;">Summary</div>
@@ -1210,11 +1213,12 @@
           <div style="padding:9px 10px; font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em;">Area</div>
           <div style="padding:9px 10px; font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em;">Labels</div>
           <div style="padding:9px 10px; font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em;">Status</div>
+          <div style="padding:9px 10px; font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em;">Assignee</div>
           <div style="padding:9px 10px; font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em;">Created</div>
           <div style="padding:9px 10px; font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em;">Testing link</div>
         </div>
         <sc-for list="{{ backlogRows }}" as="b" hint-placeholder-count="8">
-          <div style="display:grid; grid-template-columns:34px 96px 1.7fr 84px 130px 130px 100px 100px 120px; gap:0; border-bottom:1px solid var(--brd-sub); align-items:center;">
+          <div style="display:grid; grid-template-columns:34px 92px minmax(230px,1.7fr) 78px 110px 118px 96px 120px 92px 112px; gap:0; border-bottom:1px solid var(--brd-sub); align-items:center;">
             <div style="padding:9px 6px; text-align:center;"><button sc-camel-on-click="{{ b.onFlag }}" title="Flag for follow-up" style="background:none; border:none; cursor:pointer; font-size:14px; padding:2px; opacity:{{ b.flagged }};">🚩</button></div>
             <a href="{{ b.keyHref }}" target="_blank" rel="noopener" sc-camel-on-click="{{ b.onOpen }}" title="Open in Jira" style="padding:9px 10px; font-size:11px; font-weight:700; color:#2563eb; text-decoration:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block;">{{ b.key }} ↗</a>
             <div style="padding:9px 10px; font-size:11px; color:var(--tx-strong); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ b.summary }}</div>
@@ -1222,6 +1226,7 @@
             <div style="padding:9px 10px; font-size:10.5px; color:var(--tx-mut); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ b.area }}</div>
             <div style="padding:9px 10px; font-size:10px; color:var(--tx-mut); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ b.labels }}</div>
             <div style="padding:9px 10px; font-size:10px; color:var(--tx-mut); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ b.status }}</div>
+            <div style="padding:9px 10px; font-size:10.5px; color:{{ b.assigneeColor }}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ b.assignee }}">{{ b.assignee }}</div>
             <div style="padding:9px 10px; font-size:10px; color:var(--tx-mut); white-space:nowrap;">{{ b.created }}</div>
             <div style="padding:9px 10px;"><span style="font-size:9.5px; font-weight:700; color:#fff; background:{{ b.tagColor }}; padding:2px 9px; border-radius:99px; white-space:nowrap;">{{ b.tag }}</span></div>
           </div>

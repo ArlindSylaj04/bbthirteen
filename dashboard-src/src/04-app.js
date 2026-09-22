@@ -4874,6 +4874,14 @@ class Component extends DCLogic {
     const _isFlagged = (d) => !!_flags[d.key];
     const _matchBF = (d) => backlogFilter === 'All' ? true : backlogFilter === 'qTest linked' ? _linkedQtest(d) : backlogFilter === 'QA+ / Testfrei' ? _hasQaLabel(d) : backlogFilter === 'Pre-existing bugs' ? _isOlderBug(d) : backlogFilter === 'No test link' ? (!_linkedQtest(d) && !_hasQaLabel(d)) : backlogFilter === 'Flagged' ? _isFlagged(d) : true;
     const backlogStatusOpts = ['All statuses'].concat(Array.from(new Set(_backlog.map(d => d.status || 'Unknown'))).sort());
+    // Assignee: who the ticket sits with. "Unassigned" always sorts last.
+    const _asgOf = (d) => String(d.assignee || '').trim() || 'Unassigned';
+    const _asgNames = Array.from(new Set(_backlog.map(_asgOf)))
+      .sort((a, b) => a === 'Unassigned' ? 1 : b === 'Unassigned' ? -1 : a.localeCompare(b));
+    const backlogAsgOpts = ['All assignees'].concat(_asgNames);
+    const backlogAsg = this.state.backlogAsg || 'All assignees';
+    const _matchAsg = (d) => backlogAsg === 'All assignees' ? true : _asgOf(d) === backlogAsg;
+    const setBacklogAsg = (e) => this.setState({ backlogAsg: e.target.value });
     const backlogStatus = this.state.backlogStatus || 'All statuses';
     const _matchStatus = (d) => backlogStatus === 'All statuses' ? true : (d.status || 'Unknown') === backlogStatus;
     const flaggedN = _backlog.filter(_isFlagged).length;
@@ -4882,9 +4890,10 @@ class Component extends DCLogic {
     const _matchQ = (d) => !_bq ? true : ((d.summary || '') + ' ' + (d.key || '') + ' ' + (d.labels || '') + ' ' + (d.component || '') + ' ' + (d.status || '') + ' ' + (d.issueType || '')).toLowerCase().includes(_bq);
     const setBacklogQuery = (e) => this.setState({ backlogQuery: e.target.value });
     const clearBacklogQuery = () => this.setState({ backlogQuery: '' });
-    const backlogRows = _backlog.filter(_matchBF).filter(_matchStatus).filter(_matchQ).map(d => ({
+    const backlogRows = _backlog.filter(_matchBF).filter(_matchStatus).filter(_matchAsg).filter(_matchQ).map(d => ({
       key: d.key, summary: d.summary || '—', type: _isStory(d) ? (d.issueType || 'Story') : (d.issueType || 'Bug'),
       area: d.component || '—', labels: d.labels || '—', created: d.created || '—', status: d.status || 'Unknown',
+      assignee: _asgOf(d), assigneeColor: _asgOf(d) === 'Unassigned' ? 'var(--tx-fnt)' : 'var(--tx)',
       tag: _relTag(d), tagColor: _relColor(d), flagged: _isFlagged(d) ? 1 : 0.25,
       onFlag: () => this.toggleBacklogFlag(d.key),
       keyHref: (jiraBase && d.key) ? this.jiraTicketUrl(jiraBase, d.key) : '#',
@@ -5636,6 +5645,7 @@ class Component extends DCLogic {
       backlogRows, backlogFilterOpts, backlogFilter, setBacklogFilter, testStart, setTestStart, backlogTotal,
       onBacklogCsvFile, clearBacklog, backlogFile, backlogError, backlogShow, backlogNoData, backlogFileInfo, pickBacklog,
       pickAll, pickLinked, pickQa, pickOlder, pickNone, pickFlagged, flaggedN, backlogStatusOpts, backlogStatus, setBacklogStatus,
+      backlogAsgOpts, backlogAsg, setBacklogAsg,
       backlogQuery, setBacklogQuery, clearBacklogQuery, backlogShownN: backlogRows.length, backlogHasQuery: !!_bq,
       exportPdf, exportPdfEnv, exportPdfOverall, rptTitle, rptIsEnv,
       rptPaceShow, rptPaceRows, rptPaceSub, rptPaceNote, rptPaceDaysLeft, rptPaceOpen, rptPaceTotal, rptPacePerDay,

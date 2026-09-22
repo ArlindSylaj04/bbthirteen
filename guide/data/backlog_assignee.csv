@@ -1,0 +1,13 @@
+Issue key,Issue Type,Summary,Status,Priority,Assignee,Reporter,Created,Labels,Component/s,Fix Version/s,Description
+GCSAP-5000,Bug,Scenario 1 for the upgrade,Open,Medium,A. Sylaj,A. Sylaj,01/Aug/26,,SAP FI,26.02.00,
+GCSAP-5001,Story,Scenario 2 for the upgrade,In Progress,Medium,M. Brinkmann,A. Sylaj,02/Aug/26,,SAP FI,26.02.00,
+GCSAP-5002,Story,Scenario 3 for the upgrade,Closed,Medium,L. Haas,A. Sylaj,03/Aug/26,,SAP FI,26.02.00,
+GCSAP-5003,Bug,Scenario 4 for the upgrade,Open,Medium,R. Petrov,A. Sylaj,04/Aug/26,,SAP FI,26.02.00,
+GCSAP-5004,Story,Scenario 5 for the upgrade,In Progress,Medium,S. Weber,A. Sylaj,05/Aug/26,,SAP FI,26.02.00,
+GCSAP-5005,Story,Scenario 6 for the upgrade,Closed,Medium,,A. Sylaj,06/Aug/26,,SAP FI,26.02.00,
+GCSAP-5006,Bug,Scenario 7 for the upgrade,Open,Medium,A. Sylaj,A. Sylaj,07/Aug/26,,SAP FI,26.02.00,
+GCSAP-5007,Story,Scenario 8 for the upgrade,In Progress,Medium,M. Brinkmann,A. Sylaj,08/Aug/26,,SAP FI,26.02.00,
+GCSAP-5008,Story,Scenario 9 for the upgrade,Closed,Medium,L. Haas,A. Sylaj,09/Aug/26,,SAP FI,26.02.00,
+GCSAP-5009,Bug,Scenario 10 for the upgrade,Open,Medium,R. Petrov,A. Sylaj,10/Aug/26,,SAP FI,26.02.00,
+GCSAP-5010,Story,Scenario 11 for the upgrade,In Progress,Medium,S. Weber,A. Sylaj,11/Aug/26,,SAP FI,26.02.00,
+GCSAP-5011,Story,Scenario 12 for the upgrade,Closed,Medium,,A. Sylaj,12/Aug/26,,SAP FI,26.02.00,
