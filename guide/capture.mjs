@@ -154,9 +154,36 @@ await ann([{ txt: 'Import Jira CSV', n: 1, pos: 'L' }]);
 await shot('s13-import-jira-button', pad(await cardOf('DEFECT OVERVIEW', 300), 22));
 await clear();
 await (await p.$('label:has-text("Import Jira CSV") input[type=file]'))
-  .setInputFiles('data/jira_bugs_26.03.00.csv');
+  .setInputFiles('data/jira_carryover_26.03.00.csv');
 await p.waitForTimeout(2200);
 await shot('s14-after-jira-full');
+
+// ══════════ 8b · CARRY-OVER ══════════
+await p.evaluate(() => window.scrollTo(0, 0));
+await p.waitForTimeout(600);
+const coBox = await p.evaluate(() => {
+  const e = [...document.querySelectorAll('div')].find(d => /CARRY.OVER/i.test(d.textContent || '') && d.textContent.length < 300);
+  if (!e) return null; e.scrollIntoView({ block: 'center' });
+  const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height };
+});
+await p.waitForTimeout(600);
+if (coBox) {
+  const r = await p.evaluate(() => {
+    let e = [...document.querySelectorAll('div')].find(d => /CARRY.OVER/i.test(d.textContent || '') && d.textContent.length < 300);
+    // walk out to the framed strip (the one carrying the purple left border)
+    for (let i = 0; i < 4 && e; i++) { const st = getComputedStyle(e); if (parseFloat(st.borderLeftWidth) >= 3) break; e = e.parentElement; }
+    const b = e.getBoundingClientRect(); return { x: b.x, y: b.y, width: b.width, height: b.height };
+  });
+  await shot('s25-carryover', pad(r, 20));
+}
+// the workspace, filtered to the carry-over
+await p.evaluate(() => { const e = [...document.querySelectorAll('div')].find(d => /CARRY.OVER/i.test(d.textContent || '') && d.textContent.length < 300); e && e.click(); });
+await p.waitForTimeout(1600);
+const coW = await panel('Defect Management Workspace');
+await ann([{ box: await boxOf('Carry-over only'), n: 1, pos: 'tl', pad: 4 }]);
+await shot('s26-carryover-list', { x: Math.max(0, coW.x - 12), y: Math.max(0, coW.y - 12), width: Math.min(1680, coW.width + 24), height: 620 });
+await clear();
+await closeTop();
 
 // ══════════ 9 · ENVIRONMENT CARDS ══════════
 const scrollTo = async (txt, off = 120) => {
@@ -235,7 +262,7 @@ await closeTop();
 
 // defect export buttons
 await scrollTo('DEFECT OVERVIEW', 120);
-const opened = await p.evaluate(() => { const e = [...document.querySelectorAll('div')].find(d => /^\s*Closed & Ready for Transport\s*$/.test(d.textContent||'')); if (!e) return false; const c = e.closest('div[style*="cursor"]') || e.parentElement; c.click(); return true; });
+const opened = await p.evaluate(() => { const e = [...document.querySelectorAll('div')].find(d => /^\s*Closed & (Ready for Transport|RfT)\s*$/.test(d.textContent||'')); if (!e) return false; const c = e.closest('div[style*="cursor"]') || e.parentElement; c.click(); return true; });
 console.log('  workspace opened:', opened);
 if (opened) { await p.waitForTimeout(1500);
   await ann([{ txt: 'Excel', exact: true, n: 1, pos: 'bl' }, { txt: 'PowerPoint', exact: true, n: 2, pos: 'bl' }, { txt: 'CSV', exact: true, n: 3, pos: 'br' }]);

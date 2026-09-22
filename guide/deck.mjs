@@ -286,6 +286,27 @@ s.addText('Suche, Priorität, Status, Bereich, Erstelldatum, Retest und Verknüp
   { x: 9.75, y: 4.73, w: 2.75, h: 1.5, fontFace: BODY, fontSize: 11.5, color: TXT, lineSpacing: 16, margin: 0, isTextBox: true });
 note(s, 'Zu jedem Fehler steht der verknüpfte Testlauf mit Anzahl der Läufe und Datum — so ist sofort sichtbar, was noch fehlschlägt.', 6.6);
 
+// ═══ 13b · CARRY-OVER ═══
+s = P.addSlide(); bg(s);
+slideTitle(s, 'SCHRITT 3 · IMPORT', 'Offene Fehler aus früheren Umgebungen');
+s.addText('Ein Fehler gehört zu der Umgebung, in deren Zeitfenster er gemeldet wurde. Ist er beim Wechsel in die nächste Umgebung noch offen, wird er zum Carry‑over: keine Feststellung der laufenden Umgebung, aber offene Arbeit, die sie mitträgt.',
+  { x: 0.62, y: 1.62, w: 12.1, h: 0.78, fontFace: BODY, fontSize: 14, color: TXT, lineSpacing: 21, valign: 'top', margin: 0, isTextBox: true });
+shot(s, 'shots/s25-carryover.png', { x: 0.62, y: 2.6, w: 5.55, h: 1.95 });
+s.addText([{ text: 'Die große Zahl', options: { bold: true, color: TXT } },
+  { text: ' — wie viele Fehler aus früheren Umgebungen noch offen sind.', options: { color: MUT } }],
+  { x: 0.62, y: 4.85, w: 5.55, h: 0.5, fontFace: BODY, fontSize: 12.5, lineSpacing: 18, valign: 'top', margin: 0, isTextBox: true });
+s.addText([{ text: 'Die Chips', options: { bold: true, color: TXT } },
+  { text: ' — je Herkunftsumgebung einer, mit der Zahl der Highest/High. Anklickbar.', options: { color: MUT } }],
+  { x: 0.62, y: 5.35, w: 5.55, h: 0.55, fontFace: BODY, fontSize: 12.5, lineSpacing: 18, valign: 'top', margin: 0, isTextBox: true });
+shot(s, 'shots/s26-carryover-list.png', { x: 6.6, y: 2.6, w: 6.12, h: 3.35 });
+s.addText('Im Arbeitsbereich filtert „Origin“ nach Herkunft — „Carry‑over only“ oder eine einzelne Umgebung. Die Spalte „Origin“ zeigt sie violett.',
+  { x: 6.6, y: 6.05, w: 6.12, h: 0.62, fontFace: BODY, fontSize: 12.5, color: MUT, lineSpacing: 18, valign: 'top', margin: 0, isTextBox: true });
+s.addShape(P.ShapeType.roundRect, { x: 0.62, y: 6.02, w: 5.55, h: 0.64, fill: { color: '1B2C1A' },
+  line: { color: LIME2, width: 1 }, rectRadius: 0.06 });
+s.addText('Geschlossene Fehler früherer Umgebungen zählen nicht mit — die sind erledigt.',
+  { x: 0.86, y: 6.02, w: 5.1, h: 0.64, fontFace: BODY, fontSize: 12, color: TXT, valign: 'middle', margin: 0, isTextBox: true });
+s.addNotes('Beispiel: die Tests laufen in QC1, drei in IR1 gemeldete Fehler sind noch offen — davon zwei Highest oder High.');
+
 // ═══════════════════ 14 · UMGEBUNGSKARTEN ═══════════════════
 wideSlide('SCHRITT 4 · AUSWERTEN', 'Fortschritt je Testumgebung',
   'shots/s15-env-cards.png', [
@@ -337,7 +358,7 @@ s.addText('Zeigt die verbleibende Zeit bis zum nächsten Termin der laufenden Um
 shot(s, 'shots/s20-defect-overview.png', { x: 6.75, y: 1.75, w: 2.9, h: 4.55 });
 s.addText('Fehlerübersicht', { x: 10.0, y: 1.85, w: 2.75, h: 0.32, fontFace: HDR, fontSize: 15, bold: true,
   color: LIME, margin: 0, isTextBox: true });
-s.addText('Gesamt, offen, geschlossen & Ready for Transport sowie die Verteilung nach Priorität.\n\nJede Kachel ist anklickbar und öffnet den gefilterten Arbeitsbereich.\n\nDarunter der Fehlerverlauf: erstellt gegen gelöst, je Tag.',
+s.addText('Oben gesamt, offen und geschlossen & Ready for Transport, darunter die Verteilung nach Priorität.\n\nJede Kachel ist anklickbar und öffnet den gefilterten Arbeitsbereich.\n\nDer violette Streifen zeigt die offenen Fehler aus früheren Umgebungen.',
   { x: 10.0, y: 2.3, w: 2.72, h: 3.6, fontFace: BODY, fontSize: 12.5, color: TXT, lineSpacing: 18, margin: 0, isTextBox: true });
 
 // ═══════════════════ 19 · DEFECT MANAGER DASHBOARD ═══════════════════
