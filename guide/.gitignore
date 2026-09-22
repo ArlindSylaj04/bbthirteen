@@ -1,3 +1,9 @@
 node_modules/
 slide-*.jpg
 *.pdf
+
+# verification-run screenshots — not used by the deck, regenerated on every test
+shots/00-*.png
+shots/01-login.png
+shots/c[0-9]-*.png
+shots/p-*.png
