@@ -395,6 +395,57 @@ class Component extends DCLogic {
   // Ordered environment ids of the selected release — replaces the old
   // hardcoded ['DF1','IR1','QC1','IR3','PC1'].
   relOrder() { return this.relPhasesSched().map(p => p.id); }
+  // ── Carry-over ────────────────────────────────────────────────────────────
+  // A defect belongs to the environment whose window contains the day it was
+  // raised. One raised in QC1 and still open while IR3 runs is a carry-over:
+  // it is not IR3's own finding, but it is still open work blocking IR3.
+  relEnvSpans() {
+    if (this._envSpanId === this.relSelectedId() && this._envSpans) return this._envSpans;
+    const spans = this.relEnvs().map((e, i) => {
+      const w = this.relEnvWindow(e);
+      return { id: e.name, idx: i, from: w.start, to: w.end };
+    }).filter(x => x.from != null);
+    this._envSpans = spans; this._envSpanId = this.relSelectedId();
+    return spans;
+  }
+  // Environment id a date falls into, or '' when it sits outside every window.
+  relEnvOfMs(ms) {
+    if (ms == null || isNaN(ms)) return '';
+    const spans = this.relEnvSpans();
+    for (const s of spans) { if (ms >= s.from && ms <= s.to + 86399999) return s.id; }
+    return '';
+  }
+  // Jira CSV exports dates as "12/Aug/26" or "12/Aug/26 9:41 AM"; German Jira
+  // uses "12/Aug/26" too but with localised month names. Also accept ISO and
+  // dd.mm.yyyy so a hand-made CSV still works.
+  MONTHS = { jan:1, feb:2, mar:3, mär:3, maer:3, apr:4, may:5, mai:5, jun:6, jul:7, aug:8,
+             sep:9, sept:9, oct:10, okt:10, nov:11, dec:12, dez:12 };
+  dateToIso(v) {
+    const raw = String(v == null ? '' : v).trim();
+    if (!raw) return '';
+    let m = raw.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);                       // 2026-09-07
+    if (m) return m[1] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[3]).padStart(2, '0');
+    m = raw.match(/(\d{1,2})[.\/-]([A-Za-zÄÖÜäöü]{3,4})[.\/-](\d{2,4})/);   // 12/Aug/26
+    if (m) {
+      const mo = this.MONTHS[m[2].toLowerCase().replace(/\.$/, '')];
+      if (mo) {
+        let y = parseInt(m[3], 10); if (y < 100) y += 2000;
+        return y + '-' + String(mo).padStart(2, '0') + '-' + String(m[1]).padStart(2, '0');
+      }
+    }
+    m = raw.match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2,4})/);              // 12.08.2026
+    if (m) { let y = parseInt(m[3], 10); if (y < 100) y += 2000;
+      return y + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[1]).padStart(2, '0'); }
+    const d = new Date(raw);
+    if (!isNaN(d.getTime())) {
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    return '';
+  }
+  relEnvIndex(id) {
+    const o = this.relOrder(); const i = o.indexOf(id);
+    return i < 0 ? -1 : i;
+  }
   // Per-environment display metadata for the report's phase cards.
   relMeta() {
     const out = {};
@@ -3873,24 +3924,58 @@ class Component extends DCLogic {
     // ─── DEFECT OVERVIEW (Jira CSV) ──────────────────────────────────────
     // Defect Overview is scoped to the ACTIVE environment window of the selected release.
     // Release Backlog × Testing Link stays unscoped and shows the whole release.
-    const _phaseWin = this.ACTIVE_PHASE_WINDOW;
-    const _toISO = (s) => { const m = String(s || '').match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/); if (m) return m[3] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[1]).padStart(2, '0'); const m2 = String(s || '').match(/(\d{4})-(\d{2})-(\d{2})/); return m2 ? m2[0] : ''; };
-    const _inPhase = (d) => { const iso = _toISO(d.created); return !iso || (iso >= _phaseWin.from && iso <= _phaseWin.to); };
-    const _jdAll = this.state.jiraDefects || [];
-    const jd = _jdAll.filter(_inPhase);
-    const phaseScopeLabel = _phaseWin.label + ' · test ' + _phaseWin.fromLabel + '–' + _phaseWin.testToLabel + ' · fix till ' + _phaseWin.toLabel;
-    const phaseScopeHidden = _jdAll.length - jd.length;
-    const phaseScopeHasHidden = phaseScopeHidden > 0;
     const isClosed = (s) => { const x = String(s).toLowerCase(); return ['done', 'closed', 'resolved', 'fixed', 'verified', 'complete', 'rejected', 'cancel', 'transport'].some(k => x.indexOf(k) >= 0); };
     const prBucket = (p) => { const x = String(p).toLowerCase(); if (x.indexOf('highest') >= 0 || x.indexOf('critical') >= 0 || x.indexOf('blocker') >= 0) return 'Highest'; if (x.indexOf('high') >= 0 || x.indexOf('major') >= 0) return 'High'; if (x.indexOf('medium') >= 0 || x.indexOf('normal') >= 0) return 'Medium'; return 'Low'; };
     const defPriStyle = (p) => p === 'Highest' ? { priColor: '#b91c1c', priBg: '#fee2e2' } : p === 'High' ? { priColor: '#ea580c', priBg: '#ffedd5' } : p === 'Medium' ? { priColor: '#d97706', priBg: '#fef3c7' } : { priColor: '#65a30d', priBg: '#ecfccb' };
+    // ── Scope: the active environment, plus whatever is still open from earlier ones ──
+    // A defect belongs to the environment whose schedule window contains the day it
+    // was raised. One raised in QC1 and still open while IR3 runs is a carry-over:
+    // not IR3's own finding, but open work IR3 still has to live with.
+    const _phaseWin = this.ACTIVE_PHASE_WINDOW;
+    const _toISO = (s) => this.dateToIso(s);
+    const _msOfDay = (v) => { const iso = _toISO(v); const t = iso ? Date.parse(iso + 'T00:00:00') : NaN; return isNaN(t) ? null : t; };
+    const _inPhase = (d) => { const iso = _toISO(d.created); return !iso || (iso >= _phaseWin.from && iso <= _phaseWin.to); };
+    const _jdAll = this.state.jiraDefects || [];
+    const _curEnv = _phaseWin.label || '';
+    const _curIdx = this.relEnvIndex(_curEnv);
+    _jdAll.forEach(d => { d._env = this.relEnvOfMs(_msOfDay(d.created)); });
+    const _isCarry = (d) => {
+      if (isClosed(d.status)) return false;
+      const i = this.relEnvIndex(d._env);
+      return i >= 0 && _curIdx >= 0 && i < _curIdx;
+    };
+    const _jdCur = _jdAll.filter(_inPhase);
+    const _jdCarry = _jdAll.filter(d => !_inPhase(d) && _isCarry(d));
+    const jd = _jdCur.concat(_jdCarry);
+    const phaseScopeLabel = _phaseWin.label + ' · test ' + _phaseWin.fromLabel + '–' + _phaseWin.testToLabel + ' · fix till ' + _phaseWin.toLabel;
+    const phaseScopeHidden = _jdAll.length - jd.length;
+    const phaseScopeHasHidden = phaseScopeHidden > 0;
+    // carry-over roll-up, newest environment first
+    const carryTotal = _jdCarry.length;
+    const carryHas = carryTotal > 0;
+    const carryNone = !carryHas;
+    const _carryMap = {};
+    _jdCarry.forEach(d => { (_carryMap[d._env] = _carryMap[d._env] || []).push(d); });
+    const _relMetaC = this.relMeta();
+    const _openCarryAt = (origin) => () => this.setState({ dfStatus: 'All', dfPriority: 'All', dfSearch: '', dfState: 'Open', dfArea: 'All Areas', dfDate: '', dfOrigin: origin, defectModal: true });
+    const carryEnvs = Object.keys(_carryMap)
+      .sort((a, b) => this.relEnvIndex(b) - this.relEnvIndex(a))
+      .map(id => {
+        const list = _carryMap[id];
+        const hi = list.filter(d => { const b = prBucket(d.priority); return b === 'Highest' || b === 'High'; }).length;
+        return { id, count: list.length, high: hi, hasHigh: hi > 0, noHigh: hi === 0,
+          color: (_relMetaC[id] || {}).color || '#7c3aed', onClick: _openCarryAt(id) };
+      });
+    const carryHighTotal = _jdCarry.filter(d => { const b = prBucket(d.priority); return b === 'Highest' || b === 'High'; }).length;
+    const carryHasHigh = carryHighTotal > 0;
+    const openCarry = _openCarryAt('__carry');
     const defTotal = jd.length;
     const defClosed = jd.filter(d => isClosed(d.status)).length;
     const defOpen = defTotal - defClosed;
     const prCnt = { Highest: 0, High: 0, Medium: 0, Low: 0 }; jd.forEach(d => { prCnt[prBucket(d.priority)]++; });
     const hasDefects = defTotal > 0;
     const noDefects = !hasDefects;
-    const drill = (patch) => () => this.setState({ dfStatus: 'All', dfPriority: 'All', dfSearch: '', dfState: 'All', ...patch, defectModal: true });
+    const drill = (patch) => () => this.setState({ dfStatus: 'All', dfPriority: 'All', dfSearch: '', dfState: 'All', dfOrigin: 'All', ...patch, defectModal: true });
     const defectKpis = [
       { label: 'Total', value: defTotal, color: 'var(--tx-strong)', accent: '#94a3b8', onClick: drill({}) },
       { label: 'Open', value: defOpen, color: '#ef4444', accent: '#ef4444', onClick: drill({ dfState: 'Open' }) },
@@ -3900,6 +3985,9 @@ class Component extends DCLogic {
       { label: 'Medium', value: prCnt.Medium, color: '#d97706', accent: '#d97706', onClick: drill({ dfPriority: 'Medium' }) },
       { label: 'Low', value: prCnt.Low, color: '#65a30d', accent: '#65a30d', onClick: drill({ dfPriority: 'Low' }) },
     ];
+    const _kpiShort = { 'Closed & Ready for Transport': 'Closed & RfT' };
+    const defectKpisState = defectKpis.slice(0, 3).map(k => ({ ...k, short: _kpiShort[k.label] || k.label, full: k.label }));
+    const defectKpisPrio = defectKpis.slice(3).map(k => ({ ...k, dim: k.value === 0 }));
     const openClosedPct = defTotal ? Math.round(defClosed / defTotal * 100) : 0;
     const closedDeg = Math.round(openClosedPct * 3.6);
     const jiraBase = this.state.jiraBase || this.loadJiraBase() || ''; const jiraHasBase = !!jiraBase;
@@ -3926,12 +4014,23 @@ class Component extends DCLogic {
     const prOrder = { Highest: 0, High: 1, Medium: 2, Low: 3 };
     const dfState = this.state.dfState || 'All';
     const dfDate = this.state.dfDate || '';
-    const toISO = (s) => { const m = String(s || '').match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/); if (m) return m[3] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[1]).padStart(2, '0'); const m2 = String(s || '').match(/(\d{4})-(\d{2})-(\d{2})/); return m2 ? m2[0] : ''; };
+    // Origin = the environment a defect was raised in. '__carry' = everything
+    // carried over from an earlier environment, whichever one.
+    const dfOrigin = this.state.dfOrigin || 'All';
+    const _originIds = Array.from(new Set(jd.map(d => d._env).filter(Boolean)))
+      .sort((a, b) => this.relEnvIndex(a) - this.relEnvIndex(b));
+    const originOptions = ['All'].concat(carryHas ? ['__carry'] : []).concat(_originIds);
+    const originLabelOf = (v) => v === 'All' ? 'All origins' : v === '__carry' ? 'Carry-over only' : (v === _curEnv ? v + ' (current)' : v);
+    const originChoices = originOptions.map(v => ({ v, label: originLabelOf(v), sel: v === dfOrigin }));
+    const setDfOrigin = (e) => this.setState({ dfOrigin: e.target.value });
+    const _matchOrigin = (d) => dfOrigin === 'All' || (dfOrigin === '__carry' ? _isCarry(d) : d._env === dfOrigin);
+    const toISO = (s) => this.dateToIso(s);
     let filtered = jd.filter(d => (dfStatus === 'All' || d.status === dfStatus)
       && (dfState === 'All' || (dfState === 'Closed') === isClosed(d.status))
       && (dfArea === 'All Areas' || d.component === dfArea)
       && (dfPriority === 'All' || prBucket(d.priority) === dfPriority)
       && (!dfDate || toISO(d.created) === dfDate)
+      && _matchOrigin(d)
       && (!dfSearch || (d.key + ' ' + d.summary + ' ' + d.assignee + ' ' + d.component + ' ' + d.release + ' ' + d.reporter + ' ' + (d.labels || '')).toLowerCase().indexOf(dfSearch.toLowerCase()) >= 0));
     filtered = filtered.slice().sort((a, b) => { let av, bv;
       if (dfSortKey === 'priority') { av = prOrder[prBucket(a.priority)]; bv = prOrder[prBucket(b.priority)]; }
@@ -4065,7 +4164,12 @@ class Component extends DCLogic {
     this._filteredDefects = filtered;
     const _notes = this.state.defectNotes || {};
     const defectRows = filtered.map(d => { const bk = prBucket(d.priority); const ri = _rtInfo(d);
+      const _isCo = _isCarry(d);
       return { ...d, prBucket: bk, ...defPriStyle(bk), stClosed: isClosed(d.status), hasUrl: !!d.key,
+        origin: d._env || '\u2014', isCarry: _isCo, notCarry: !_isCo,
+        originColor: _isCo ? '#c026d3' : 'var(--tx-mut)',
+        originBg: _isCo ? 'rgba(192,38,211,0.14)' : 'var(--chip-bg)',
+        originTitle: _isCo ? ('Carry-over \u2014 raised in ' + d._env + ', still open in ' + _curEnv) : (d._env ? ('Raised in ' + d._env) : 'Raised outside every environment window'),
         rt: ri.rt, rtColor: ri.c, rtBg: ri.bg, rtRuns: ri.rtRuns, rtDetail: ri.rtDetail, rtLast: ri.rtLast, rtBasis: ri.rtBasis, _why: Object.keys(_rtWhy[String(d.key || '').toUpperCase()] || {}),
         rtBreak: ri.rtBreak || [], rtList: ri.rtList || [], rtHasRuns: !!(ri.rtList && ri.rtList.length), rtNoLink: !(ri.rtList && ri.rtList.length),
         rtOpenFlag: (this.state.rtOpen || '') === d.key,
@@ -5417,7 +5521,9 @@ class Component extends DCLogic {
       execDaysLeftLabel, execEndLabel, execSuggest, execPctDone, execPctBar, execPaceLabel, execPaceColor,
       execVerdict, execVerdictColor, execVerdictBg,
       phaseScopeLabel, phaseScopeHidden, phaseScopeHasHidden,
-      defectKpis, hasDefects, noDefects, defTotal, defOpen, defClosed, openClosedPct, closedDeg, prCnt,      jiraBase, jiraHasBase, jiraFile, jiraHasFile, jiraError, jiraHasError, onCsvFile, setJiraBase, exportDefectsCsv, exportDefectsXlsx, exportDefectsPptx,
+      carryTotal, carryHas, carryNone, carryEnvs, carryHighTotal, carryHasHigh, openCarry, curEnvName: _curEnv,
+      dfOrigin, originChoices, setDfOrigin, originLabel: originLabelOf(dfOrigin),
+      defectKpis, defectKpisState, defectKpisPrio, hasDefects, noDefects, defTotal, defOpen, defClosed, openClosedPct, closedDeg, prCnt,      jiraBase, jiraHasBase, jiraFile, jiraHasFile, jiraError, jiraHasError, onCsvFile, setJiraBase, exportDefectsCsv, exportDefectsXlsx, exportDefectsPptx,
       openDefectModal, closeDefectModal, defectModalOpen, clearDefects, hasAnyData,
       ...(() => { const g = this.state.gngOpen ? this.gngModel() : null; return {
         gngOpen: !!this.state.gngOpen, openGng: this.openGng, closeGng: this.closeGng,

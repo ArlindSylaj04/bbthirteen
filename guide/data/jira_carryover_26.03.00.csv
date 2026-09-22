@@ -1,0 +1,12 @@
+Issue key,Summary,Issue Type,Status,Priority,Assignee,Reporter,Created,Updated,Component/s,Environment,Fix Version/s,Description
+GCSAP-3001,GR/IR clearing shows wrong currency,Bug,Open,Highest,M. Brinkmann,A. Sylaj,12/Aug/26,18/Sep/26,SAP FI,,26.03.00,
+GCSAP-3002,Batch determination times out,Bug,In Progress,High,L. Haas,A. Sylaj,19/Aug/26,18/Sep/26,SAP EWM,,26.03.00,
+GCSAP-3003,Vendor bank data not transferred,Bug,Retest,Medium,R. Petrov,A. Sylaj,27/Aug/26,18/Sep/26,SAP MM,,26.03.00,
+GCSAP-3004,Asset depreciation run aborts,Bug,Closed,High,S. Weber,A. Sylaj,14/Aug/26,18/Sep/26,SAP FI,,26.03.00,
+GCSAP-3005,Order confirmation mail not sent,Bug,Ready for Transport,Low,K. Ergün,A. Sylaj,21/Aug/26,18/Sep/26,SAP SD,,26.03.00,
+GCSAP-3010,Posting date not derived from document date,Bug,Open,Highest,A. Sylaj,A. Sylaj,09/Sep/26,18/Sep/26,SAP FI,,26.03.00,
+GCSAP-3011,Invoice PDF cuts off tax line,Bug,In Progress,High,S. Weber,A. Sylaj,11/Sep/26,18/Sep/26,SAP FI,,26.03.00,
+GCSAP-3012,Pricing condition missing after upgrade,Bug,Analyse,Medium,R. Petrov,A. Sylaj,14/Sep/26,18/Sep/26,SAP SD,,26.03.00,
+GCSAP-3013,Storage bin search returns no result,Bug,Closed,Medium,L. Haas,A. Sylaj,15/Sep/26,18/Sep/26,SAP EWM,,26.03.00,
+GCSAP-3014,Customer master sync fails for DE plants,Bug,Ready for Transport,Low,M. Brinkmann,A. Sylaj,17/Sep/26,18/Sep/26,SAP MM,,26.03.00,
+GCSAP-3015,Goods issue posts to wrong period,Bug,Open,Low,K. Ergün,A. Sylaj,21/Sep/26,18/Sep/26,SAP EWM,,26.03.00,

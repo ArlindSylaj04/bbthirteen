@@ -1171,7 +1171,20 @@ class Component extends DCLogic {
     });
 
     // weekly — real current ISO week (Mon–Fri); future days stay blank until reached
-    const parseDMY = (v) => { const m = String(v || '').match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/); if (m) return new Date(+m[3], +m[2] - 1, +m[1]); const m2 = String(v || '').match(/(\d{4})-(\d{2})-(\d{2})/); return m2 ? new Date(+m2[1], +m2[2] - 1, +m2[3]) : null; };
+    // Jira exports dates as "12/Aug/26"; also accept ISO and dd.mm.yyyy.
+    const _MON = { jan:1, feb:2, mar:3, 'mär':3, maer:3, apr:4, may:5, mai:5, jun:6, jul:7, aug:8, sep:9, sept:9, oct:10, okt:10, nov:11, dec:12, dez:12 };
+    const parseDMY = (v) => {
+      const raw = String(v == null ? '' : v).trim(); if (!raw) return null;
+      let m = raw.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+      m = raw.match(/(\d{1,2})[.\/-]([A-Za-zÄÖÜäöü]{3,4})[.\/-](\d{2,4})/);
+      if (m) { const mo = _MON[m[2].toLowerCase().replace(/\.$/, '')];
+        if (mo) { let y = +m[3]; if (y < 100) y += 2000; return new Date(y, mo - 1, +m[1]); } }
+      m = raw.match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2,4})/);
+      if (m) { let y = +m[3]; if (y < 100) y += 2000; return new Date(y, +m[2] - 1, +m[1]); }
+      const d = new Date(raw);
+      return isNaN(d.getTime()) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    };
     const _today = new Date(); _today.setHours(0, 0, 0, 0);
     const _mon = new Date(_today); _mon.setDate(_today.getDate() - ((_today.getDay() + 6) % 7));
     const _dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];

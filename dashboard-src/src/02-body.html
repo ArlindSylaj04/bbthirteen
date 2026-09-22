@@ -1292,11 +1292,11 @@
   <!-- DEFECT OVERVIEW (Jira) -->
   <div style="background:var(--card-bg); border-radius:16px; padding:22px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; flex-wrap:wrap;">
-      <div style="display:flex; align-items:center; gap:10px;">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; max-width:100%;">
         <div style="font-size:10px; font-weight:600; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.12em;">Defect Overview<span data-rel-chip="" style="margin-left:9px; background:var(--tile-bg); border:1px solid var(--brd-2); border-radius:6px; padding:2px 8px; font-size:8.5px; font-weight:700; color:var(--tx-mut); letter-spacing:0.06em; text-transform:none; white-space:nowrap;" title="This section shows data for the selected release and its active environment">Rel. {{ relVersion }} · {{ relCurrentEnv }}</span></div>
-        <span style="font-size:9px; font-weight:800; padding:3px 9px; border-radius:99px; background:#05966918; color:#059669; border:1px solid #05966945; letter-spacing:0.04em;">{{ phaseScopeLabel }}</span>
+        <span title="{{ phaseScopeLabel }}" style="font-size:9px; font-weight:800; padding:3px 9px; border-radius:99px; background:#05966918; color:#059669; border:1px solid #05966945; letter-spacing:0.04em; max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ phaseScopeLabel }}</span>
         <sc-if value="{{ phaseScopeHasHidden }}" hint-placeholder-val="{{ false }}">
-          <span title="Defects created outside the current QC1 phase window are excluded here — they remain in the Release Backlog." style="font-size:9px; font-weight:600; padding:3px 9px; border-radius:99px; background:var(--chip-bg); color:var(--tx-mut);"><span>{{ phaseScopeHidden }}</span> outside phase</span>
+          <span title="Defects that belong to neither this environment nor the carry-over — closed tickets from earlier environments, or tickets raised outside every scheduled window. They stay in the Release Backlog." style="font-size:9px; font-weight:600; padding:3px 9px; border-radius:99px; background:var(--chip-bg); color:var(--tx-mut); white-space:nowrap;"><span>{{ phaseScopeHidden }}</span> out of scope</span>
         </sc-if>
       </div>
       <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -1308,8 +1308,8 @@
             <button sc-camel-on-click="{{ clearDefects }}" title="Remove imported Jira defects, test-run history and reset all counts to 0" style="background:transparent; border:1px solid var(--brd-2); border-radius:10px; padding:10px 14px; color:var(--tx-mut); cursor:pointer; font-family:Rubik,sans-serif; font-size:12px; font-weight:700;">✕ Clear all data</button>
           </sc-if>
         </sc-if>
-        <button sc-camel-on-click="{{ openTriage }}" title="Bugs that need discussion in today’s defect call" style="background:var(--card-bg2); border:1px solid #ef4444; border-radius:12px; padding:14px 22px; color:#ef4444; cursor:pointer; font-family:Rubik,sans-serif; font-size:14px; font-weight:800; display:flex; align-items:center; gap:9px;" style-hover="background:rgba(239,68,68,0.1);">🔥 {{ triageBtnLabel }}</button>
-        <button sc-camel-on-click="{{ goDefects }}" style="background:linear-gradient(180deg,#a3d024,#7ba00f); border:1px solid rgba(255,255,255,0.18); border-radius:var(--r-md); padding:13px 24px; color:#16210a; cursor:pointer; font-family:Rubik,sans-serif; font-size:14.5px; font-weight:700; display:flex; align-items:center; gap:10px; box-shadow:0 2px 10px rgba(149,193,31,0.4);">🐞 Defect Manager Dashboard →</button>
+        <button sc-camel-on-click="{{ openTriage }}" title="Bugs that need discussion in today’s defect call" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:10px; padding:10px 15px; color:var(--tx); cursor:pointer; font-family:Rubik,sans-serif; font-size:12px; font-weight:700; display:flex; align-items:center; gap:8px; transition:border-color .16s var(--ease), color .16s var(--ease);" style-hover="border-color:#ef4444; color:#ef4444;"><span style="width:7px; height:7px; border-radius:50%; background:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,0.18);"></span>{{ triageBtnLabel }}</button>
+        <button sc-camel-on-click="{{ goDefects }}" title="Open the Defect Manager Dashboard for this release" style="background:#95c11f; border:1px solid #7ba00f; border-radius:10px; padding:10px 17px; color:#16210a; cursor:pointer; font-family:Rubik,sans-serif; font-size:12.5px; font-weight:700; display:flex; align-items:center; gap:8px; letter-spacing:0.01em; transition:background .16s var(--ease), transform .16s var(--ease);" style-hover="background:#a3d024; transform:translateY(-1px);">Defect Manager Dashboard<span style="font-weight:800;">&#8594;</span></button>
       </div>
     </div>
     <sc-if value="{{ jiraHasError }}" hint-placeholder-val="{{ false }}">
@@ -1319,14 +1319,56 @@
       <div style="margin-bottom:14px; padding:9px 14px; background:var(--soft-warn); border:1px solid var(--soft-warn-brd); border-radius:8px; color:#b45309; font-size:11px;">⚠ Import OK — column mapping needs a look: {{ jiraWarn }}</div>
     </sc-if>
     <sc-if value="{{ hasDefects }}" hint-placeholder-val="{{ false }}">
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px;">
-        <sc-for list="{{ defectKpis }}" as="k" hint-placeholder-count="7">
-          <div sc-camel-on-click="{{ k.onClick }}" title="Show these defects" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-left:3px solid {{ k.accent }}; border-radius:var(--r-md); padding:14px 14px; cursor:pointer;" style-hover="transform:translateY(-2px); box-shadow:var(--shadow);">
-            <div style="font-size:32px; font-weight:700; color:{{ k.color }}; line-height:1; font-variant-numeric:tabular-nums;">{{ k.value }}</div>
-            <div style="font-size:10px; font-weight:600; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:7px;">{{ k.label }}</div>
+      <!-- state of play: total / open / closed -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(94px,1fr)); gap:9px;">
+        <sc-for list="{{ defectKpisState }}" as="k" hint-placeholder-count="3">
+          <div sc-camel-on-click="{{ k.onClick }}" title="{{ k.full }} — click to list them" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:2px solid {{ k.accent }}; border-radius:var(--r-md); padding:12px 12px 11px; cursor:pointer; min-width:0; transition:transform .16s var(--ease), box-shadow .16s var(--ease);" style-hover="transform:translateY(-2px); box-shadow:var(--shadow);">
+            <div style="font-size:28px; font-weight:700; color:{{ k.color }}; line-height:1; font-variant-numeric:tabular-nums;">{{ k.value }}</div>
+            <div style="font-size:9px; font-weight:600; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em; margin-top:7px; line-height:1.3;">{{ k.short }}</div>
           </div>
         </sc-for>
       </div>
+      <!-- by priority: compact, one row, dimmed when empty -->
+      <div style="margin-top:10px; display:flex; align-items:center; gap:9px; flex-wrap:wrap;">
+        <div style="font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.08em; white-space:nowrap;">By priority</div>
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:7px; flex:1; min-width:210px;">
+          <sc-for list="{{ defectKpisPrio }}" as="k" hint-placeholder-count="4">
+            <div sc-camel-on-click="{{ k.onClick }}" title="Show these defects" style="background:var(--tile-bg); border:1px solid var(--brd-sub); border-radius:10px; padding:8px 9px; cursor:pointer; text-align:center; transition:border-color .16s var(--ease);" style-hover="border-color:{{ k.accent }};">
+              <div style="font-size:18px; font-weight:700; color:{{ k.color }}; line-height:1; font-variant-numeric:tabular-nums;">{{ k.value }}</div>
+              <div style="font-size:8.5px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em; margin-top:5px;">{{ k.label }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+
+      <!-- CARRY-OVER: still-open defects raised in an earlier environment -->
+      <sc-if value="{{ carryHas }}" hint-placeholder-val="{{ true }}">
+        <div sc-camel-on-click="{{ openCarry }}" title="Open defects raised in an earlier test environment of this release — click to list them" style="margin-top:12px; background:var(--soft-purple); border:1px solid var(--soft-purple-brd); border-left:3px solid #c026d3; border-radius:var(--r-md); padding:13px 16px; cursor:pointer;" style-hover="box-shadow:var(--shadow);">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <div style="display:flex; align-items:baseline; gap:10px; min-width:0;">
+              <div style="font-size:28px; font-weight:700; color:#c026d3; line-height:1; font-variant-numeric:tabular-nums;">{{ carryTotal }}</div>
+              <div style="font-size:10px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; line-height:1.35;">Carry&#8209;over<br>still open in {{ curEnvName }}</div>
+            </div>
+            <div style="font-size:11px; font-weight:700; color:#c026d3; white-space:nowrap;">Show &#8250;</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:11px;">
+            <sc-for list="{{ carryEnvs }}" as="c" hint-placeholder-count="2">
+              <div sc-camel-on-click="{{ c.onClick }}" title="Show the open defects carried over from this environment" style="display:flex; align-items:center; gap:6px; background:var(--tile-bg); border:1px solid var(--brd-2); border-radius:99px; padding:4px 10px; cursor:pointer;" style-hover="border-color:#c026d3;">
+                <div style="width:8px; height:8px; border-radius:3px; background:{{ c.color }}; flex-shrink:0;"></div>
+                <div style="font-size:11px; font-weight:700; color:var(--tx);">{{ c.id }}</div>
+                <div style="font-size:11px; font-weight:800; color:#c026d3; font-variant-numeric:tabular-nums;">{{ c.count }}</div>
+                <sc-if value="{{ c.hasHigh }}" hint-placeholder-val="{{ false }}">
+                  <div title="of which Highest or High priority" style="font-size:9px; font-weight:800; color:#b91c1c; background:var(--soft-bad); border-radius:99px; padding:1px 6px; white-space:nowrap;">{{ c.high }} high+</div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ carryNone }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:12px; padding:9px 14px; border:1px dashed var(--brd-2); border-radius:var(--r-md); color:var(--tx-fnt); font-size:11px;">No carry&#8209;over &#8212; every defect from the earlier environments of this release is closed.</div>
+      </sc-if>
 
       <!-- DEFECT COURSE -->
       <div style="margin-top:18px; border:1px solid var(--brd-sub); border-radius:14px; padding:18px 20px 12px; background:var(--card-bg2);">
@@ -2354,6 +2396,12 @@
               </sc-raw-select>
             </div>
             <div style="display:flex; align-items:center; gap:7px;">
+              <span style="font-size:10px; font-weight:600; color:#c026d3; text-transform:uppercase; letter-spacing:0.06em;">Origin</span>
+              <sc-raw-select value="{{ dfOrigin }}" sc-camel-on-change="{{ setDfOrigin }}" title="The test environment a defect was raised in — &#8222;Carry-over only&#8220; lists everything still open from an earlier environment" style="padding:8px 10px; border:1px solid var(--brd-2); border-radius:9px; background:var(--card-bg); color:var(--tx); font-family:Rubik,sans-serif; font-size:12px;">
+                <sc-for list="{{ originChoices }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+              </sc-raw-select>
+            </div>
+            <div style="display:flex; align-items:center; gap:7px;">
               <span style="font-size:10px; font-weight:600; color:#7c3aed; text-transform:uppercase; letter-spacing:0.06em;">Link basis</span>
               <sc-raw-select value="{{ dfBasis }}" sc-camel-on-change="{{ setDfBasis }}" title="How the ticket is joined to qTest: the run's Defect column, a Test-Run ID or a Test-Case ID in the ticket's links" style="padding:8px 10px; border:1px solid var(--brd-2); border-radius:9px; background:var(--card-bg); color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:12px; cursor:pointer;">
                 <sc-for list="{{ basisOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o }}">{{ o }}</option></sc-for>
@@ -2369,11 +2417,12 @@
           </div>
           <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-radius:12px; overflow:auto; max-height:46vh;">
             <div style="min-width:1710px;">
-              <div style="display:grid; grid-template-columns:96px 1.9fr 84px 120px 150px 130px 130px 100px 150px 130px 230px; gap:0; position:sticky; top:0; background:var(--card-bg2); z-index:1; border-bottom:1px solid var(--brd-2);">
+              <div style="display:grid; grid-template-columns:96px 1.9fr 84px 120px 92px 150px 130px 130px 100px 150px 130px 230px; gap:0; position:sticky; top:0; background:var(--card-bg2); z-index:1; border-bottom:1px solid var(--brd-2);">
                 <div sc-camel-on-click="{{ sortHandlers.key }}" style="padding:9px 10px; font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em; cursor:pointer;">Ticket ↕</div>
                 <div sc-camel-on-click="{{ sortHandlers.summary }}" style="padding:9px 10px; font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em; cursor:pointer;">Summary ↕</div>
                 <div sc-camel-on-click="{{ sortHandlers.priority }}" style="padding:9px 10px; font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em; cursor:pointer;">Priority ↕</div>
                 <div sc-camel-on-click="{{ sortHandlers.status }}" style="padding:9px 10px; font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em; cursor:pointer;">Status ↕</div>
+                <div title="The test environment the ticket was raised in. Purple = carry-over: raised earlier, still open now." style="padding:9px 10px; font-size:9px; font-weight:700; color:#c026d3; text-transform:uppercase; letter-spacing:0.05em;">Origin</div>
                 <div title="Status of the qTest run(s) linked to the ticket" style="padding:9px 10px; font-size:9px; font-weight:700; color:#0891b2; text-transform:uppercase; letter-spacing:0.05em;">Linked test run</div>
                 <div sc-camel-on-click="{{ sortHandlers.assignee }}" style="padding:9px 10px; font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em; cursor:pointer;">Assignee ↕</div>
                 <div sc-camel-on-click="{{ sortHandlers.reporter }}" style="padding:9px 10px; font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em; cursor:pointer;">Reporter ↕</div>
@@ -2384,11 +2433,12 @@
               </div>
               <sc-for list="{{ defectRows }}" as="d" hint-placeholder-count="6">
                 <div style="border-bottom:1px solid var(--brd-sub);">
-                <div style="display:grid; grid-template-columns:96px 1.9fr 84px 120px 150px 130px 130px 100px 150px 130px 230px; gap:0;" style-hover="background:var(--card-bg2);">
+                <div style="display:grid; grid-template-columns:96px 1.9fr 84px 120px 92px 150px 130px 130px 100px 150px 130px 230px; gap:0;" style-hover="background:var(--card-bg2);">
                   <a href="{{ d.keyHref }}" target="_blank" rel="noopener" sc-camel-on-click="{{ d.onKeyOpen }}" title="Open in Jira" style="padding:9px 10px; font-size:11px; font-weight:700; color:#2563eb; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; text-decoration:none; display:block;">{{ d.key }}<sc-if value="{{ d.hasUrl }}" hint-placeholder-val="{{ false }}"><span style="font-size:9px;"> ↗</span></sc-if></a>
                   <div style="padding:9px 10px; font-size:11px; color:var(--tx-strong); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ d.summary }}</div>
                   <div style="padding:9px 10px;"><span style="font-size:9px; font-weight:700; padding:2px 8px; border-radius:99px; background:{{ d.priBg }}; color:{{ d.priColor }};">{{ d.prBucket }}</span></div>
                   <div style="padding:9px 10px; font-size:11px; color:var(--tx); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ d.status }}</div>
+                  <div style="padding:9px 8px;"><span title="{{ d.originTitle }}" style="display:inline-block; font-size:9.5px; font-weight:800; padding:2px 8px; border-radius:99px; background:{{ d.originBg }}; color:{{ d.originColor }}; letter-spacing:0.02em;">{{ d.origin }}</span></div>
                   <div sc-camel-on-click="{{ d.onRtToggle }}" title="{{ d.rtDetail }}" style="padding:7px 10px; display:flex; flex-direction:column; gap:2px; overflow:hidden; cursor:pointer;"><span style="font-size:9px; font-weight:800; padding:2px 7px; border-radius:99px; background:{{ d.rtBg }}; color:{{ d.rtColor }}; align-self:flex-start; white-space:nowrap;">{{ d.rtCaret }} {{ d.rt }}</span><span style="font-size:9px; color:var(--tx-fnt); white-space:nowrap;">{{ d.rtRuns }} · {{ d.rtLast }}</span><span style="font-size:8px; font-weight:700; color:#7c3aed; white-space:nowrap; letter-spacing:0.03em;">{{ d.rtBasis }}</span></div>
                   <div style="padding:9px 10px; font-size:11px; color:var(--tx); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ d.assignee }}</div>
                   <div style="padding:9px 10px; font-size:11px; color:var(--tx); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ d.reporter }}</div>
