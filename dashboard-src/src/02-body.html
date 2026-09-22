@@ -148,6 +148,9 @@
         <sc-if value="{{ isEditor }}" hint-placeholder-val="{{ false }}">
           <span style="font-size:10.5px; color:var(--hd-tx-faint);">{{ importInfo }}</span>
         </sc-if>
+        <sc-if value="{{ storeFull }}" hint-placeholder-val="{{ false }}">
+          <span title="The browser's storage for this page is full, so the per-run detail of the last qTest import was not kept. The totals survive a reload, but the Test Runs list, the execution calendar and the qTest\u00d7Jira join need a fresh import each time. Use \u2715 Clear all data on releases you no longer need, or import a narrower qTest export." style="font-size:10.5px; font-weight:700; color:#fbbf24; cursor:help;">\u26a0 Storage full \u2014 test-run detail not saved</span>
+        </sc-if>
         <sc-if value="{{ xlsxNoticeShow }}" hint-placeholder-val="{{ false }}">
           <span style="font-size:10.5px; color:#fbbf24;">⚠ Excel import unavailable in offline export — use CSV</span>
         </sc-if>

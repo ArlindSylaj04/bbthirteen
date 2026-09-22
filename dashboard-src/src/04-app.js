@@ -55,6 +55,10 @@ class Component extends DCLogic {
   relKey(k) { const id = this.relSelectedId(); return this.relKeyIsScoped(k) ? (k + '@' + id) : k; }
   lsGet(k) { try { return localStorage.getItem(this.relKey(k)); } catch (e) { return null; } }
   lsSet(k, v) { try { localStorage.setItem(this.relKey(k), v); } catch (e) {} }
+  // Same write, but it throws when the browser refuses (quota). Callers that can
+  // shed data use this one — lsSet swallowing the error is what silently lost a
+  // large qTest import: the trim-and-retry loops below never got to run.
+  lsSetStrict(k, v) { localStorage.setItem(this.relKey(k), v); }
   lsDel(k) { try { localStorage.removeItem(this.relKey(k)); } catch (e) {} }
 
   // ─── date helpers (single source — everything user-facing is DD.MM.YYYY) ───
@@ -2095,16 +2099,58 @@ class Component extends DCLogic {
   CASE_FIELDS = ['phase','test','team','dir','application','module','id','name','runId','tcId','tester','status','rawStatus','ts','defects','unex'];
   saveCasesLatest(cases, file) {
     const slim = (cases || []).map(c => { const o = {}; this.CASE_FIELDS.forEach(k => { if (c[k] != null && c[k] !== '') o[k] = c[k]; }); return o; });
-    try { this.lsSet('qa-cases-latest', JSON.stringify({ ts: Date.now(), file: file || '', cases: slim })); } catch (e) {
-      try { this.lsSet('qa-cases-latest', JSON.stringify({ ts: Date.now(), file: file || '', cases: slim.filter(c => c.defects || c.tcId || c.runId) })); } catch (er) {}
+    // These few fields repeat across every run — a directory path or a team name is
+    // stored thousands of times. Keep one copy of each and store an index instead.
+    const pack = (list) => {
+      const dict = {}, idx = {};
+      this.CASE_DICT.forEach(f => { dict[f] = []; idx[f] = {}; });
+      const rows = list.map(c => {
+        const o = {};
+        Object.keys(c).forEach(k => {
+          if (idx[k]) {
+            const v = String(c[k]);
+            if (idx[k][v] == null) { idx[k][v] = dict[k].length; dict[k].push(v); }
+            o[k] = idx[k][v];
+          } else { o[k] = c[k]; }
+        });
+        return o;
+      });
+      return JSON.stringify({ v: 2, ts: Date.now(), file: file || '', dict, cases: rows });
+    };
+    // Shed detail in steps, keeping whatever still lets the qTest × Jira join work.
+    const linked = (c) => c.defects || c.tcId || c.runId;
+    const attempts = [
+      () => pack(slim),
+      () => pack(slim.map(c => linked(c) ? c : { ...c, name: undefined, dir: undefined })),
+      () => pack(slim.filter(linked)),
+      () => pack(slim.filter(c => c.defects)),
+    ];
+    for (let i = 0; i < attempts.length; i++) {
+      try { this.lsSetStrict('qa-cases-latest', attempts[i]()); this.lsDel('qa-store-full'); return; }
+      catch (e) { /* try the next, smaller shape */ }
     }
+    // Nothing fits. Say so rather than pretending the import was kept.
+    try { this.lsDel('qa-cases-latest'); } catch (e) {}
+    try { this.lsSet('qa-store-full', String(Date.now())); } catch (e) {}
   }
-  loadCasesLatest() { try { const s = JSON.parse(this.lsGet('qa-cases-latest') || 'null'); return (s && Array.isArray(s.cases)) ? s.cases : []; } catch (e) { return []; } }
+  CASE_DICT = ['phase', 'test', 'team', 'dir', 'application', 'module', 'tester', 'status', 'rawStatus'];
+  loadCasesLatest() {
+    try {
+      const s = JSON.parse(this.lsGet('qa-cases-latest') || 'null');
+      if (!s || !Array.isArray(s.cases)) return [];
+      if (s.v !== 2 || !s.dict) return s.cases;            // v1 payload, stored plain
+      return s.cases.map(c => {
+        const o = { ...c };
+        this.CASE_DICT.forEach(f => { if (typeof o[f] === 'number' && s.dict[f]) o[f] = s.dict[f][o[f]]; });
+        return o;
+      });
+    } catch (e) { return []; }
+  }
   loadHistory() { try { const s = JSON.parse(this.lsGet('qa-history') || '[]'); return Array.isArray(s) ? s : []; } catch (e) { return []; } }
   persistHistory(list) {
     let arr = list.slice();
     for (let guard = 0; guard < 200; guard++) {
-      try { this.lsSet('qa-history', JSON.stringify(arr)); this.setState({ history: arr }); return; }
+      try { this.lsSetStrict('qa-history', JSON.stringify(arr)); this.setState({ history: arr }); return; }
       catch (e) {
         // Storage full: first strip heavy per-case detail from older snapshots, then drop oldest.
         if (arr.some((s, i) => i > 0 && s.cases && s.cases.length)) arr = arr.map((s, i) => i === 0 ? s : { ...s, cases: [] });
@@ -5530,6 +5576,7 @@ class Component extends DCLogic {
       execDaysLeftLabel, execEndLabel, execSuggest, execPctDone, execPctBar, execPaceLabel, execPaceColor,
       execVerdict, execVerdictColor, execVerdictBg,
       phaseScopeLabel, phaseScopeHidden, phaseScopeHasHidden,
+      storeFull: !!this.lsGet('qa-store-full'),
       carryTotal, carryHas, carryNone, carryEnvs, carryHighTotal, carryHasHigh, openCarry, curEnvName: _curEnv,
       dfOrigin, originChoices, setDfOrigin, originLabel: originLabelOf(dfOrigin),
       defectKpis, defectKpisState, defectKpisPrio, hasDefects, noDefects, defTotal, defOpen, defClosed, openClosedPct, closedDeg, prCnt,      jiraBase, jiraHasBase, jiraFile, jiraHasFile, jiraError, jiraHasError, onCsvFile, setJiraBase, exportDefectsCsv, exportDefectsXlsx, exportDefectsPptx,
