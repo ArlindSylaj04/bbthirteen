@@ -2488,7 +2488,7 @@ class Component extends DCLogic {
         const r = n.getBoundingClientRect();
         return (r.width > 0 || r.height > 0) ? n : null;
       };
-      const el = visible('phase-' + name) || visible('relenv-' + name) || visible('phasecard-' + name);
+      const el = visible('phase-' + name) || visible('envrow-' + name) || visible('relenv-' + name) || visible('phasecard-' + name);
       if (!el) return;
       const box = el.getBoundingClientRect();
       window.scrollTo({ top: box.top + window.pageYOffset - 90, behavior: 'smooth' });
@@ -2830,7 +2830,7 @@ class Component extends DCLogic {
   componentWillUnmount() { if (this._timer) clearInterval(this._timer); if (this._libPoll) clearInterval(this._libPoll); if (this._onKey) window.removeEventListener('keydown', this._onKey); if (this._defSync) window.removeEventListener('qa-defects-sync', this._defSync); if (this._modNav) window.removeEventListener('qa-module-nav', this._modNav); if (this._drillIn) window.removeEventListener('qa-drill-open', this._drillIn); if (this._wheel) window.removeEventListener('wheel', this._wheel); }
   focusPhase = (id) => {
     const all = {}; this.PHASES_SCHED.forEach(p => { all[p.id] = true; }); all[id] = false;
-    this.setState({ collapsed: all }, () => setTimeout(() => { const el = document.getElementById('phase-' + id); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 90, behavior: 'smooth' }); }, 70));
+    this.setState({ collapsed: all }, () => setTimeout(() => { const el = document.getElementById('phase-' + id) || document.getElementById('envrow-' + id); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 90, behavior: 'smooth' }); }, 70));
   };
   bizDays(aMs, bMs) { return this.workDaysBetween(aMs, bMs); }
   // The index-based "edit any text" override layer was removed: report texts now

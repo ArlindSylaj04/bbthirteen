@@ -17,11 +17,11 @@ const shot = async (name) => {
   await p.screenshot({path:`shots/${name}.png`, clip:{x:Math.max(0,hb.x-28),y:Math.max(0,hb.y-28),width:Math.min(1680-Math.max(0,hb.x-28),1210),height:520}});
   console.log('  ✓', name);
 };
-console.log('view:', await p.evaluate(()=>localStorage.getItem('qa-envview')||'cards'));
-await shot('env-cards');
+console.log('view:', await p.evaluate(()=>localStorage.getItem('qa-envview')||'compact (default)'));
+await shot('env-compact');
 await p.evaluate(()=>{const b=[...document.querySelectorAll('button')].find(e=>/Cards|Compact/.test((e.textContent||'').trim())); b&&b.click();});
 await p.waitForTimeout(1400);
 console.log('after toggle:', await p.evaluate(()=>localStorage.getItem('qa-envview')));
-await shot('env-compact');
+await shot('env-cards');
 console.log('errors:', errs.length?errs:'none');
 await b.close();

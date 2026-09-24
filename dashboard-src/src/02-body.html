@@ -715,8 +715,10 @@
   <sc-if value="{{ hasEnvData }}" hint-placeholder-val="{{ false }}">
     <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:6px 10px; box-shadow:var(--shadow);">
       <sc-for list="{{ phaseDetails }}" as="pd">
-        <div id="relenv-{{ pd.id }}" style="display:grid; grid-template-columns:112px 86px minmax(170px,1fr) 72px 72px 196px 112px; gap:11px; align-items:center; padding:13px 10px; border-bottom:1px solid var(--brd-sub);">
-          <div style="display:flex; align-items:center; gap:9px; min-width:0;">
+        <div id="envrow-{{ pd.id }}" style="scroll-margin-top:90px; border-bottom:1px solid var(--brd-sub);">
+        <div sc-camel-on-click="{{ pd.onToggle }}" sc-camel-on-key-down="{{ pd.onKey }}" role="button" tabindex="0" aria-expanded="{{ pd.ariaExpanded }}" title="Open this environment to see every test suite, team and test run" style="display:grid; grid-template-columns:132px 86px minmax(170px,1fr) 72px 72px 196px 132px; gap:11px; align-items:center; padding:13px 10px; cursor:pointer; user-select:none;">
+          <div style="display:flex; align-items:center; gap:8px; min-width:0;">
+            <span style="display:inline-block; color:var(--tx-fnt); font-size:10px; transform:rotate({{ pd.chevronRotate }}deg); transition:transform 0.2s; width:12px; text-align:center; flex-shrink:0;">&#9660;</span>
             <span style="width:4px; height:26px; border-radius:3px; background:{{ pd.envColor }}; flex-shrink:0;"></span>
             <span title="{{ pd.label }}" style="font-size:15px; font-weight:700; color:var(--tx-strong);">{{ pd.id }}</span>
             <span style="width:7px; height:7px; border-radius:50%; background:{{ pd.healthColor }}; flex-shrink:0;" title="Overall state of this environment"></span>
@@ -757,11 +759,86 @@
             </sc-if>
           </div>
           <div style="display:flex; align-items:center; justify-content:flex-end; gap:6px;">
+            <sc-if value="{{ pd.collapsed }}" hint-placeholder-val="{{ true }}">
+              <span style="font-size:9px; font-weight:700; color:var(--tx-fnt); letter-spacing:0.05em; white-space:nowrap;">{{ pd.testCount }} TESTS</span>
+            </sc-if>
             <sc-if value="{{ pd.hasExecDates }}" hint-placeholder-val="{{ false }}">
               <button sc-camel-on-click="{{ pd.onOpenCalendar }}" title="Execution calendar — tests executed per day in this environment" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:8px; padding:4px 8px; cursor:pointer; font-size:11px; line-height:1;">&#128197;</button>
             </sc-if>
             <button sc-camel-on-click="{{ pd.onOpenCoverage }}" title="Application Coverage tree" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:8px; padding:4px 8px; cursor:pointer; color:var(--tx-mut); font-size:11px; line-height:1;">&#10530;</button>
           </div>
+        </div>
+        <sc-if value="{{ pd.expanded }}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{ pd.onOpenRuns }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:9px 18px; border-bottom:1px solid var(--brd-sub); display:flex; justify-content:flex-end;">
+            <button sc-camel-on-click="{{ pd.onOpenRuns }}" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:8px; padding:6px 13px; color:#2563eb; cursor:pointer; font-family:Rubik,sans-serif; font-size:10px; font-weight:700; display:flex; align-items:center; gap:6px;">🔎 View all test runs · {{ pd.id }} ›</button>
+          </div>
+        </sc-if>
+        <div style="display:grid; grid-template-columns:{{ pd.gridCols }}; grid-auto-rows:auto;">
+          <sc-for list="{{ pd.tests }}" as="test">
+            <div style="padding:16px 18px; border-right:1px solid var(--card-brd); min-width:0;">
+              <!-- Test type header -->
+              <div style="display:flex; align-items:center; gap:7px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--brd-sub);">
+                <div style="width:8px; height:8px; border-radius:50%; background:{{ test.color }}; flex-shrink:0;"></div>
+                <span sc-camel-on-click="{{ test.onOpenQtest }}" title="Open in qTest" style="font-size:10px; font-weight:600; color:var(--tx-strong); text-transform:uppercase; letter-spacing:0.06em; line-height:1.2; flex:1; cursor:pointer; display:inline-flex; align-items:center; gap:5px;" style-hover="color:#2563eb; text-decoration:underline;">{{ test.name }}<sc-if value="{{ test.hasQtest }}" hint-placeholder-val="{{ false }}"><span style="color:#2563eb; font-size:9px;">↗</span></sc-if></span>
+                <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+                  <button sc-camel-on-click="{{ test.onSetQtest }}" title="Set qTest link" style="background:transparent; border:none; color:var(--tx-mut); cursor:pointer; font-size:11px; line-height:1; flex-shrink:0; padding:0;">🔗</button>
+                </sc-if>
+                <span style="font-size:9px; font-weight:700; padding:2px 6px; border-radius:99px; background:{{ test.badgeBg }}; color:{{ test.color }}; letter-spacing:0.06em; flex-shrink:0;">{{ test.status }}</span>
+                <sc-if value="{{ test.canMove }}" hint-placeholder-val="{{ false }}">
+                  <span style="display:flex; gap:2px; flex-shrink:0; margin-left:4px;">
+                    <button sc-camel-on-click="{{ test.onMoveLeft }}" disabled="{{ test.leftDisabled }}" title="Move left" aria-label="Move suite left" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:5px; width:18px; height:18px; color:var(--tx-mut); cursor:pointer; font-size:10px; line-height:1; padding:0; opacity:{{ test.leftOp }};">‹</button>
+                    <button sc-camel-on-click="{{ test.onMoveRight }}" disabled="{{ test.rightDisabled }}" title="Move right" aria-label="Move suite right" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:5px; width:18px; height:18px; color:var(--tx-mut); cursor:pointer; font-size:10px; line-height:1; padding:0; opacity:{{ test.rightOp }};">›</button>
+                  </span>
+                </sc-if>
+              </div>
+              <!-- Tested / Planned -->
+              <div sc-camel-on-click="{{ test.onOpenCases }}" style="display:flex; align-items:baseline; gap:6px; margin-bottom:4px; cursor:pointer;">
+                <span style="font-size:24px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ test.tested }}</span>
+                <span style="font-size:13px; font-weight:600; color:var(--tx-fnt);">/ {{ test.planned }} planned</span>
+                <span style="font-size:9px; font-weight:600; color:#2563eb; margin-left:auto;">details ›</span>
+              </div>
+              <div style="background:var(--tile-bg); border-radius:99px; height:5px; overflow:hidden; margin-bottom:10px;">
+                <div style="background:{{ test.color }}; height:100%; border-radius:99px; width:{{ test.pct }}%;"></div>
+              </div>
+              <!-- 4-status breakdown -->
+              <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin-bottom:12px;">
+                <span sc-camel-on-click="{{ test.onPassed }}" title="View passed test runs" style="font-size:13px; font-weight:700; padding:4px 9px; border-radius:4px; background:var(--soft-ok); color:#4caf2f; cursor:pointer;" style-hover="filter:brightness(0.94);">✓ {{ test.passed }}</span>
+                <span sc-camel-on-click="{{ test.onFailed }}" title="View failed test runs" style="font-size:13px; font-weight:700; padding:4px 9px; border-radius:4px; background:var(--soft-bad); color:#ef4444; cursor:pointer;" style-hover="filter:brightness(0.94);">✗ {{ test.failed }}</span>
+                <span sc-camel-on-click="{{ test.onBlocked }}" title="View blocked test runs" style="font-size:13px; font-weight:700; padding:4px 9px; border-radius:4px; background:var(--soft-info); color:#3b82f6; cursor:pointer;" style-hover="filter:brightness(0.94);">⊡ {{ test.blocked }}</span>
+                <span sc-camel-on-click="{{ test.onNr }}" title="View not-relevant test runs" style="font-size:13px; font-weight:700; padding:4px 9px; border-radius:4px; background:var(--soft-purple); color:#a855f7; cursor:pointer;" style-hover="filter:brightness(0.94);">— {{ test.notRelevant }}</span>
+                <div style="margin-left:auto; display:flex; gap:6px;">
+                  <span title="Executed vs planned" style="font-size:12px; font-weight:800; padding:4px 10px; border-radius:6px; background:var(--tile-bg); color:var(--tx-strong); white-space:nowrap;">{{ test.execPct }}% exec</span>
+                  <span title="Passed vs executed" style="font-size:12px; font-weight:800; padding:4px 10px; border-radius:6px; background:var(--soft-ok); color:#4caf2f; white-space:nowrap;">{{ test.passPct }}% pass</span>
+                </div>
+              </div>
+              <!-- Day-over-day delta -->
+              <sc-if value="{{ test.hasPrev }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; padding:6px 0; border-top:1px dashed var(--brd-sub);">
+                  <span style="font-size:8px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em;">Δ vs prev</span>
+                  <span style="font-size:11px; font-weight:700; color:#4caf2f;">▲ {{ test.dPassed }}</span>
+                  <span style="font-size:11px; font-weight:700; color:#ef4444;">▲ {{ test.dFailed }}</span>
+                  <span style="font-size:11px; font-weight:700; color:#2563eb;">▲ {{ test.dBlocked }}</span>
+                </div>
+              </sc-if>
+              <!-- Folder label (if present) -->
+              <sc-if value="{{ test.folderLabel }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:9px; font-weight:600; color:var(--tx-fnt); margin-bottom:6px; padding:3px 8px; background:var(--tile-bg); border-radius:4px; display:inline-flex; align-items:center; gap:4px; letter-spacing:0.05em;">📁 {{ test.folderLabel }}</div>
+              </sc-if>
+              <!-- Team rows -->
+              <div style="display:flex; flex-direction:column; gap:3px;">
+                <sc-for list="{{ test.teams }}" as="team" hint-placeholder-count="0">
+                  <div sc-camel-on-click="{{ team.onOpenCases }}" title="View test runs for this environment" style="display:flex; align-items:center; gap:6px; padding:6px 9px; background:var(--card-bg2); border-radius:6px; cursor:pointer;" style-hover="background:var(--tile-bg);">
+                    <span style="font-size:13px; font-weight:500; color:var(--tx); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ team.name }}</span>
+                    <span style="font-size:14px; font-weight:700; color:var(--tx); white-space:nowrap; flex-shrink:0;">{{ team.tested }}<span style="color:var(--brd-2);">/</span>{{ team.planned }}</span>
+                    <span style="font-size:10px; font-weight:700; padding:2px 7px; border-radius:99px; background:{{ team.statusBg }}; color:{{ team.statusColor }}; white-space:nowrap; flex-shrink:0;">{{ team.status }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
         </div>
       </sc-for>
     </div>
