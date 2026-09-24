@@ -60,6 +60,10 @@ class Component extends DCLogic {
   // large qTest import: the trim-and-retry loops below never got to run.
   lsSetStrict(k, v) { localStorage.setItem(this.relKey(k), v); }
   lsDel(k) { try { localStorage.removeItem(this.relKey(k)); } catch (e) {} }
+  // Screen preferences (view, finish, lights). Never release-scoped, and never
+  // allowed to throw: a file:// page with storage switched off still has to render.
+  prefRead(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  prefWrite(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
   // ─── date helpers (single source — everything user-facing is DD.MM.YYYY) ───
   relParse(d) {
@@ -2838,23 +2842,26 @@ class Component extends DCLogic {
     const dark = this.state.dark;
     const theme = dark ? 'dark' : 'light';
     try { document.documentElement.setAttribute('data-theme', theme); } catch (e) {}
-    // Optional glass finish. Stored per browser, not per release — it is a
-    // preference about this screen, not part of any release's data.
-    const envCompact = (this._envv == null ? (this._envv = (localStorage.getItem('qa-envview') === 'compact')) : this._envv);
+    // Screen preferences below are stored per browser, not per release — they
+    // say how this page looks, not what a release contains.
+    // Compact is the default: the bar length means something there. The full
+    // colour cards stay one click away for anyone who prefers them.
+    const envCompact = (this._envv == null ? (this._envv = (this.prefRead('qa-envview') !== 'cards')) : this._envv);
     const envCards = !envCompact;
     const envViewLabel = envCompact ? 'Compact' : 'Cards';
-    const toggleEnvView = () => { this._envv = !envCompact; try { localStorage.setItem('qa-envview', this._envv ? 'compact' : 'cards'); } catch (e) {} this.forceUpdate(); };
-    const vfxGlass = (this._vfx == null ? (this._vfx = (localStorage.getItem('qa-vfx') !== 'flat')) : this._vfx);
+    const toggleEnvView = () => { this._envv = !envCompact; this.prefWrite('qa-envview', this._envv ? 'compact' : 'cards'); this.forceUpdate(); };
+    // Optional glass finish.
+    const vfxGlass = (this._vfx == null ? (this._vfx = (this.prefRead('qa-vfx') !== 'flat')) : this._vfx);
     const vfxFlat = !vfxGlass;
     const vfxLabel = vfxGlass ? 'Glass' : 'Flat';
     try { document.documentElement.setAttribute('data-vfx', vfxGlass ? 'glass' : 'flat'); } catch (e) {}
-    const toggleVfx = () => { this._vfx = !vfxGlass; try { localStorage.setItem('qa-vfx', this._vfx ? 'glass' : 'flat'); } catch (e) {} this.forceUpdate(); };
+    const toggleVfx = () => { this._vfx = !vfxGlass; this.prefWrite('qa-vfx', this._vfx ? 'glass' : 'flat'); this.forceUpdate(); };
     // The lights behind the page switch on their own, so you can keep the frosted
     // panels without the colour, or the colour without the frost.
-    const auroraOn = (this._aur == null ? (this._aur = (localStorage.getItem('qa-aurora') !== 'off')) : this._aur);
+    const auroraOn = (this._aur == null ? (this._aur = (this.prefRead('qa-aurora') !== 'off')) : this._aur);
     const auroraLabel = auroraOn ? 'On' : 'Off';
     try { document.documentElement.setAttribute('data-aurora', auroraOn ? 'on' : 'off'); } catch (e) {}
-    const toggleAurora = () => { this._aur = !auroraOn; try { localStorage.setItem('qa-aurora', this._aur ? 'on' : 'off'); } catch (e) {} this.forceUpdate(); };
+    const toggleAurora = () => { this._aur = !auroraOn; this.prefWrite('qa-aurora', this._aur ? 'on' : 'off'); this.forceUpdate(); };
     const toggleTheme = () => this.setState(s => { const nd = !s.dark; try { this.lsSet('qa-theme', nd ? 'dark' : 'light'); } catch (e) {} try { window.dispatchEvent(new CustomEvent('qa-theme-sync', { detail: nd ? 'dark' : 'light' })); } catch (e) {} return { dark: nd }; });
     const _collapsedRaw = this.state.collapsed || {};
     // Environment cards start collapsed; an id the user never touched is absent.
