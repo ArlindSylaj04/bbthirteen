@@ -1,0 +1,30 @@
+import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import { ANN, FILE, BROWSER } from './lib.mjs';
+const b = await chromium.launch({ executablePath: BROWSER });
+const p = await (await b.newContext({ viewport:{width:1700,height:1100}, deviceScaleFactor:2 })).newPage();
+const errs=[]; p.on('pageerror',e=>errs.push(e.message));
+await p.addInitScript(ANN);
+await p.goto(FILE,{waitUntil:'load'});
+await p.evaluate(()=>{sessionStorage.setItem('qa-session',JSON.stringify({name:'Arlind Sylaj',role:'admin',ts:Date.now()})); localStorage.setItem('qa-envview','cards');});
+await p.reload({waitUntil:'load'}); await p.waitForTimeout(2200);
+await (await p.$('label:has-text("Import XLS / CSV") input[type=file]')).setInputFiles('data/qtest_uneven.csv');
+await p.waitForTimeout(7000);
+await (await p.$('label:has-text("Import Jira CSV") input[type=file]')).setInputFiles('data/jira_recurring.csv');
+await p.waitForTimeout(2500);
+
+const grab = async (anchor, name, h, pad=26) => {
+  await p.evaluate(a=>{const el=[...document.querySelectorAll('div')].find(x=>new RegExp('^'+a).test((x.textContent||'').trim()));
+    if(el) window.scrollTo(0, el.getBoundingClientRect().top+window.scrollY-26);}, anchor);
+  await p.waitForTimeout(1000);
+  const bx = await p.evaluate(a=>{const el=[...document.querySelectorAll('div')].find(x=>new RegExp('^'+a).test((x.textContent||'').trim()));
+    const r=el.getBoundingClientRect(); return {x:r.x,y:r.y};}, anchor);
+  await p.screenshot({path:`out/${name}.png`, clip:{x:Math.max(0,bx.x-30), y:Math.max(0,bx.y-30), width:Math.min(1700-Math.max(0,bx.x-30),1460), height:h}});
+  console.log('  ✓', name);
+};
+await grab('Test environments','1-cards',760);
+await p.evaluate(()=>{const b=[...document.querySelectorAll('button')].find(e=>/View:/.test(e.textContent||'')); b&&b.click();});
+await p.waitForTimeout(1500);
+await grab('Test environments','2-compact',600);
+await grab('Recurring Defects across Environments','3-recurring',900);
+console.log('errors:', errs.length?errs:'none');
+await b.close();
