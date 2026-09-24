@@ -2096,10 +2096,19 @@
           <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 13px; border:1px solid var(--brd-2); border-radius:10px; background:var(--card-bg2); margin-bottom:4px;">
             <div style="min-width:0;">
               <div style="font-size:12.5px; font-weight:700; color:var(--tx-strong);">Visual style</div>
-              <div style="font-size:11px; color:var(--tx-mut); margin-top:2px;">Glass adds frosted panels and a soft moving backdrop. Flat turns all of it off.</div>
+              <div style="font-size:11px; color:var(--tx-mut); margin-top:2px;">Glass frosts the panels and lifts the tiles you can click. Flat turns that off.</div>
             </div>
             <button sc-camel-on-click="{{ toggleVfx }}" title="Switch between the glass finish and a plain flat surface" style="flex-shrink:0; background:var(--card-bg); border:1px solid var(--brd-2); border-radius:99px; padding:7px 15px; color:var(--tx-strong); cursor:pointer; font-family:Rubik,sans-serif; font-size:12px; font-weight:700; display:flex; align-items:center; gap:8px;">
               <span style="width:8px; height:8px; border-radius:50%; background:{{ vfxDot }};"></span>{{ vfxLabel }}
+            </button>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 13px; border:1px solid var(--brd-2); border-radius:10px; background:var(--card-bg2); margin-bottom:4px;">
+            <div style="min-width:0;">
+              <div style="font-size:12.5px; font-weight:700; color:var(--tx-strong);">Background lights</div>
+              <div style="font-size:11px; color:var(--tx-mut); margin-top:2px;">The soft coloured glow drifting behind the page. Independent of the visual style.</div>
+            </div>
+            <button sc-camel-on-click="{{ toggleAurora }}" title="Turn the coloured backdrop behind the page on or off" style="flex-shrink:0; background:var(--card-bg); border:1px solid var(--brd-2); border-radius:99px; padding:7px 15px; color:var(--tx-strong); cursor:pointer; font-family:Rubik,sans-serif; font-size:12px; font-weight:700; display:flex; align-items:center; gap:8px;">
+              <span style="width:8px; height:8px; border-radius:50%; background:{{ auroraDot }};"></span>{{ auroraLabel }}
             </button>
           </div>
           <sc-for list="{{ layoutRows }}" as="r" hint-placeholder-count="11">

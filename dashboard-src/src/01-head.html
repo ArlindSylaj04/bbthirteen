@@ -349,7 +349,7 @@
        whole point of a dialog is that you cannot read the page through it. */
 
     /* a slow aurora behind the page, painted under the existing body gradient */
-    html[data-vfx="glass"] body::before {
+    html[data-aurora="on"] body::before {
       content: ""; position: fixed; inset: -12%; z-index: 0; pointer-events: none;
       background:
         radial-gradient(48% 42% at 24% 26%, rgba(149,193,31,0.38), transparent 68%),
@@ -359,13 +359,13 @@
       opacity: 1;
       animation: qaAurora 34s ease-in-out infinite alternate;
     }
-    html[data-vfx="glass"][data-theme="light"] body::before { opacity: 0.45; }
+    html[data-aurora="on"][data-theme="light"] body::before { opacity: 0.45; }
     @keyframes qaAurora {
       0%   { transform: translate3d(-2%, -1.5%, 0) scale(1); }
       50%  { transform: translate3d(2%, 1.5%, 0) scale(1.06); }
       100% { transform: translate3d(-1.5%, 2%, 0) scale(1.02); }
     }
-    html[data-vfx="glass"] body > * { position: relative; z-index: 1; }
+    html[data-aurora="on"] body > * { position: relative; z-index: 1; }
 
     /* frosted cards: a touch of blur and a hairline of light along the top edge */
     html[data-vfx="glass"] .glass-card,
@@ -429,7 +429,7 @@
 
     /* Nothing above is worth motion sickness. */
     @media (prefers-reduced-motion: reduce) {
-      html[data-vfx="glass"] body::before { animation: none; }
+      html[data-aurora="on"] body::before { animation: none; }
       html[data-vfx="glass"] .glass-head::before { animation: none; opacity: 0; }
       html[data-vfx="glass"] .glass-pulse { animation: none; }
       html[data-vfx="glass"] .glass-tile { transition: none; }
@@ -437,7 +437,7 @@
     }
     /* Printing is a document, not a light show. */
     @media print {
-      html[data-vfx="glass"] body::before { display: none; }
+      html[data-aurora="on"] body::before { display: none; }
       html[data-vfx="glass"] .glass-card,
       html[data-vfx="glass"] [data-glass],
       html[data-vfx="glass"] .glass-head { backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }

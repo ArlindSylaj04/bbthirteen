@@ -2849,6 +2849,12 @@ class Component extends DCLogic {
     const vfxLabel = vfxGlass ? 'Glass' : 'Flat';
     try { document.documentElement.setAttribute('data-vfx', vfxGlass ? 'glass' : 'flat'); } catch (e) {}
     const toggleVfx = () => { this._vfx = !vfxGlass; try { localStorage.setItem('qa-vfx', this._vfx ? 'glass' : 'flat'); } catch (e) {} this.forceUpdate(); };
+    // The lights behind the page switch on their own, so you can keep the frosted
+    // panels without the colour, or the colour without the frost.
+    const auroraOn = (this._aur == null ? (this._aur = (localStorage.getItem('qa-aurora') !== 'off')) : this._aur);
+    const auroraLabel = auroraOn ? 'On' : 'Off';
+    try { document.documentElement.setAttribute('data-aurora', auroraOn ? 'on' : 'off'); } catch (e) {}
+    const toggleAurora = () => { this._aur = !auroraOn; try { localStorage.setItem('qa-aurora', this._aur ? 'on' : 'off'); } catch (e) {} this.forceUpdate(); };
     const toggleTheme = () => this.setState(s => { const nd = !s.dark; try { this.lsSet('qa-theme', nd ? 'dark' : 'light'); } catch (e) {} try { window.dispatchEvent(new CustomEvent('qa-theme-sync', { detail: nd ? 'dark' : 'light' })); } catch (e) {} return { dark: nd }; });
     const _collapsedRaw = this.state.collapsed || {};
     // Environment cards start collapsed; an id the user never touched is absent.
@@ -5730,7 +5736,8 @@ class Component extends DCLogic {
       execVerdict, execVerdictColor, execVerdictBg,
       phaseScopeLabel, phaseScopeHidden, phaseScopeHasHidden,
       storeFull: !!this.lsGet('qa-store-full'),
-      vfxGlass, vfxFlat, vfxLabel, toggleVfx, envCompact, envCards, envViewLabel, toggleEnvView, vfxDot: vfxGlass ? '#95c11f' : 'var(--tx-fnt)',
+      vfxGlass, vfxFlat, vfxLabel, toggleVfx, envCompact, envCards, envViewLabel, toggleEnvView,
+      auroraOn, auroraLabel, toggleAurora, auroraDot: auroraOn ? '#95c11f' : 'var(--tx-fnt)', vfxDot: vfxGlass ? '#95c11f' : 'var(--tx-fnt)',
       xeGroups, xeHas, xeNone, xeGroupN, xeTicketN, xeIdenticalN, xeOpenN,
       xeMatrix, xeMatrixCols, xeMatrixHas, xeLevels, xeThresholdKey, setXeStrict,
       carryTotal, carryHas, carryNone, carryEnvs, carryHighTotal, carryHasHigh, openCarry, curEnvName: _curEnv,
