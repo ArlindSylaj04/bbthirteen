@@ -698,6 +698,7 @@ class Component extends DCLogic {
     { k: 'chains',    label: 'E2E Chain Progress',        col: 'Main column' },
     { k: 'tcf',       label: 'Testfallfinalisierung',     col: 'Main column' },
     { k: 'backlog',   label: 'Release Backlog × Testing Link', col: 'Main column' },
+    { k: 'xenv',      label: 'Recurring Defects across Environments', col: 'Main column' },
     { k: 'countdown', label: 'Release Countdown',         col: 'Side column' },
     { k: 'workflow',  label: 'Testing Workflow Timeline', col: 'Side column' },
     { k: 'defects',   label: 'Defect Overview',           col: 'Side column' },
@@ -2837,6 +2838,13 @@ class Component extends DCLogic {
     const dark = this.state.dark;
     const theme = dark ? 'dark' : 'light';
     try { document.documentElement.setAttribute('data-theme', theme); } catch (e) {}
+    // Optional glass finish. Stored per browser, not per release — it is a
+    // preference about this screen, not part of any release's data.
+    const vfxGlass = (this._vfx == null ? (this._vfx = (localStorage.getItem('qa-vfx') !== 'flat')) : this._vfx);
+    const vfxFlat = !vfxGlass;
+    const vfxLabel = vfxGlass ? 'Glass' : 'Flat';
+    try { document.documentElement.setAttribute('data-vfx', vfxGlass ? 'glass' : 'flat'); } catch (e) {}
+    const toggleVfx = () => { this._vfx = !vfxGlass; try { localStorage.setItem('qa-vfx', this._vfx ? 'glass' : 'flat'); } catch (e) {} this.forceUpdate(); };
     const toggleTheme = () => this.setState(s => { const nd = !s.dark; try { this.lsSet('qa-theme', nd ? 'dark' : 'light'); } catch (e) {} try { window.dispatchEvent(new CustomEvent('qa-theme-sync', { detail: nd ? 'dark' : 'light' })); } catch (e) {} return { dark: nd }; });
     const _collapsedRaw = this.state.collapsed || {};
     // Environment cards start collapsed; an id the user never touched is absent.
@@ -4015,6 +4023,125 @@ class Component extends DCLogic {
     const carryHighTotal = _jdCarry.filter(d => { const b = prBucket(d.priority); return b === 'Highest' || b === 'High'; }).length;
     const carryHasHigh = carryHighTotal > 0;
     const openCarry = _openCarryAt('__carry');
+
+    // ── Cross-environment defect comparison ───────────────────────────────
+    // Does the same problem keep coming back? Compare defect summaries across
+    // environments: normalise the text, then score every cross-environment pair
+    // on how much vocabulary they share. Grouping is by similarity, not by key —
+    // a defect raised again in QC1 gets its own Jira ticket.
+    const XE_STOP = ' the a an of in on at for to is are be was were not no with and or by from this that it its as into over under after before when while cannot can does do has have had will shall should would der die das den dem ein eine einer und oder nicht kein keine bei von fuer für im am zum zur mit auf aus nach wird wurde ist sind war waren wenn beim durch ';
+    const xeTokens = (s) => {
+      const out = {}, seen = {};
+      String(s || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').split(' ').forEach(w => {
+        if (w.length < 3) return;
+        if (XE_STOP.indexOf(' ' + w + ' ') >= 0) return;
+        if (!seen[w]) { seen[w] = 1; out[w] = 1; }
+      });
+      return Object.keys(out);
+    };
+    const xeThresholdKey = this.state.xeStrict || 'normal';
+    const XE_LEVELS = { strict: 0.80, normal: 0.62, loose: 0.48 };
+    const xeMin = XE_LEVELS[xeThresholdKey] || 0.62;
+    const xeLevels = [
+      { k: 'strict', label: 'Near-identical', sel: xeThresholdKey === 'strict' },
+      { k: 'normal', label: 'Similar', sel: xeThresholdKey === 'normal' },
+      { k: 'loose', label: 'Loosely related', sel: xeThresholdKey === 'loose' },
+    ];
+    const setXeStrict = (e) => this.setState({ xeStrict: e.target.value });
+    const xeOrder = this.relOrder();
+    const _xePool = _jdAll.filter(d => d._env && d.summary);
+    const _xeDocs = _xePool.map((d, i) => ({ i, d, t: xeTokens(d.summary), env: d._env }));
+    // token -> doc ids, skipping words so common they carry no signal
+    const _xeIdx = {};
+    _xeDocs.forEach(x => x.t.forEach(w => (_xeIdx[w] = _xeIdx[w] || []).push(x.i)));
+    const _xeCommon = Math.max(8, Math.round(_xeDocs.length * 0.25));
+    const _dice = (a, b) => {
+      if (!a.length || !b.length) return 0;
+      const set = {}; a.forEach(w => set[w] = 1);
+      let hit = 0; b.forEach(w => { if (set[w]) hit++; });
+      return (2 * hit) / (a.length + b.length);
+    };
+    const _xePairs = [];
+    const _xeSeenPair = {};
+    _xeDocs.forEach(x => {
+      const cand = {};
+      x.t.forEach(w => { const l = _xeIdx[w]; if (l && l.length <= _xeCommon) l.forEach(j => { if (j !== x.i) cand[j] = 1; }); });
+      Object.keys(cand).forEach(js => {
+        const j = +js, y = _xeDocs[j];
+        if (!y || y.env === x.env) return;                       // only across environments
+        const a = Math.min(x.i, j), b = Math.max(x.i, j), pk = a + ':' + b;
+        if (_xeSeenPair[pk]) return; _xeSeenPair[pk] = 1;
+        const sc = _dice(x.t, y.t);
+        if (sc >= xeMin) _xePairs.push({ a, b, sc });
+      });
+    });
+    // union-find, so a defect recurring in three environments forms one group
+    const _uf = {};
+    const _find = (v) => { while (_uf[v] != null && _uf[v] !== v) v = _uf[v] = _uf[_uf[v]]; return v; };
+    const _union = (a, b) => { const ra = _find(a), rb = _find(b); if (ra !== rb) _uf[rb] = ra; };
+    _xePairs.forEach(p => { if (_uf[p.a] == null) _uf[p.a] = p.a; if (_uf[p.b] == null) _uf[p.b] = p.b; _union(p.a, p.b); });
+    const _xeBest = {};
+    _xePairs.forEach(p => { const r = _find(p.a); if (!_xeBest[r] || p.sc > _xeBest[r]) _xeBest[r] = p.sc; });
+    const _xeGroups = {};
+    Object.keys(_uf).forEach(k => { const r = _find(+k); (_xeGroups[r] = _xeGroups[r] || []).push(+k); });
+    const _relMetaX = this.relMeta();
+    const _xeJiraBase = this.state.jiraBase || this.loadJiraBase() || '';
+    const _envColor = (id) => (_relMetaX[id] || {}).color || '#8b95ab';
+    const xeGroups = Object.keys(_xeGroups).map(r => {
+      const ids = _xeGroups[r];
+      const members = ids.map(i => _xeDocs[i]).sort((a, b) => this.relEnvIndex(a.env) - this.relEnvIndex(b.env));
+      const envs = Array.from(new Set(members.map(m => m.env)));
+      const best = _xeBest[r] || 0;
+      const openN = members.filter(m => !isClosed(m.d.status)).length;
+      const topPr = ['Highest', 'High', 'Medium', 'Low'].find(p => members.some(m => prBucket(m.d.priority) === p)) || 'Low';
+      return {
+        id: r, best, pct: Math.round(best * 100) + '%',
+        title: members[0].d.summary,
+        envCount: envs.length, envList: envs.join(' → '),
+        isIdentical: best >= 0.85, isSimilar: best < 0.85,
+        matchColor: best >= 0.85 ? '#e11d48' : best >= 0.7 ? '#ea580c' : '#d97706',
+        openN, hasOpen: openN > 0, allClosed: openN === 0,
+        topPr, prColor: defPriStyle(topPr).priColor, prBg: defPriStyle(topPr).priBg,
+        rows: members.map(m => ({
+          key: m.d.key, env: m.env, envColor: _envColor(m.env),
+          summary: m.d.summary, status: m.d.status || 'Unknown',
+          closed: isClosed(m.d.status), stColor: isClosed(m.d.status) ? '#4caf2f' : '#ef4444',
+          created: m.d.created || '—', assignee: m.d.assignee || 'Unassigned',
+          href: (_xeJiraBase && m.d.key) ? this.jiraTicketUrl(_xeJiraBase, m.d.key) : '#',
+          onOpen: (e) => { if (!_xeJiraBase) { if (e && e.preventDefault) e.preventDefault(); this.openJira(m.d.key); } },
+        })),
+      };
+    }).sort((a, b) => (b.envCount - a.envCount) || (b.best - a.best));
+    const xeHas = xeGroups.length > 0;
+    const xeNone = !xeHas;
+    const xeGroupN = xeGroups.length;
+    const xeTicketN = xeGroups.reduce((n, g) => n + g.rows.length, 0);
+    const xeIdenticalN = xeGroups.filter(g => g.isIdentical).length;
+    const xeOpenN = xeGroups.filter(g => g.hasOpen).length;
+    // environment × environment matrix of matched pairs
+    const _mx = {};
+    _xePairs.forEach(p => {
+      const ea = _xeDocs[p.a].env, eb = _xeDocs[p.b].env;
+      const k = this.relEnvIndex(ea) <= this.relEnvIndex(eb) ? (ea + '|' + eb) : (eb + '|' + ea);
+      _mx[k] = (_mx[k] || 0) + 1;
+    });
+    const _xeEnvsUsed = xeOrder.filter(id => _xeDocs.some(x => x.env === id));
+    const xeMatrixHas = _xeEnvsUsed.length > 1 && xeHas;
+    const xeMatrixCols = _xeEnvsUsed.map(id => ({ id, color: _envColor(id) }));
+    const _mxMax = Math.max(1, ...Object.values(_mx));
+    const xeMatrix = _xeEnvsUsed.map(rowId => ({
+      id: rowId, color: _envColor(rowId),
+      cells: _xeEnvsUsed.map(colId => {
+        const same = rowId === colId;
+        const k = this.relEnvIndex(rowId) <= this.relEnvIndex(colId) ? (rowId + '|' + colId) : (colId + '|' + rowId);
+        const n = same ? 0 : (_mx[k] || 0);
+        return { n, show: same ? '—' : String(n), same, none: !same && n === 0,
+          bg: same ? 'transparent' : (n ? 'rgba(225,29,72,' + (0.12 + 0.55 * (n / _mxMax)).toFixed(2) + ')' : 'var(--tile-bg)'),
+          color: same ? 'var(--tx-fnt)' : (n ? '#fff' : 'var(--tx-fnt)'),
+          title: same ? rowId : (n + ' matching defect' + (n === 1 ? '' : 's') + ' between ' + rowId + ' and ' + colId) };
+      }),
+    }));
+
     const defTotal = jd.length;
     const defClosed = jd.filter(d => isClosed(d.status)).length;
     const defOpen = defTotal - defClosed;
@@ -5577,6 +5704,9 @@ class Component extends DCLogic {
       execVerdict, execVerdictColor, execVerdictBg,
       phaseScopeLabel, phaseScopeHidden, phaseScopeHasHidden,
       storeFull: !!this.lsGet('qa-store-full'),
+      vfxGlass, vfxFlat, vfxLabel, toggleVfx, vfxDot: vfxGlass ? '#95c11f' : 'var(--tx-fnt)',
+      xeGroups, xeHas, xeNone, xeGroupN, xeTicketN, xeIdenticalN, xeOpenN,
+      xeMatrix, xeMatrixCols, xeMatrixHas, xeLevels, xeThresholdKey, setXeStrict,
       carryTotal, carryHas, carryNone, carryEnvs, carryHighTotal, carryHasHigh, openCarry, curEnvName: _curEnv,
       dfOrigin, originChoices, setDfOrigin, originLabel: originLabelOf(dfOrigin),
       defectKpis, defectKpisState, defectKpisPrio, hasDefects, noDefects, defTotal, defOpen, defClosed, openClosedPct, closedDeg, prCnt,      jiraBase, jiraHasBase, jiraFile, jiraHasFile, jiraError, jiraHasError, onCsvFile, setJiraBase, exportDefectsCsv, exportDefectsXlsx, exportDefectsPptx,

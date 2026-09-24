@@ -185,7 +185,7 @@
 
   <div style="order:{{ ord_relovw }}; display:{{ dsp_relovw }}; flex-direction:column; gap:16px; min-width:0;">
   <!-- ═══════════════ RELEASE OVERVIEW ═══════════════ -->
-  <div style="background:var(--card-bg); border-radius:16px; padding:20px 24px; box-shadow:var(--shadow); transition:background 0.25s;">
+  <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:20px 24px; box-shadow:var(--shadow); transition:background 0.25s;">
     <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
       <div style="font-size:15.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em;">Release Overview</div>
       <span style="background:{{ relStatusBg }}; color:{{ relStatusColor }}; border-radius:6px; padding:3px 9px; font-size:9px; font-weight:800; letter-spacing:0.08em;">{{ relStatusLabel }}</span>
@@ -266,7 +266,7 @@
   <div style="order:{{ ord_reltl }}; display:{{ dsp_reltl }}; flex-direction:column; gap:16px; min-width:0;">
   <!-- ═══════════════ RELEASE TIMELINE ═══════════════ -->
   <sc-if value="{{ relHasEnvs }}" hint-placeholder-val="{{ true }}">
-  <div style="background:var(--card-bg); border-radius:16px; padding:20px 24px; box-shadow:var(--shadow); transition:background 0.25s;">
+  <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:20px 24px; box-shadow:var(--shadow); transition:background 0.25s;">
     <div style="display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:4px;">
       <div style="font-size:15.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em;">Release Timeline</div>
       <div style="font-size:11px; color:var(--tx-faint);">{{ relVersion }} · complete lifecycle · {{ relTlStartLabel }} – {{ relTlEndLabel }}</div>
@@ -309,7 +309,7 @@
 
   <div style="order:{{ ord_relsum }}; display:{{ dsp_relsum }}; flex-direction:column; gap:16px; min-width:0;">
   <!-- ═══════════════ RELEASE SUMMARY — complete schedule ═══════════════ -->
-  <div style="background:var(--card-bg); border-radius:16px; padding:22px 26px; box-shadow:var(--shadow); transition:background 0.25s;">
+  <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:22px 26px; box-shadow:var(--shadow); transition:background 0.25s;">
     <div style="display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
       <div style="font-size:15.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em;">Release Summary</div>
       <div style="font-size:11px; color:var(--tx-faint);">{{ relContext }} · every environment of this release with its schedule, progress and defects</div>
@@ -362,7 +362,7 @@
   <div style="order:{{ ord_resp }}; display:{{ dsp_resp }}; flex-direction:column; gap:16px; min-width:0;">
   <!-- RESPONSIBILITIES + TOPICS -->
   <div style="display:grid; grid-template-columns:minmax(280px,0.62fr) 1.38fr; gap:16px; align-items:start;">
-    <div style="background:var(--card-bg); border-radius:16px; padding:22px 26px; box-shadow:var(--shadow); transition:background 0.25s;">
+    <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:22px 26px; box-shadow:var(--shadow); transition:background 0.25s;">
       <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
         <span style="font-size:15.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em;">Responsibilities</span>
         <span style="font-size:9px; color:var(--tx-faint); font-variant-numeric:tabular-nums;">Rel. {{ relVersion }}</span>
@@ -392,7 +392,7 @@
         </sc-for>
       </div>
     </div>
-    <div style="background:var(--card-bg); border-radius:16px; padding:22px 26px; box-shadow:var(--shadow); transition:background 0.25s;">
+    <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:22px 26px; box-shadow:var(--shadow); transition:background 0.25s;">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
         <div>
           <div style="font-size:15px; font-weight:700; color:var(--tx-strong); margin-bottom:3px;">Topics, Risks &amp; Decisions</div>
@@ -846,7 +846,7 @@
   </sc-if>
 
   <sc-if value="{{ hasEnvData }}" hint-placeholder-val="{{ false }}">
-  <div style="background:var(--card-bg); border-radius:16px; padding:20px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
+  <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:20px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
       <div>
         <div style="font-size:15.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em;">Requirement Coverage</div>
@@ -903,7 +903,7 @@
   </div>
   <div style="order:{{ ord_chains }}; display:{{ dsp_chains }}; flex-direction:column; gap:16px; min-width:0;">
   <!-- E2E CHAIN PROGRESS — qTest folder tree -->
-  <div style="background:var(--card-bg); border-radius:16px; padding:20px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
+  <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:20px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
       <div>
         <div style="font-size:15.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em;">E2E Chain Progress<span data-rel-chip="" style="margin-left:9px; background:var(--tile-bg); border:1px solid var(--brd-2); border-radius:6px; padding:2px 8px; font-size:8.5px; font-weight:700; color:var(--tx-mut); letter-spacing:0.06em; text-transform:none; white-space:nowrap;" title="This section shows data for the selected release and its active environment">Rel. {{ relVersion }} · {{ relCurrentEnv }}</span></div>
@@ -1009,7 +1009,7 @@
 
   <div style="order:{{ ord_tcf }}; display:{{ dsp_tcf }}; flex-direction:column; gap:16px; min-width:0;">
   <!-- TEST CASE FINALISATION (Testfallfinalisierung) -->
-  <div style="background:var(--card-bg); border-radius:16px; padding:20px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
+  <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:20px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
       <div>
         <div style="font-size:15.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em; display:flex; align-items:center; gap:10px;">Testfallfinalisierung
@@ -1049,24 +1049,24 @@
 
     <sc-if value="{{ tcfHasData }}" hint-placeholder-val="{{ false }}">
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:16px;">
-        <div sc-camel-on-click="{{ pickTcfAll }}" title="Alle anzeigen" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-radius:12px; padding:14px 16px; cursor:pointer;" style-hover="transform:translateY(-2px);">
+        <div class="glass-tile" sc-camel-on-click="{{ pickTcfAll }}" title="Alle anzeigen" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-radius:12px; padding:14px 16px; cursor:pointer;" style-hover="transform:translateY(-2px);">
           <div style="font-size:28px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ tcfTotal }}</div>
           <div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Geplant gesamt ›</div>
           <div style="font-size:9.5px; color:var(--tx-fnt); margin-top:3px;">{{ tcfTaskN }} Tasks · {{ tcfSubN }} Sub-Tasks</div>
         </div>
-        <div sc-camel-on-click="{{ pickTcfNew }}" title="Offene Neuerstellungen anzeigen" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #38bdf8; border-radius:12px; padding:14px 16px; cursor:pointer;" style-hover="transform:translateY(-2px);">
+        <div class="glass-tile" sc-camel-on-click="{{ pickTcfNew }}" title="Offene Neuerstellungen anzeigen" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #38bdf8; border-radius:12px; padding:14px 16px; cursor:pointer;" style-hover="transform:translateY(-2px);">
           <div style="font-size:28px; font-weight:700; color:#38bdf8; line-height:1;">{{ tcfNewOpen }}</div>
           <div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Noch zu erstellen ›</div>
         </div>
-        <div sc-camel-on-click="{{ pickTcfUpd }}" title="Offene Aktualisierungen anzeigen" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #f6b73c; border-radius:12px; padding:14px 16px; cursor:pointer;" style-hover="transform:translateY(-2px);">
+        <div class="glass-tile" sc-camel-on-click="{{ pickTcfUpd }}" title="Offene Aktualisierungen anzeigen" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #f6b73c; border-radius:12px; padding:14px 16px; cursor:pointer;" style-hover="transform:translateY(-2px);">
           <div style="font-size:28px; font-weight:700; color:#f6b73c; line-height:1;">{{ tcfUpdOpen }}</div>
           <div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Noch zu aktualisieren ›</div>
         </div>
-        <div sc-camel-on-click="{{ pickTcfDone }}" title="Abgeschlossene anzeigen" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #4caf2f; border-radius:12px; padding:14px 16px; cursor:pointer;" style-hover="transform:translateY(-2px);">
+        <div class="glass-tile" sc-camel-on-click="{{ pickTcfDone }}" title="Abgeschlossene anzeigen" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #4caf2f; border-radius:12px; padding:14px 16px; cursor:pointer;" style-hover="transform:translateY(-2px);">
           <div style="font-size:28px; font-weight:700; color:#4caf2f; line-height:1;">{{ tcfDoneN }}</div>
           <div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Abgeschlossen · {{ tcfPct }}% ›</div>
         </div>
-        <div sc-camel-on-click="{{ pickTcfOpen }}" title="Alle offenen anzeigen" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-radius:12px; padding:14px 16px; cursor:pointer;" style-hover="transform:translateY(-2px);">
+        <div class="glass-tile" sc-camel-on-click="{{ pickTcfOpen }}" title="Alle offenen anzeigen" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-radius:12px; padding:14px 16px; cursor:pointer;" style-hover="transform:translateY(-2px);">
           <div style="font-size:28px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ tcfAvgTeamPerDay }}</div>
           <div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Ø pro Team &amp; Tag</div>
           <div style="font-size:9.5px; color:var(--tx-fnt); margin-top:3px;">Ø {{ tcfAvgTeam }} Testfälle / Team</div>
@@ -1154,7 +1154,7 @@
   </div>
   <div style="order:{{ ord_backlog }}; display:{{ dsp_backlog }}; flex-direction:column; gap:16px; min-width:0;">
   <sc-if value="{{ backlogShow }}" hint-placeholder-val="{{ false }}">
-  <div style="background:var(--card-bg); border-radius:16px; padding:20px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
+  <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:20px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
       <div>
         <div style="font-size:15.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em;">Release Backlog × Testing Link<span data-rel-chip="" style="margin-left:9px; background:var(--tile-bg); border:1px solid var(--brd-2); border-radius:6px; padding:2px 8px; font-size:8.5px; font-weight:700; color:var(--tx-mut); letter-spacing:0.06em; text-transform:none; white-space:nowrap;" title="This section shows data for the selected release and its active environment">Rel. {{ relVersion }} · {{ relCurrentEnv }}</span></div>
@@ -1176,12 +1176,12 @@
     </sc-if>
     <sc-if value="{{ backlogHasData }}" hint-placeholder-val="{{ false }}">
     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:16px;">
-      <div sc-camel-on-click="{{ pickAll }}" title="Show all" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-radius:12px; padding:13px 15px; cursor:pointer;" style-hover="transform:translateY(-2px);"><div style="font-size:26px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ backlogTotal }}</div><div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.05em; margin-top:4px;">{{ backlogStories }} stories · {{ backlogBugs }} bugs ›</div></div>
-      <div sc-camel-on-click="{{ pickLinked }}" title="Show linked to qTest" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #4caf2f; border-radius:12px; padding:13px 15px; cursor:pointer;" style-hover="transform:translateY(-2px);"><div style="font-size:26px; font-weight:700; color:#4caf2f; line-height:1;">{{ linkedQtestN }}</div><div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.05em; margin-top:4px;">Linked to qTest runs ›</div></div>
-      <div sc-camel-on-click="{{ pickQa }}" title="Show QA+ / Testfrei" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #38bdf8; border-radius:12px; padding:13px 15px; cursor:pointer;" style-hover="transform:translateY(-2px);"><div style="font-size:26px; font-weight:700; color:#38bdf8; line-height:1;">{{ qaLabelN }}</div><div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.05em; margin-top:4px;">Label QA+ / Testfrei ›</div></div>
-      <div sc-camel-on-click="{{ pickOlder }}" title="Show pre-existing bugs" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #f6b73c; border-radius:12px; padding:13px 15px; cursor:pointer;" style-hover="transform:translateY(-2px);"><div style="font-size:26px; font-weight:700; color:#f6b73c; line-height:1;">{{ olderBugsN }}</div><div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.05em; margin-top:4px;">Pre-existing bugs (older) ›</div></div>
-      <div sc-camel-on-click="{{ pickNone }}" title="Show issues with no test link" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #8b95ab; border-radius:12px; padding:13px 15px; cursor:pointer;" style-hover="transform:translateY(-2px);"><div style="font-size:26px; font-weight:700; color:#8b95ab; line-height:1;">{{ notLinkedN }}</div><div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.05em; margin-top:4px;">No test link yet ›</div></div>
-      <div sc-camel-on-click="{{ pickFlagged }}" title="Show flagged tickets" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #f59e0b; border-radius:12px; padding:13px 15px; cursor:pointer;" style-hover="transform:translateY(-2px);"><div style="font-size:26px; font-weight:700; color:#f59e0b; line-height:1;">{{ flaggedN }}</div><div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.05em; margin-top:4px;">🚩 Flagged ›</div></div>
+      <div class="glass-tile" sc-camel-on-click="{{ pickAll }}" title="Show all" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-radius:12px; padding:13px 15px; cursor:pointer;" style-hover="transform:translateY(-2px);"><div style="font-size:26px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ backlogTotal }}</div><div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.05em; margin-top:4px;">{{ backlogStories }} stories · {{ backlogBugs }} bugs ›</div></div>
+      <div class="glass-tile" sc-camel-on-click="{{ pickLinked }}" title="Show linked to qTest" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #4caf2f; border-radius:12px; padding:13px 15px; cursor:pointer;" style-hover="transform:translateY(-2px);"><div style="font-size:26px; font-weight:700; color:#4caf2f; line-height:1;">{{ linkedQtestN }}</div><div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.05em; margin-top:4px;">Linked to qTest runs ›</div></div>
+      <div class="glass-tile" sc-camel-on-click="{{ pickQa }}" title="Show QA+ / Testfrei" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #38bdf8; border-radius:12px; padding:13px 15px; cursor:pointer;" style-hover="transform:translateY(-2px);"><div style="font-size:26px; font-weight:700; color:#38bdf8; line-height:1;">{{ qaLabelN }}</div><div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.05em; margin-top:4px;">Label QA+ / Testfrei ›</div></div>
+      <div class="glass-tile" sc-camel-on-click="{{ pickOlder }}" title="Show pre-existing bugs" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #f6b73c; border-radius:12px; padding:13px 15px; cursor:pointer;" style-hover="transform:translateY(-2px);"><div style="font-size:26px; font-weight:700; color:#f6b73c; line-height:1;">{{ olderBugsN }}</div><div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.05em; margin-top:4px;">Pre-existing bugs (older) ›</div></div>
+      <div class="glass-tile" sc-camel-on-click="{{ pickNone }}" title="Show issues with no test link" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #8b95ab; border-radius:12px; padding:13px 15px; cursor:pointer;" style-hover="transform:translateY(-2px);"><div style="font-size:26px; font-weight:700; color:#8b95ab; line-height:1;">{{ notLinkedN }}</div><div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.05em; margin-top:4px;">No test link yet ›</div></div>
+      <div class="glass-tile" sc-camel-on-click="{{ pickFlagged }}" title="Show flagged tickets" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:3px solid #f59e0b; border-radius:12px; padding:13px 15px; cursor:pointer;" style-hover="transform:translateY(-2px);"><div style="font-size:26px; font-weight:700; color:#f59e0b; line-height:1;">{{ flaggedN }}</div><div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.05em; margin-top:4px;">🚩 Flagged ›</div></div>
     </div>
     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
       <sc-raw-select value="{{ backlogFilter }}" sc-camel-on-change="{{ setBacklogFilter }}" style="padding:8px 12px; border:1px solid var(--brd-2); border-radius:9px; background:var(--card-bg); color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:12px; cursor:pointer;">
@@ -1240,11 +1240,109 @@
   </sc-if>
   </div>
 
+  <!-- RECURRING DEFECTS ACROSS ENVIRONMENTS -->
+  <div style="order:{{ ord_xenv }}; display:{{ dsp_xenv }}; flex-direction:column; gap:16px; min-width:0;">
+    <div class="glass-card" style="background:var(--card-bg); border-radius:16px; padding:20px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+        <div style="min-width:0;">
+          <div style="font-size:15.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em;">Recurring Defects across Environments<span data-rel-chip="" style="margin-left:9px; background:var(--tile-bg); border:1px solid var(--brd-2); border-radius:6px; padding:2px 8px; font-size:8.5px; font-weight:700; color:var(--tx-mut); letter-spacing:0.06em; white-space:nowrap;">Rel. {{ relVersion }}</span></div>
+          <div style="font-size:12px; color:var(--tx-mut); margin-top:3px;">Defects whose wording matches across two or more test environments &#8212; the same problem reported again</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:7px;">
+          <span style="font-size:10px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em;">Match</span>
+          <sc-raw-select value="{{ xeThresholdKey }}" sc-camel-on-change="{{ setXeStrict }}" title="How close the wording has to be before two defects count as the same problem" style="padding:8px 12px; border:1px solid var(--brd-2); border-radius:9px; background:var(--card-bg); color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:12px;">
+            <sc-for list="{{ xeLevels }}" as="lv" hint-placeholder-count="3"><option value="{{ lv.k }}">{{ lv.label }}</option></sc-for>
+          </sc-raw-select>
+        </div>
+      </div>
+
+      <sc-if value="{{ xeNone }}" hint-placeholder-val="{{ true }}">
+        <div style="border:1.5px dashed var(--brd-2); border-radius:12px; padding:28px; text-align:center; color:var(--tx-mut); font-size:12.5px; line-height:1.7;">No repeat found at this setting.<br>Either each environment hit different problems, or the wording differs too much &#8212; try a looser match.</div>
+      </sc-if>
+
+      <sc-if value="{{ xeHas }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:10px; margin-bottom:16px;">
+          <div class="glass-tile" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:2px solid #e11d48; border-radius:var(--r-md); padding:13px 15px;">
+            <div style="font-size:26px; font-weight:700; color:#e11d48; line-height:1;">{{ xeGroupN }}</div>
+            <div style="font-size:9.5px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em; margin-top:6px;">Repeating problems</div>
+          </div>
+          <div class="glass-tile" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:2px solid #ea580c; border-radius:var(--r-md); padding:13px 15px;">
+            <div style="font-size:26px; font-weight:700; color:#ea580c; line-height:1;">{{ xeIdenticalN }}</div>
+            <div style="font-size:9.5px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em; margin-top:6px;">Near&#8209;identical wording</div>
+          </div>
+          <div class="glass-tile" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:2px solid #ef4444; border-radius:var(--r-md); padding:13px 15px;">
+            <div style="font-size:26px; font-weight:700; color:#ef4444; line-height:1;">{{ xeOpenN }}</div>
+            <div style="font-size:9.5px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em; margin-top:6px;">Still open somewhere</div>
+          </div>
+          <div class="glass-tile" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:2px solid #8b95ab; border-radius:var(--r-md); padding:13px 15px;">
+            <div style="font-size:26px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ xeTicketN }}</div>
+            <div style="font-size:9.5px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em; margin-top:6px;">Tickets involved</div>
+          </div>
+        </div>
+
+        <sc-if value="{{ xeMatrixHas }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-bottom:16px;">
+            <div style="font-size:9.5px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">How much each pair of environments overlaps</div>
+            <div style="overflow-x:auto;">
+              <div style="display:inline-block; min-width:0;">
+                <div style="display:flex; gap:4px; margin-bottom:4px;">
+                  <div style="width:62px; flex-shrink:0;"></div>
+                  <sc-for list="{{ xeMatrixCols }}" as="c" hint-placeholder-count="3">
+                    <div style="width:56px; text-align:center; font-size:10px; font-weight:800; color:{{ c.color }};">{{ c.id }}</div>
+                  </sc-for>
+                </div>
+                <sc-for list="{{ xeMatrix }}" as="r" hint-placeholder-count="3">
+                  <div style="display:flex; gap:4px; margin-bottom:4px; align-items:center;">
+                    <div style="width:62px; flex-shrink:0; font-size:10px; font-weight:800; color:{{ r.color }}; text-align:right; padding-right:6px;">{{ r.id }}</div>
+                    <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="3">
+                      <div title="{{ c.title }}" style="width:56px; height:34px; border-radius:8px; background:{{ c.bg }}; border:1px solid var(--brd-sub); display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:700; color:{{ c.color }}; font-variant-numeric:tabular-nums;">{{ c.show }}</div>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <sc-for list="{{ xeGroups }}" as="g" hint-placeholder-count="3">
+            <div class="glass-tile" style="border:1px solid var(--brd-sub); border-left:3px solid {{ g.matchColor }}; border-radius:12px; padding:13px 16px; background:var(--card-bg2);">
+              <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+                <span style="font-size:10.5px; font-weight:800; color:#fff; background:{{ g.matchColor }}; border-radius:99px; padding:2px 9px;">{{ g.pct }} match</span>
+                <span style="font-size:11.5px; font-weight:700; color:var(--tx-strong); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">{{ g.title }}</span>
+                <span style="font-size:10px; font-weight:700; color:var(--tx-mut); white-space:nowrap;">{{ g.envList }}</span>
+                <sc-if value="{{ g.hasOpen }}" hint-placeholder-val="{{ true }}">
+                  <span title="Still open in at least one environment" style="font-size:9.5px; font-weight:800; color:#ef4444; background:var(--soft-bad); border-radius:99px; padding:2px 8px; white-space:nowrap;">{{ g.openN }} open</span>
+                </sc-if>
+                <sc-if value="{{ g.allClosed }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-size:9.5px; font-weight:800; color:#4caf2f; background:var(--soft-ok); border-radius:99px; padding:2px 8px; white-space:nowrap;">all closed</span>
+                </sc-if>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:5px;">
+                <sc-for list="{{ g.rows }}" as="t" hint-placeholder-count="2">
+                  <div style="display:grid; grid-template-columns:52px 96px minmax(0,1fr) 120px 110px 92px; gap:8px; align-items:center; padding:5px 0; border-top:1px solid var(--brd-sub);">
+                    <span style="font-size:9.5px; font-weight:800; color:#fff; background:{{ t.envColor }}; border-radius:6px; padding:2px 0; text-align:center;">{{ t.env }}</span>
+                    <a href="{{ t.href }}" target="_blank" rel="noopener" sc-camel-on-click="{{ t.onOpen }}" title="Open in Jira" style="font-size:11px; font-weight:700; color:#2563eb; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ t.key }}</a>
+                    <span style="font-size:11px; color:var(--tx); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ t.summary }}</span>
+                    <span style="font-size:10.5px; font-weight:700; color:{{ t.stColor }}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ t.status }}</span>
+                    <span style="font-size:10.5px; color:var(--tx-mut); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ t.assignee }}</span>
+                    <span style="font-size:10px; color:var(--tx-mut); white-space:nowrap;">{{ t.created }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+
   </div>
 
   <div data-noedit="" style="display:flex; flex-direction:column; gap:16px; position:sticky; top:16px; align-self:start;">
   <div style="order:{{ ord_countdown }}; display:{{ dsp_countdown }}; flex-direction:column; gap:16px; min-width:0;">
-    <div style="position:relative; background:var(--hd-bg); border:1px solid var(--hd-brd); border-radius:var(--r-xl); padding:17px 20px 16px; box-shadow:var(--shadow); overflow:hidden;">
+    <div class="glass-head" style="position:relative; background:var(--hd-bg); border:1px solid var(--hd-brd); border-radius:var(--r-xl); padding:17px 20px 16px; box-shadow:var(--shadow); overflow:hidden;">
       <div style="position:absolute; inset:0 auto 0 0; width:3px; background:linear-gradient(180deg,{{ relPhaseColor }},transparent);"></div>
       <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:3px;">
         <span style="font-size:9px; letter-spacing:0.16em; color:var(--hd-tx-faint); text-transform:uppercase; font-weight:700;">Release Countdown</span>
@@ -1261,7 +1359,7 @@
   </div>
   <div style="order:{{ ord_workflow }}; display:{{ dsp_workflow }}; flex-direction:column; gap:16px; min-width:0;">
   <!-- TESTING WORKFLOW TIMELINE -->
-  <div style="background:var(--card-bg); border-radius:16px; padding:20px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
+  <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:20px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
       <div style="font-size:10px; font-weight:600; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.12em;">Testing Workflow Timeline<span data-rel-chip="" style="margin-left:9px; background:var(--tile-bg); border:1px solid var(--brd-2); border-radius:6px; padding:2px 8px; font-size:8.5px; font-weight:700; color:var(--tx-mut); letter-spacing:0.06em; text-transform:none; white-space:nowrap;" title="This section shows data for the selected release and its active environment">Rel. {{ relVersion }} · {{ relCurrentEnv }}</span></div>
       <button sc-camel-on-click="{{ openTimelineModal }}" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:8px; padding:6px 13px; color:var(--tx); cursor:pointer; font-family:Rubik,sans-serif; font-size:10px; font-weight:600; display:flex; align-items:center; gap:6px;">⤢ Weekly calendar</button>
@@ -1298,7 +1396,7 @@
   </div>
   <div style="order:{{ ord_defects }}; display:{{ dsp_defects }}; flex-direction:column; gap:16px; min-width:0;">
   <!-- DEFECT OVERVIEW (Jira) -->
-  <div style="background:var(--card-bg); border-radius:16px; padding:22px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
+  <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:22px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; flex-wrap:wrap;">
       <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; max-width:100%;">
         <div style="font-size:10px; font-weight:600; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.12em;">Defect Overview<span data-rel-chip="" style="margin-left:9px; background:var(--tile-bg); border:1px solid var(--brd-2); border-radius:6px; padding:2px 8px; font-size:8.5px; font-weight:700; color:var(--tx-mut); letter-spacing:0.06em; text-transform:none; white-space:nowrap;" title="This section shows data for the selected release and its active environment">Rel. {{ relVersion }} · {{ relCurrentEnv }}</span></div>
@@ -1330,7 +1428,7 @@
       <!-- state of play: total / open / closed -->
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(94px,1fr)); gap:9px;">
         <sc-for list="{{ defectKpisState }}" as="k" hint-placeholder-count="3">
-          <div sc-camel-on-click="{{ k.onClick }}" title="{{ k.full }} — click to list them" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:2px solid {{ k.accent }}; border-radius:var(--r-md); padding:12px 12px 11px; cursor:pointer; min-width:0; transition:transform .16s var(--ease), box-shadow .16s var(--ease);" style-hover="transform:translateY(-2px); box-shadow:var(--shadow);">
+          <div class="glass-tile" sc-camel-on-click="{{ k.onClick }}" title="{{ k.full }} — click to list them" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:2px solid {{ k.accent }}; border-radius:var(--r-md); padding:12px 12px 11px; cursor:pointer; min-width:0; transition:transform .16s var(--ease), box-shadow .16s var(--ease);" style-hover="transform:translateY(-2px); box-shadow:var(--shadow);">
             <div style="font-size:28px; font-weight:700; color:{{ k.color }}; line-height:1; font-variant-numeric:tabular-nums;">{{ k.value }}</div>
             <div style="font-size:9px; font-weight:600; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em; margin-top:7px; line-height:1.3;">{{ k.short }}</div>
           </div>
@@ -1341,7 +1439,7 @@
         <div style="font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.08em; white-space:nowrap;">By priority</div>
         <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:7px; flex:1; min-width:210px;">
           <sc-for list="{{ defectKpisPrio }}" as="k" hint-placeholder-count="4">
-            <div sc-camel-on-click="{{ k.onClick }}" title="Show these defects" style="background:var(--tile-bg); border:1px solid var(--brd-sub); border-radius:10px; padding:8px 9px; cursor:pointer; text-align:center; transition:border-color .16s var(--ease);" style-hover="border-color:{{ k.accent }};">
+            <div class="glass-tile" sc-camel-on-click="{{ k.onClick }}" title="Show these defects" style="background:var(--tile-bg); border:1px solid var(--brd-sub); border-radius:10px; padding:8px 9px; cursor:pointer; text-align:center; transition:border-color .16s var(--ease);" style-hover="border-color:{{ k.accent }};">
               <div style="font-size:18px; font-weight:700; color:{{ k.color }}; line-height:1; font-variant-numeric:tabular-nums;">{{ k.value }}</div>
               <div style="font-size:8.5px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em; margin-top:5px;">{{ k.label }}</div>
             </div>
@@ -1494,7 +1592,7 @@
   </div>
   <div style="order:{{ ord_dump }}; display:{{ dsp_dump }}; flex-direction:column; gap:16px; min-width:0;">
   <!-- BUG DUMP REPORT -->
-  <div style="background:var(--card-bg); border-radius:16px; padding:22px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
+  <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:22px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
       <div>
         <div style="font-size:10px; font-weight:600; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.12em;">Bug Dump Report<span data-rel-chip="" style="margin-left:9px; background:var(--tile-bg); border:1px solid var(--brd-2); border-radius:6px; padding:2px 8px; font-size:8.5px; font-weight:700; color:var(--tx-mut); letter-spacing:0.06em; text-transform:none; white-space:nowrap;" title="This section shows data for the selected release and its active environment">Rel. {{ relVersion }} · {{ relCurrentEnv }}</span></div>
@@ -1927,6 +2025,15 @@
           <button sc-camel-on-click="{{ closeLayout }}" style="background:transparent; border:none; color:#ffffffcc; font-size:20px; cursor:pointer; padding:0 6px; line-height:1;">×</button>
         </div>
         <div style="padding:18px 20px; display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 13px; border:1px solid var(--brd-2); border-radius:10px; background:var(--card-bg2); margin-bottom:4px;">
+            <div style="min-width:0;">
+              <div style="font-size:12.5px; font-weight:700; color:var(--tx-strong);">Visual style</div>
+              <div style="font-size:11px; color:var(--tx-mut); margin-top:2px;">Glass adds frosted panels and a soft moving backdrop. Flat turns all of it off.</div>
+            </div>
+            <button sc-camel-on-click="{{ toggleVfx }}" title="Switch between the glass finish and a plain flat surface" style="flex-shrink:0; background:var(--card-bg); border:1px solid var(--brd-2); border-radius:99px; padding:7px 15px; color:var(--tx-strong); cursor:pointer; font-family:Rubik,sans-serif; font-size:12px; font-weight:700; display:flex; align-items:center; gap:8px;">
+              <span style="width:8px; height:8px; border-radius:50%; background:{{ vfxDot }};"></span>{{ vfxLabel }}
+            </button>
+          </div>
           <sc-for list="{{ layoutRows }}" as="r" hint-placeholder-count="11">
             <div style="display:flex; flex-direction:column; gap:8px;">
               <sc-if value="{{ r.colShow }}" hint-placeholder-val="{{ false }}">

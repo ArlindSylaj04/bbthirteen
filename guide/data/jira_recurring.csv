@@ -1,0 +1,12 @@
+Issue key,Summary,Issue Type,Status,Priority,Assignee,Reporter,Created,Updated,Component/s,Environment,Fix Version/s,Description
+GC-1001,Batch determination times out on large deliveries,Bug,Closed,High,L. Haas,A. Sylaj,05/Aug/26,20/Sep/26,SAP FI,,26.02.00,
+GC-2001,Batch determination times out on large deliveries,Bug,Closed,High,L. Haas,A. Sylaj,01/Sep/26,20/Sep/26,SAP FI,,26.02.00,
+GC-3001,Batch determination times out for large deliveries,Bug,Open,High,L. Haas,A. Sylaj,30/Sep/26,20/Sep/26,SAP FI,,26.02.00,
+GC-1002,Posting date not derived from the document date,Bug,Closed,Highest,A. Sylaj,A. Sylaj,07/Aug/26,20/Sep/26,SAP FI,,26.02.00,
+GC-2002,Document date does not derive the posting date correctly,Bug,Open,Highest,A. Sylaj,A. Sylaj,03/Sep/26,20/Sep/26,SAP FI,,26.02.00,
+GC-1003,Invoice PDF cuts off the tax line,Bug,Closed,Medium,S. Weber,A. Sylaj,09/Aug/26,20/Sep/26,SAP FI,,26.02.00,
+GC-2003,Invoice PDF cuts off the tax line,Bug,Closed,Medium,S. Weber,A. Sylaj,05/Sep/26,20/Sep/26,SAP FI,,26.02.00,
+GC-1004,Vendor bank data not transferred,Bug,Closed,Low,R. Petrov,A. Sylaj,11/Aug/26,20/Sep/26,SAP FI,,26.02.00,
+GC-2004,Storage bin search returns no result,Bug,Open,Medium,M. Brinkmann,A. Sylaj,08/Sep/26,20/Sep/26,SAP FI,,26.02.00,
+GC-3004,Asset depreciation run aborts at year end,Bug,Open,High,S. Weber,A. Sylaj,02/Oct/26,20/Sep/26,SAP FI,,26.02.00,
+GC-2005,Pricing condition missing after the upgrade,Bug,Open,Low,K. Ergün,A. Sylaj,10/Sep/26,20/Sep/26,SAP FI,,26.02.00,
