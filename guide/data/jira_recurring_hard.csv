@@ -1,0 +1,9 @@
+Issue key,Summary,Issue Type,Status,Priority,Assignee,Reporter,Created,Updated,Component/s,Environment,Fix Version/s,Description
+GC-4001,Auftrag wird beim Speichern nicht gespeichert,Bug,Closed,High,L. Haas,A. Sylaj,05/Aug/26,20/Aug/26,SAP FI,IR1,26.02.00,Testfall TC-88421 fehlgeschlagen
+GC-4002,Speichern des Auftrags schlaegt fehl,Bug,Open,High,L. Haas,A. Sylaj,30/Sep/26,02/Oct/26,SAP FI,IR3,26.02.00,Testfall TC-88421 fehlgeschlagen
+GC-4003,Preisfindung liefert falschen Nettowert,Bug,Closed,Medium,M. Klein,A. Sylaj,06/Aug/26,20/Aug/26,SAP SD,IR1,26.02.00,
+GC-4004,Nettowerte der Preisfindung sind falsch,Bug,Open,Medium,M. Klein,A. Sylaj,01/Oct/26,02/Oct/26,SAP SD,IR3,26.02.00,
+GC-4005,Lieferschein Druck bricht ab,Bug,Open,Low,P. Roth,A. Sylaj,07/Aug/26,20/Aug/26,SAP LO,IR1,26.02.00,TC-77310
+GC-4006,PDF Ausgabe im Versand endet mit Fehler 500,Bug,Open,Low,P. Roth,A. Sylaj,02/Oct/26,03/Oct/26,SAP LO,IR3,26.02.00,TC-77310
+GC-4007,Kundenstamm Anlage nicht moeglich,Bug,Open,High,S. Beck,A. Sylaj,03/Oct/26,03/Oct/26,SAP MD,IR3,26.02.00,
+GC-4008,Rechnungsliste wird leer angezeigt,Bug,Open,High,S. Beck,A. Sylaj,04/Oct/26,04/Oct/26,SAP MD,IR3,26.02.00,

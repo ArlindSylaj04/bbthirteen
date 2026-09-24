@@ -4009,7 +4009,21 @@ class Component extends DCLogic {
     const _jdAll = this.state.jiraDefects || [];
     const _curEnv = _phaseWin.label || '';
     const _curIdx = this.relEnvIndex(_curEnv);
-    _jdAll.forEach(d => { d._env = this.relEnvOfMs(_msOfDay(d.created)); });
+    // Which environment a defect belongs to. A ticket that names its environment
+    // (label, component, Jira Environment field) is taken at its word — that is
+    // the tester's own statement. Only when nothing says so do we fall back to
+    // the created date landing inside an environment's window.
+    const _envNames = this.relOrder();
+    const _envTagOf = (d) => {
+      const hay = ' ' + String((d.labels || '') + ' ' + (d.environment || '') + ' ' + (d.component || ''))
+        .toUpperCase().replace(/[^A-Z0-9]+/g, ' ') + ' ';
+      for (let i = 0; i < _envNames.length; i++) {
+        const n = String(_envNames[i]).toUpperCase().replace(/[^A-Z0-9]+/g, '');
+        if (n && hay.indexOf(' ' + n + ' ') >= 0) return _envNames[i];
+      }
+      return '';
+    };
+    _jdAll.forEach(d => { d._envTag = _envTagOf(d); d._env = d._envTag || this.relEnvOfMs(_msOfDay(d.created)); });
     const _isCarry = (d) => {
       if (isClosed(d.status)) return false;
       const i = this.relEnvIndex(d._env);
@@ -4047,12 +4061,27 @@ class Component extends DCLogic {
     // on how much vocabulary they share. Grouping is by similarity, not by key —
     // a defect raised again in QC1 gets its own Jira ticket.
     const XE_STOP = ' the a an of in on at for to is are be was were not no with and or by from this that it its as into over under after before when while cannot can does do has have had will shall should would der die das den dem ein eine einer und oder nicht kein keine bei von fuer für im am zum zur mit auf aus nach wird wurde ist sind war waren wenn beim durch ';
+    // Two reports of one problem are rarely worded the same: "Auftrag wird nicht
+    // gespeichert" against "Speichern des Auftrags schlaegt fehl". Cutting the
+    // usual German and English endings (and the ge- of a participle) lets those
+    // meet on the same stem — speichert / speichern / Speichern all become speich.
+    const XE_SUF = ['ungen', 'ungs', 'enden', 'ende', 'eten', 'erte', 'ert', 'ung', 'end', 'ern', 'est', 'ens', 'ing', 'en', 'er', 'es', 'em', 'et', 'te', 'st', 's', 'e', 'n'];
+    const xeStem = (w) => {
+      let x = w;
+      if (x.length > 6 && x.slice(0, 2) === 'ge') x = x.slice(2);
+      for (let i = 0; i < XE_SUF.length; i++) {
+        const f = XE_SUF[i];
+        if (x.length - f.length >= 4 && x.slice(-f.length) === f) { x = x.slice(0, x.length - f.length); break; }
+      }
+      return x;
+    };
     const xeTokens = (s) => {
       const out = {}, seen = {};
       String(s || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').split(' ').forEach(w => {
         if (w.length < 3) return;
         if (XE_STOP.indexOf(' ' + w + ' ') >= 0) return;
-        if (!seen[w]) { seen[w] = 1; out[w] = 1; }
+        const st = xeStem(w);
+        if (!seen[st]) { seen[st] = 1; out[st] = 1; }
       });
       return Object.keys(out);
     };
@@ -4066,11 +4095,48 @@ class Component extends DCLogic {
     ];
     const setXeStrict = (e) => this.setState({ xeStrict: e.target.value });
     const xeOrder = this.relOrder();
-    const _xePool = _jdAll.filter(d => d._env && d.summary);
-    const _xeDocs = _xePool.map((d, i) => ({ i, d, t: xeTokens(d.summary), env: d._env }));
+    // Comparing inside one team is the useful question — "did Finance hit this
+    // again in IR3?" — so the pool can be narrowed to a single Jira component.
+    const _xeTeamOf = (d) => String(d.component || '').trim() || 'No team';
+    const xeTeams = ['All teams'].concat(Array.from(new Set(_jdAll.filter(d => d.summary).map(_xeTeamOf)))
+      .sort((a, b) => a === 'No team' ? 1 : b === 'No team' ? -1 : a.localeCompare(b)));
+    const xeTeamSel = xeTeams.indexOf(this.state.xeTeam) > 0 ? this.state.xeTeam : 'All teams';
+    const setXeTeam = (e) => this.setState({ xeTeam: e.target.value });
+    const _xePool = _jdAll.filter(d => d._env && d.summary && (xeTeamSel === 'All teams' || _xeTeamOf(d) === xeTeamSel));
+    // The test case a defect hangs off is the hardest evidence there is: two
+    // tickets against the same qTest case in two environments are the same
+    // problem however differently they are worded. Take the links from the
+    // qTest import (its Defect column) and from the ticket's own TC references.
+    const _xeCaseRows = (this.state.importedCases || []).filter(c => !c.unex);
+    const _xeTcByBug = {};
+    _xeCaseRows.forEach(c => {
+      const tid = String(c.tcId == null ? '' : c.tcId).trim();
+      if (!tid) return;
+      (c.defects || []).forEach(k => {
+        const K = String(k || '').trim().toUpperCase();
+        if (K) (_xeTcByBug[K] = _xeTcByBug[K] || {})['TC' + tid] = 1;
+      });
+    });
+    const _xeTcOf = (d) => {
+      const out = { ...(_xeTcByBug[String(d.key || '').trim().toUpperCase()] || {}) };
+      const hay = String((d.links || '') + ' ' + (d.summary || '') + ' ' + (d.labels || '') + ' ' + (d.refText || ''));
+      let m; const re = /\b(?:TC|TEST\s*CASE|CASE)[\s\-#:]*(\d{2,})/gi;
+      while ((m = re.exec(hay))) out['TC' + m[1]] = 1;
+      return Object.keys(out);
+    };
+    // Everything around the title that also says what the defect is about.
+    const _xeCtxOf = (d, tc) => xeTokens([d.component, d.labels, d.descr, d.environment, tc.join(' ')].filter(Boolean).join(' '));
+    const _xeDocs = _xePool.map((d, i) => {
+      const tc = _xeTcOf(d);
+      return { i, d, t: xeTokens(d.summary), ctx: _xeCtxOf(d, tc), tc, team: _xeTeamOf(d), env: d._env };
+    });
     // token -> doc ids, skipping words so common they carry no signal
     const _xeIdx = {};
     _xeDocs.forEach(x => x.t.forEach(w => (_xeIdx[w] = _xeIdx[w] || []).push(x.i)));
+    // test case -> doc ids: a shared case always gets compared, however the
+    // wording differs, so a rare-word index can never hide it.
+    const _xeTcIdx = {};
+    _xeDocs.forEach(x => x.tc.forEach(t => (_xeTcIdx[t] = _xeTcIdx[t] || []).push(x.i)));
     const _xeCommon = Math.max(8, Math.round(_xeDocs.length * 0.25));
     const _dice = (a, b) => {
       if (!a.length || !b.length) return 0;
@@ -4080,16 +4146,33 @@ class Component extends DCLogic {
     };
     const _xePairs = [];
     const _xeSeenPair = {};
+    // How alike two defects are: the title carries the argument, the context
+    // (team, labels, linked case, description) only ever helps, and a shared
+    // test case is treated as near-proof on its own.
+    const _xeScore = (x, y) => {
+      const base = _dice(x.t, y.t);
+      const ctx = _dice(x.ctx, y.ctx);
+      const shared = x.tc.filter(t => y.tc.indexOf(t) >= 0);
+      // Context lifts a score, it never creates one: two defects of the same team
+      // share their team words whatever they are about, so the title has to carry
+      // some weight first. A shared test case is the one exception.
+      let sc = base >= 0.30 ? Math.max(base, 0.72 * base + 0.28 * ctx) : base;
+      if (shared.length) sc = Math.max(sc, 0.90);
+      if (x.team === y.team && x.team !== 'No team' && (sc >= 0.30 || shared.length)) sc = Math.min(1, sc + 0.04);
+      return { sc, base, ctx, shared, sameTeam: x.team === y.team && x.team !== 'No team' };
+    };
     _xeDocs.forEach(x => {
       const cand = {};
       x.t.forEach(w => { const l = _xeIdx[w]; if (l && l.length <= _xeCommon) l.forEach(j => { if (j !== x.i) cand[j] = 1; }); });
+      x.ctx.forEach(w => { const l = _xeIdx[w]; if (l && l.length <= _xeCommon) l.forEach(j => { if (j !== x.i) cand[j] = 1; }); });
+      x.tc.forEach(t => (_xeTcIdx[t] || []).forEach(j => { if (j !== x.i) cand[j] = 1; }));
       Object.keys(cand).forEach(js => {
         const j = +js, y = _xeDocs[j];
         if (!y || y.env === x.env) return;                       // only across environments
         const a = Math.min(x.i, j), b = Math.max(x.i, j), pk = a + ':' + b;
         if (_xeSeenPair[pk]) return; _xeSeenPair[pk] = 1;
-        const sc = _dice(x.t, y.t);
-        if (sc >= xeMin) _xePairs.push({ a, b, sc });
+        const r = _xeScore(x, y);
+        if (r.sc >= xeMin) _xePairs.push({ a, b, sc: r.sc, tc: r.shared, sameTeam: r.sameTeam, word: r.base });
       });
     });
     // union-find, so a defect recurring in three environments forms one group
@@ -4099,6 +4182,15 @@ class Component extends DCLogic {
     _xePairs.forEach(p => { if (_uf[p.a] == null) _uf[p.a] = p.a; if (_uf[p.b] == null) _uf[p.b] = p.b; _union(p.a, p.b); });
     const _xeBest = {};
     _xePairs.forEach(p => { const r = _find(p.a); if (!_xeBest[r] || p.sc > _xeBest[r]) _xeBest[r] = p.sc; });
+    // keep what made each group match, so the panel can say why
+    const _xeWhy = {};
+    _xePairs.forEach(p => {
+      const r = _find(p.a);
+      const w = _xeWhy[r] = _xeWhy[r] || { tc: {}, sameTeam: false, word: 0 };
+      (p.tc || []).forEach(t => { w.tc[t] = 1; });
+      if (p.sameTeam) w.sameTeam = true;
+      if (p.word > w.word) w.word = p.word;
+    });
     const _xeGroups = {};
     Object.keys(_uf).forEach(k => { const r = _find(+k); (_xeGroups[r] = _xeGroups[r] || []).push(+k); });
     const _relMetaX = this.relMeta();
@@ -4109,10 +4201,16 @@ class Component extends DCLogic {
       const members = ids.map(i => _xeDocs[i]).sort((a, b) => this.relEnvIndex(a.env) - this.relEnvIndex(b.env));
       const envs = Array.from(new Set(members.map(m => m.env)));
       const best = _xeBest[r] || 0;
+      const why = _xeWhy[r] || { tc: {}, sameTeam: false, word: 0 };
+      const tcList = Object.keys(why.tc).map(t => t.replace(/^TC/, 'TC-'));
+      const reasons = [];
+      if (tcList.length) reasons.push({ t: 'Same test case \u00b7 ' + tcList.slice(0, 3).join(', ') + (tcList.length > 3 ? ' +' + (tcList.length - 3) : ''), c: '#e11d48', bg: 'rgba(225,29,72,0.12)' });
+      if (why.sameTeam) reasons.push({ t: 'Same team \u00b7 ' + members[0].team, c: '#2563eb', bg: 'rgba(37,99,235,0.12)' });
+      reasons.push({ t: 'Wording ' + Math.round(why.word * 100) + '%', c: 'var(--tx-mut)', bg: 'var(--tile-bg)' });
       const openN = members.filter(m => !isClosed(m.d.status)).length;
       const topPr = ['Highest', 'High', 'Medium', 'Low'].find(p => members.some(m => prBucket(m.d.priority) === p)) || 'Low';
       return {
-        id: r, best, pct: Math.round(best * 100) + '%',
+        id: r, best, pct: Math.round(best * 100) + '%', reasons,
         title: members[0].d.summary,
         envCount: envs.length, envList: envs.join(' → '),
         isIdentical: best >= 0.85, isSimilar: best < 0.85,
@@ -4120,7 +4218,7 @@ class Component extends DCLogic {
         openN, hasOpen: openN > 0, allClosed: openN === 0,
         topPr, prColor: defPriStyle(topPr).priColor, prBg: defPriStyle(topPr).priBg,
         rows: members.map(m => ({
-          key: m.d.key, env: m.env, envColor: _envColor(m.env),
+          key: m.d.key, env: m.env, envColor: _envColor(m.env), team: m.team,
           summary: m.d.summary, status: m.d.status || 'Unknown',
           closed: isClosed(m.d.status), stColor: isClosed(m.d.status) ? '#4caf2f' : '#ef4444',
           created: m.d.created || '—', assignee: m.d.assignee || 'Unassigned',
@@ -4131,6 +4229,20 @@ class Component extends DCLogic {
     }).sort((a, b) => (b.envCount - a.envCount) || (b.best - a.best));
     const xeHas = xeGroups.length > 0;
     const xeNone = !xeHas;
+    // When nothing matches, say which of the three reasons it was: too few
+    // defects, all of them in one environment, or wording that never got close.
+    const _xeScope = _jdAll.filter(d => d.summary && (xeTeamSel === 'All teams' || _xeTeamOf(d) === xeTeamSel));
+    const xePoolN = _xeDocs.length;
+    const xeNoEnvN = _xeScope.length - xePoolN;
+    const _xeEnvsIn = Array.from(new Set(_xeDocs.map(x => x.env)));
+    const xeLevelLabel = (xeLevels.find(l => l.sel) || { label: 'Similar' }).label.toLowerCase();
+    const xeWhyNone = xePoolN < 2
+      ? ('Only ' + xePoolN + ' defect' + (xePoolN === 1 ? '' : 's') + ' could be placed in an environment, so there is nothing to compare.')
+      : (_xeEnvsIn.length < 2
+        ? ('All ' + xePoolN + ' defects in scope belong to one environment (' + _xeEnvsIn.join('') + ') \u2014 a repeat can only be found across two or more.')
+        : ('Compared ' + xePoolN + ' defects across ' + _xeEnvsIn.length + ' environments (' + _xeEnvsIn.join(', ') + '). No pair reached the \u201c' + xeLevelLabel + '\u201d threshold \u2014 try a looser match.'));
+    const xeNoEnvHas = xeNoEnvN > 0;
+    const xeNoEnvNote = xeNoEnvN + ' defect' + (xeNoEnvN === 1 ? '' : 's') + ' could not be placed in any environment: no environment name in their labels, component or environment field, and their created date falls outside every environment window.';
     const xeGroupN = xeGroups.length;
     const xeTicketN = xeGroups.reduce((n, g) => n + g.rows.length, 0);
     const xeIdenticalN = xeGroups.filter(g => g.isIdentical).length;
@@ -5747,6 +5859,7 @@ class Component extends DCLogic {
       auroraOn, auroraLabel, toggleAurora, auroraDot: auroraOn ? '#95c11f' : 'var(--tx-fnt)', vfxDot: vfxGlass ? '#95c11f' : 'var(--tx-fnt)',
       xeGroups, xeHas, xeNone, xeGroupN, xeTicketN, xeIdenticalN, xeOpenN,
       xeMatrix, xeMatrixCols, xeMatrixHas, xeLevels, xeThresholdKey, setXeStrict,
+      xeTeams, xeTeamSel, setXeTeam, xeWhyNone, xeNoEnvHas, xeNoEnvNote,
       carryTotal, carryHas, carryNone, carryEnvs, carryHighTotal, carryHasHigh, openCarry, curEnvName: _curEnv,
       dfOrigin, originChoices, setDfOrigin, originLabel: originLabelOf(dfOrigin),
       defectKpis, defectKpisState, defectKpisPrio, hasDefects, noDefects, defTotal, defOpen, defClosed, openClosedPct, closedDeg, prCnt,      jiraBase, jiraHasBase, jiraFile, jiraHasFile, jiraError, jiraHasError, onCsvFile, setJiraBase, exportDefectsCsv, exportDefectsXlsx, exportDefectsPptx,
