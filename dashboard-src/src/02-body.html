@@ -704,6 +704,73 @@
     </div>
   </sc-if>
   <sc-if value="{{ hasEnvData }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:-4px;">
+      <div style="font-size:9.5px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.1em;">Test environments</div>
+      <button sc-camel-on-click="{{ toggleEnvView }}" title="Switch between the full colour cards and a compact row per environment, where the bar length shows how big each environment really is" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:99px; padding:6px 14px; color:var(--tx); cursor:pointer; font-family:Rubik,sans-serif; font-size:11.5px; font-weight:700; display:flex; align-items:center; gap:7px;">&#9707; View: {{ envViewLabel }}</button>
+    </div>
+  </sc-if>
+
+  <!-- COMPACT: one aligned row per environment, bar scaled to real size -->
+  <sc-if value="{{ envCompact }}" hint-placeholder-val="{{ false }}">
+  <sc-if value="{{ hasEnvData }}" hint-placeholder-val="{{ false }}">
+    <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:6px 10px; box-shadow:var(--shadow);">
+      <sc-for list="{{ phaseDetails }}" as="pd">
+        <div id="relenv-{{ pd.id }}" style="display:grid; grid-template-columns:112px 86px minmax(170px,1fr) 72px 72px 196px 112px; gap:11px; align-items:center; padding:13px 10px; border-bottom:1px solid var(--brd-sub);">
+          <div style="display:flex; align-items:center; gap:9px; min-width:0;">
+            <span style="width:4px; height:26px; border-radius:3px; background:{{ pd.envColor }}; flex-shrink:0;"></span>
+            <span title="{{ pd.label }}" style="font-size:15px; font-weight:700; color:var(--tx-strong);">{{ pd.id }}</span>
+            <span style="width:7px; height:7px; border-radius:50%; background:{{ pd.healthColor }}; flex-shrink:0;" title="Overall state of this environment"></span>
+          </div>
+          <div title="{{ pd.plannedRuns }} planned runs &#183; {{ pd.shareLabel }}" style="text-align:right;">
+            <div style="font-size:16px; font-weight:700; color:var(--tx-strong); line-height:1; font-variant-numeric:tabular-nums;">{{ pd.plannedLabel }}</div>
+            <div style="font-size:8px; font-weight:700; color:var(--tx-fnt); letter-spacing:0.06em; text-transform:uppercase; margin-top:3px;">runs</div>
+          </div>
+          <div style="min-width:0;">
+            <div title="Bar length shows this environment's share of the release &#183; {{ pd.shareLabel }}" style="width:{{ pd.scaleW }}%; display:flex; height:16px; border-radius:8px; overflow:hidden; background:var(--track); box-shadow:inset 0 0 0 1px var(--brd-sub);">
+              <sc-for list="{{ pd.segs }}" as="sg" hint-placeholder-count="3">
+                <div title="{{ sg.k }}: {{ sg.n }}" style="width:{{ sg.w }}%; background:{{ sg.c }};"></div>
+              </sc-for>
+            </div>
+            <div style="display:flex; gap:11px; margin-top:6px; flex-wrap:wrap;">
+              <sc-for list="{{ pd.segs }}" as="sg" hint-placeholder-count="3">
+                <span style="font-size:10.5px; font-weight:700; color:var(--tx-mut); display:flex; align-items:center; gap:4px; white-space:nowrap;"><span style="width:7px; height:7px; border-radius:2px; background:{{ sg.c }};"></span>{{ sg.n }} {{ sg.k }}</span>
+              </sc-for>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:15px; font-weight:700; color:var(--tx-strong); line-height:1; font-variant-numeric:tabular-nums;">{{ pd.execLabel }}</div>
+            <div style="font-size:8px; font-weight:700; color:var(--tx-fnt); letter-spacing:0.06em; text-transform:uppercase; margin-top:3px;">executed</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:15px; font-weight:700; color:{{ pd.healthColor }}; line-height:1; font-variant-numeric:tabular-nums;">{{ pd.passLabel }}</div>
+            <sc-if value="{{ pd.hasFail }}" hint-placeholder-val="{{ true }}">
+              <div title="Failed test runs in this environment" style="font-size:9px; font-weight:800; color:#ef4444; margin-top:3px; white-space:nowrap;">{{ pd.failN }} failed</div>
+            </sc-if>
+            <sc-if value="{{ pd.noFail }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:8px; font-weight:700; color:var(--tx-fnt); letter-spacing:0.06em; text-transform:uppercase; margin-top:3px;">passed</div>
+            </sc-if>
+          </div>
+          <div title="{{ pd.dateMain }} &#183; {{ pd.dateSub }}" style="text-align:right; min-width:0; overflow:hidden;">
+            <div style="font-size:10.5px; font-weight:600; color:var(--tx); font-variant-numeric:tabular-nums; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ pd.dateMain }}</div>
+            <sc-if value="{{ pd.hasDateSub }}" hint-placeholder-val="{{ true }}">
+              <div style="font-size:9.5px; color:var(--tx-fnt); font-variant-numeric:tabular-nums; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ pd.dateSub }}</div>
+            </sc-if>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:flex-end; gap:6px;">
+            <sc-if value="{{ pd.hasExecDates }}" hint-placeholder-val="{{ false }}">
+              <button sc-camel-on-click="{{ pd.onOpenCalendar }}" title="Execution calendar — tests executed per day in this environment" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:8px; padding:4px 8px; cursor:pointer; font-size:11px; line-height:1;">&#128197;</button>
+            </sc-if>
+            <button sc-camel-on-click="{{ pd.onOpenCoverage }}" title="Application Coverage tree" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:8px; padding:4px 8px; cursor:pointer; color:var(--tx-mut); font-size:11px; line-height:1;">&#10530;</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+  </sc-if>
+
+  <sc-if value="{{ envCards }}" hint-placeholder-val="{{ true }}">
+
+  <sc-if value="{{ hasEnvData }}" hint-placeholder-val="{{ false }}">
   <sc-for list="{{ phaseDetails }}" as="pd">
     <div id="phase-{{ pd.id }}" data-noedit="" style="background:var(--card-bg); border-radius:16px; overflow:hidden; box-shadow:var(--shadow); transition:background 0.25s; scroll-margin-top:90px;">
       <div sc-camel-on-click="{{ pd.onToggle }}" sc-camel-on-key-down="{{ pd.onKey }}" sc-camel-on-touch-start="{{ pd.onCovTouchStart }}" sc-camel-on-touch-end="{{ pd.onCovTouchEnd }}" role="button" tabindex="0" aria-expanded="{{ pd.ariaExpanded }}" style="background:{{ pd.headerBg }}; padding:12px 26px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; cursor:pointer; user-select:none;">
@@ -843,6 +910,7 @@
       </sc-if>
     </div>
   </sc-for>
+  </sc-if>
   </sc-if>
 
   <sc-if value="{{ hasEnvData }}" hint-placeholder-val="{{ false }}">

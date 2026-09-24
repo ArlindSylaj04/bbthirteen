@@ -2840,6 +2840,10 @@ class Component extends DCLogic {
     try { document.documentElement.setAttribute('data-theme', theme); } catch (e) {}
     // Optional glass finish. Stored per browser, not per release — it is a
     // preference about this screen, not part of any release's data.
+    const envCompact = (this._envv == null ? (this._envv = (localStorage.getItem('qa-envview') === 'compact')) : this._envv);
+    const envCards = !envCompact;
+    const envViewLabel = envCompact ? 'Compact' : 'Cards';
+    const toggleEnvView = () => { this._envv = !envCompact; try { localStorage.setItem('qa-envview', this._envv ? 'compact' : 'cards'); } catch (e) {} this.forceUpdate(); };
     const vfxGlass = (this._vfx == null ? (this._vfx = (localStorage.getItem('qa-vfx') !== 'flat')) : this._vfx);
     const vfxFlat = !vfxGlass;
     const vfxLabel = vfxGlass ? 'Glass' : 'Flat';
@@ -4367,6 +4371,7 @@ class Component extends DCLogic {
     ['key', 'summary', 'priority', 'status', 'assignee', 'reporter', 'created', 'updated', 'resolved', 'environment', 'component', 'release'].forEach(k => { sortHandlers[k] = sortDefBy(k); });
     const byStatusBars = statusOptions.filter(s => s !== 'All').map(s => ({ label: s, count: jd.filter(d => d.status === s).length, closed: isClosed(s) })).sort((a, b) => b.count - a.count);
     const bsMax = Math.max(1, ...byStatusBars.map(s => s.count)); byStatusBars.forEach(s => { s.pct = Math.round(s.count / bsMax * 100); s.barColor = s.closed ? '#4caf2f' : '#ef4444'; });
+    const _plMax = Math.max(1, ...phaseDetails.map(pd => (pd.tests || []).reduce((a, t) => a + num(t.planned || 0), 0)));
     const byPriorityBars = ['Highest', 'High', 'Medium', 'Low'].map(p => ({ label: p, count: prCnt[p], ...defPriStyle(p) }));
     const bpMax = Math.max(1, ...byPriorityBars.map(p => p.count)); byPriorityBars.forEach(p => { p.pct = Math.round(p.count / bpMax * 100); });
     for (const pd of phaseDetails) {
@@ -4395,6 +4400,27 @@ class Component extends DCLogic {
         ? ((_sched.greyNote || 'Fix & retest') + ' till ' + this.relFmt(_sched.end)) : '';
       pd.hasDateSub = !!pd.dateSub;
       pd.hasBar = (pa + fa + bl + nr) > 0;
+      // ── compact row ──
+      // Only the segments that exist; a row of zeros tells you nothing.
+      pd.segs = [
+        { k: 'Passed', n: pa, w: (pa / base * 100).toFixed(2), c: '#4caf2f' },
+        { k: 'Failed', n: fa, w: (fa / base * 100).toFixed(2), c: '#ef4444' },
+        { k: 'Blocked', n: bl, w: (bl / base * 100).toFixed(2), c: '#3b82f6' },
+        { k: 'N/R', n: nr, w: (nr / base * 100).toFixed(2), c: '#a855f7' },
+        { k: 'Pending', n: pend, w: (pend / base * 100).toFixed(2), c: 'var(--track)' },
+      ].filter(x => x.n > 0);
+      pd.envColor = (this.relMeta()[pd.id] || {}).color || '#8b95ab';
+      pd.failN = fa; pd.hasFail = fa > 0; pd.noFail = fa === 0;
+      pd.pendN = pend; pd.hasPend = pend > 0;
+      pd.execLabel = pd.execPct + '%'; pd.passLabel = pd.passPct + '%';
+      // Health drives the one strong colour in the row, so colour means status
+      // rather than just "which environment".
+      pd.health = pl === 0 ? 'none' : (fa > 0 && pd.passPct < 90) ? 'bad' : (pd.execPct < 100 ? 'warn' : 'ok');
+      pd.healthColor = pd.health === 'bad' ? '#ef4444' : pd.health === 'warn' ? '#d97706' : pd.health === 'ok' ? '#4caf2f' : 'var(--tx-fnt)';
+      pd.testsLabel = ((pd.tests || []).length) + ' tests';
+      // A 36-run environment must not draw the same bar as a 3646-run one.
+      pd.scaleW = Math.max(2, Math.round(pl / _plMax * 100));
+      pd.shareLabel = Math.round(pl / Math.max(1, phaseDetails.reduce((a, x) => a + (x.tests || []).reduce((b, t) => b + num(t.planned || 0), 0), 0)) * 100) + '% of the release';
       pd.ariaExpanded = pd.expanded ? 'true' : 'false';
       pd.onOpenCoverage = (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.openCoverage(pd.id); };
       pd.onKey = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pd.onToggle(); } };
@@ -5704,7 +5730,7 @@ class Component extends DCLogic {
       execVerdict, execVerdictColor, execVerdictBg,
       phaseScopeLabel, phaseScopeHidden, phaseScopeHasHidden,
       storeFull: !!this.lsGet('qa-store-full'),
-      vfxGlass, vfxFlat, vfxLabel, toggleVfx, vfxDot: vfxGlass ? '#95c11f' : 'var(--tx-fnt)',
+      vfxGlass, vfxFlat, vfxLabel, toggleVfx, envCompact, envCards, envViewLabel, toggleEnvView, vfxDot: vfxGlass ? '#95c11f' : 'var(--tx-fnt)',
       xeGroups, xeHas, xeNone, xeGroupN, xeTicketN, xeIdenticalN, xeOpenN,
       xeMatrix, xeMatrixCols, xeMatrixHas, xeLevels, xeThresholdKey, setXeStrict,
       carryTotal, carryHas, carryNone, carryEnvs, carryHighTotal, carryHasHigh, openCarry, curEnvName: _curEnv,
