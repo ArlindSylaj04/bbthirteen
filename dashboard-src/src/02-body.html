@@ -1,49 +1,6 @@
 <div id="report-root" data-theme="{{ theme }}" style="max-width:2060px; margin:0 auto; display:flex; flex-direction:column; gap:16px;">
 
-  <!-- ═══════════ RELEASE COCKPIT SHELL ═══════════ -->
-  <div id="qa-shell" style="display:block; min-width:0;">
-
   <div id="report-body" style="min-width:0; display:flex; flex-direction:column; gap:16px;">
-
-  <!-- ===== RELEASE BAR: releases and their environments, read left to right ===== -->
-  <div id="release-bar" data-noedit="" style="background:var(--card-bg); border:1px solid var(--card-brd); border-radius:14px; box-shadow:var(--shadow); padding:10px 14px; display:flex; flex-direction:column; gap:8px;">
-    <div style="display:flex; align-items:center; gap:12px; min-width:0;">
-      <div style="flex-shrink:0; display:flex; align-items:baseline; gap:7px;">
-        <span style="font-size:9.5px; font-weight:700; letter-spacing:0.14em; color:var(--tx-fnt); text-transform:uppercase;">Releases</span>
-        <span style="font-size:9.5px; color:var(--tx-faint); white-space:nowrap;">{{ navReleaseLabel }}</span>
-      </div>
-      <div data-rail="" style="flex:1; min-width:0; display:flex; align-items:center; gap:8px; overflow-x:auto; padding-bottom:2px;">
-        <sc-for list="{{ navReleases }}" as="nr" hint-placeholder-count="3">
-          <div sc-camel-on-click="{{ nr.onSelect }}" title="{{ nr.envCountLabel }} &#183; {{ nr.rangeLabel }}" style="flex-shrink:0; display:flex; align-items:center; gap:8px; padding:6px 12px; border-radius:99px; cursor:pointer; background:{{ nr.rowBg }}; border:1px solid {{ nr.chipBrd }};">
-            <span style="color:{{ nr.dotColor }}; font-size:8px; line-height:1;">{{ nr.dot }}</span>
-            <span style="font-size:12.5px; font-weight:{{ nr.rowWeight }}; color:{{ nr.rowTx }}; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ nr.version }}</span>
-            <span style="background:{{ nr.statusBg }}; color:{{ nr.statusColor }}; border-radius:5px; padding:2px 6px; font-size:7.5px; font-weight:800; letter-spacing:0.08em; white-space:nowrap;">{{ nr.statusLabel }}</span>
-            <span style="font-size:9.5px; color:var(--tx-faint); font-variant-numeric:tabular-nums; white-space:nowrap;">{{ nr.rangeLabel }}</span>
-          </div>
-        </sc-for>
-      </div>
-      <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
-        <button sc-camel-on-click="{{ openRelManager }}" title="Create, edit, duplicate or delete releases and their environments" style="flex-shrink:0; background:linear-gradient(90deg,#7ba00f,#95c11f); border:none; border-radius:99px; padding:7px 14px; color:#16210a; cursor:pointer; font-family:Rubik,sans-serif; font-size:11px; font-weight:700; white-space:nowrap;">&#9881; Manage Releases</button>
-      </sc-if>
-    </div>
-
-    <sc-if value="{{ navHasEnvs }}" hint-placeholder-val="{{ true }}">
-      <div style="display:flex; align-items:center; gap:12px; min-width:0; border-top:1px solid var(--brd-sub); padding-top:8px;">
-        <span style="flex-shrink:0; font-size:9.5px; font-weight:700; letter-spacing:0.14em; color:var(--tx-fnt); text-transform:uppercase;">Environments</span>
-        <div data-rail="" style="flex:1; min-width:0; display:flex; align-items:center; gap:7px; overflow-x:auto; padding-bottom:2px;">
-          <sc-for list="{{ navEnvs }}" as="ne" hint-placeholder-count="5">
-            <div sc-camel-on-click="{{ ne.onClick }}" title="{{ ne.name }} &#183; {{ ne.phase }} &#183; {{ ne.rangeLabel }}" style="flex-shrink:0; display:flex; align-items:center; gap:7px; padding:5px 11px; border-radius:99px; cursor:pointer; background:{{ ne.bg }}; border:1px solid var(--brd-sub);">
-              <span style="width:7px; height:7px; border-radius:2px; background:{{ ne.envColor }};"></span>
-              <span style="font-size:11.5px; font-weight:600; color:var(--tx-soft); white-space:nowrap;">{{ ne.name }}</span>
-              <span style="background:{{ ne.phaseBg }}; color:{{ ne.phaseColor }}; border-radius:4px; padding:1px 6px; font-size:7.5px; font-weight:700; white-space:nowrap;">{{ ne.phase }}</span>
-              <span style="font-size:9.5px; color:var(--tx-faint); font-variant-numeric:tabular-nums; white-space:nowrap;">{{ ne.rangeLabel }}</span>
-            </div>
-          </sc-for>
-        </div>
-      </div>
-    </sc-if>
-  </div>
-
 
   <!-- ===== SWIPE VIEWPORT ===== -->
   <div sc-camel-on-touch-start="{{ onTrackTouchStart }}" sc-camel-on-touch-end="{{ onTrackTouchEnd }}" sc-camel-on-pointer-down="{{ onTrackPtrDown }}" sc-camel-on-pointer-up="{{ onTrackPtrUp }}" style="overflow:clip; position:relative; border-radius:2px;">
@@ -1825,7 +1782,6 @@
   <!-- end swipe viewport -->
 
   </div><!-- end #report-body -->
-  </div><!-- end #qa-shell -->
 
   <!-- FLOATING BUTTONS -->
   <sc-if value="{{ showCommentFab }}" hint-placeholder-val="{{ true }}">

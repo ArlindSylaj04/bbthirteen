@@ -2470,14 +2470,14 @@ class Component extends DCLogic {
     this._relSelId = id;
     store.selectedId = id;
     this.relWrite(store);
-    this.setState({ collapsed: {}, navEnvFocus: null }, () => this.loadReleaseData());
+    this.setState({ collapsed: {} }, () => this.loadReleaseData());
   };
   // Scroll to an environment: its phase card when a qTest export has been
   // imported, otherwise its row in the Release Summary — so the navigation
   // always lands somewhere meaningful.
   focusEnvironment = (name) => {
     const all = {}; this.relPhasesSched().forEach(p => { all[p.id] = true; }); all[name] = false;
-    this.setState({ collapsed: all, navEnvFocus: name }, () => setTimeout(() => {
+    this.setState({ collapsed: all }, () => setTimeout(() => {
       // First visible anchor wins: the environment card when a qTest export
       // exists, else its Release Summary row, else its card in the Test Phase
       // Timeline strip. Sections switched off in the layout settings are still
@@ -2500,20 +2500,6 @@ class Component extends DCLogic {
         strip.scrollTo({ left: Math.max(0, el.offsetLeft - (strip.clientWidth - el.offsetWidth) / 2), behavior: 'smooth' });
       }
     }, 80));
-  };
-  focusReleaseEnv = (relId, envName) => (e) => {
-    if (e && e.stopPropagation) e.stopPropagation();
-    const go = () => this.focusEnvironment(envName);
-    if (relId !== this.relSelectedId()) { this.selectRelease(relId); setTimeout(go, 120); } else go();
-  };
-  toggleNavRelease = (id) => (e) => {
-    if (e && e.stopPropagation) e.stopPropagation();
-    this.setState(s => {
-      const o = { ...(s.navOpen || {}) };
-      const isOpen = o[id] === undefined ? (id === this.relSelectedId()) : !!o[id];
-      o[id] = !isOpen;
-      return { navOpen: o };
-    });
   };
 
   // ─── release administration (admin role only) ─────────────────────────────
@@ -5531,65 +5517,13 @@ class Component extends DCLogic {
     const closeDiag = () => this.setState({ diagOpen: false });
 
     // ══════════════════════════════════════════════════════════════════════
-    //  RELEASE COCKPIT — navigation, overview, timeline, summary, admin
+    //  RELEASE COCKPIT — overview, timeline, summary, admin
     //  Everything here reads the release model; nothing is release-specific.
     // ══════════════════════════════════════════════════════════════════════
     const _relNow = Date.now();
     const _relSel = this.relSelected() || { version: '—', environments: [] };
     const _relSelId = this.relSelectedId();
     const _relAll = this.relAll();
-    const _navOpenState = this.state.navOpen || {};
-    const _navFocus = this.state.navEnvFocus || '';
-
-    // ── left navigation tree (qTest style) ──────────────────────────────
-    const navReleases = _relAll.map(r => {
-      const sel = r.id === _relSelId;
-      const st = this.relAutoStatus(r);
-      const stStyle = this.relStatusStyle(st);
-      const w = this.relWindow(r);
-      const envs = this.relEnvs(r);
-      const openRaw = _navOpenState[r.id];
-      const expanded = openRaw === undefined ? sel : !!openRaw;
-      return {
-        id: r.id, version: r.version || '(unnamed)',
-        isSelected: sel, isCurrent: !!r.current, notCurrent: !r.current,
-        statusLabel: r.current ? 'CURRENT' : st.toUpperCase(),
-        statusColor: r.current ? '#0b1220' : stStyle.color,
-        statusBg: r.current ? '#95c11f' : stStyle.bg,
-        dot: sel ? '●' : '○',
-        dotColor: r.current ? '#95c11f' : stStyle.color,
-        rowBg: sel ? 'var(--card-bg2)' : 'transparent',
-        rowBrd: sel ? '#95c11f' : 'transparent',
-        chipBrd: sel ? '#95c11f' : 'var(--brd-sub)',
-        rowTx: sel ? 'var(--tx-strong)' : 'var(--tx-mut)',
-        rowWeight: sel ? 700 : 500,
-        envCount: envs.length,
-        envCountLabel: envs.length + ' env' + (envs.length === 1 ? '' : 's'),
-        rangeLabel: w.start == null ? 'No schedule yet' : (this.relFmt(w.start) + ' – ' + this.relFmt(w.end)),
-        onSelect: () => this.selectRelease(r.id),
-        expanded, chevron: expanded ? '▾' : '▸',
-        hasEnvs: envs.length > 0,
-        onToggle: this.toggleNavRelease(r.id),
-        envs: envs.map(e => {
-          const ph = this.relEnvPhase(e, _relNow);
-          const st2 = this.relPhaseStyle(ph);
-          const ew = this.relEnvWindow(e);
-          const focus = sel && _navFocus === e.name;
-          return { key: r.id + '|' + e.id, name: e.name, phase: ph,
-            phaseColor: st2.color, phaseBg: st2.bg,
-            envColor: this.relEnvMeta(e.name).color,
-            rangeLabel: ew.start == null ? '—' : (this.relFmtShort(ew.start) + ' – ' + this.relFmtShort(ew.end)),
-            bg: focus ? 'var(--tile-bg)' : 'transparent',
-            onClick: this.focusReleaseEnv(r.id, e.name) };
-        }),
-      };
-    });
-    const navReleaseCount = _relAll.length;
-    const navReleaseLabel = navReleaseCount + ' configured';
-    // The release bar reads left to right, so the selected release's environments
-    // are a strip of their own rather than a branch of a tree.
-    const navEnvs = (navReleases.find(r => r.isSelected) || { envs: [] }).envs;
-    const navHasEnvs = navEnvs.length > 0;
 
     // ── release overview KPIs ───────────────────────────────────────────
     const _relWin = this.relWindow(_relSel);
@@ -5947,7 +5881,6 @@ class Component extends DCLogic {
       })(),
       releaseVersion: relVersion,
       // ─── release management layer ───────────────────────────────────────
-      navReleases, navReleaseCount, navReleaseLabel, navEnvs, navHasEnvs,
       relVersion, relStatus, relStatusLabel, relStatusColor, relStatusBg, relIsCurrent,
       relPeriod, relEnvCount, relHasEnvs, relNoEnvs, relCurrentEnv, relCurrentPhase, relCurrentEnvRange,
       relPhaseColor, relPhaseBg, relProgressPct, relPassPct, relProgressLabel,
