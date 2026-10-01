@@ -1,72 +1,49 @@
 <div id="report-root" data-theme="{{ theme }}" style="max-width:2060px; margin:0 auto; display:flex; flex-direction:column; gap:16px;">
 
-  <!-- ═══════════ RELEASE COCKPIT SHELL: nav (left) + report (right) ═══════════ -->
-  <div id="qa-shell" style="display:flex; gap:16px; align-items:flex-start; min-width:0;">
+  <!-- ═══════════ RELEASE COCKPIT SHELL ═══════════ -->
+  <div id="qa-shell" style="display:block; min-width:0;">
 
-  <!-- ===== RELEASE NAVIGATION (permanent, qTest-style tree) ===== -->
-  <aside id="release-nav" data-noedit="" style="width:{{ navWidth }}; flex:0 0 {{ navWidth }}; position:sticky; top:14px; align-self:flex-start; max-height:calc(100vh - 28px); display:flex; flex-direction:column; background:var(--card-bg); border:1px solid var(--card-brd); border-radius:16px; box-shadow:var(--shadow); overflow:hidden; transition:width 0.22s ease, flex-basis 0.22s ease;">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:13px 11px 11px 14px; border-bottom:1px solid var(--brd-sub); background:var(--card-bg2);">
-      <sc-if value="{{ navExpanded }}" hint-placeholder-val="{{ true }}">
-        <div style="min-width:0;">
-          <div style="font-size:10px; font-weight:700; letter-spacing:0.14em; color:var(--tx-fnt); text-transform:uppercase;">Releases</div>
-          <div style="font-size:10px; color:var(--tx-faint); margin-top:2px;">{{ navReleaseCount }} configured</div>
-        </div>
-      </sc-if>
-      <button sc-camel-on-click="{{ toggleNavPanel }}" title="Collapse or expand the release navigation" style="background:var(--input-bg); border:1px solid var(--brd-2); border-radius:8px; width:26px; height:26px; flex-shrink:0; color:var(--tx-mut); cursor:pointer; font-family:Rubik,sans-serif; font-size:12px; font-weight:700; line-height:1;">{{ navToggleIcon }}</button>
-    </div>
+  <div id="report-body" style="min-width:0; display:flex; flex-direction:column; gap:16px;">
 
-    <sc-if value="{{ navExpanded }}" hint-placeholder-val="{{ true }}">
-      <div style="overflow-y:auto; overflow-x:hidden; padding:8px 7px; display:flex; flex-direction:column; gap:2px; flex:1;">
+  <!-- ===== RELEASE BAR: releases and their environments, read left to right ===== -->
+  <div id="release-bar" data-noedit="" style="background:var(--card-bg); border:1px solid var(--card-brd); border-radius:14px; box-shadow:var(--shadow); padding:10px 14px; display:flex; flex-direction:column; gap:8px;">
+    <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+      <div style="flex-shrink:0; display:flex; align-items:baseline; gap:7px;">
+        <span style="font-size:9.5px; font-weight:700; letter-spacing:0.14em; color:var(--tx-fnt); text-transform:uppercase;">Releases</span>
+        <span style="font-size:9.5px; color:var(--tx-faint); white-space:nowrap;">{{ navReleaseLabel }}</span>
+      </div>
+      <div data-rail="" style="flex:1; min-width:0; display:flex; align-items:center; gap:8px; overflow-x:auto; padding-bottom:2px;">
         <sc-for list="{{ navReleases }}" as="nr" hint-placeholder-count="3">
-          <div style="display:flex; flex-direction:column;">
-            <div sc-camel-on-click="{{ nr.onSelect }}" title="{{ nr.rangeLabel }}" style="display:flex; align-items:center; gap:7px; padding:8px 8px 8px 7px; border-radius:9px; cursor:pointer; background:{{ nr.rowBg }}; border-left:3px solid {{ nr.rowBrd }}; transition:background 0.15s;">
-              <span style="color:{{ nr.dotColor }}; font-size:9px; line-height:1; flex-shrink:0;">{{ nr.dot }}</span>
-              <span style="flex:1; min-width:0; font-size:13px; font-weight:{{ nr.rowWeight }}; color:{{ nr.rowTx }}; font-variant-numeric:tabular-nums; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ nr.version }}</span>
-              <sc-if value="{{ nr.isCurrent }}" hint-placeholder-val="{{ true }}">
-                <span style="flex-shrink:0; background:{{ nr.statusBg }}; color:{{ nr.statusColor }}; border-radius:5px; padding:2px 6px; font-size:7.5px; font-weight:800; letter-spacing:0.08em;">CURRENT</span>
-              </sc-if>
-              <sc-if value="{{ nr.hasEnvs }}" hint-placeholder-val="{{ true }}">
-                <span sc-camel-on-click="{{ nr.onToggle }}" title="Show the environments of this release" style="flex-shrink:0; color:var(--tx-faint); font-size:10px; padding:0 2px; cursor:pointer;">{{ nr.chevron }}</span>
-              </sc-if>
-            </div>
-            <div style="padding:0 8px 2px 21px; font-size:9.5px; color:var(--tx-faint); font-variant-numeric:tabular-nums;">
-              <sc-if value="{{ nr.notCurrent }}" hint-placeholder-val="{{ true }}">
-                <span style="color:{{ nr.statusColor }}; font-weight:700; letter-spacing:0.05em;">{{ nr.statusLabel }}</span> ·
-              </sc-if>
-              {{ nr.envCountLabel }} · {{ nr.rangeLabel }}
-            </div>
-            <sc-if value="{{ nr.expanded }}" hint-placeholder-val="{{ true }}">
-              <div style="display:flex; flex-direction:column; gap:1px; margin:3px 0 6px 15px; padding-left:8px; border-left:1px dashed var(--brd-2);">
-                <sc-for list="{{ nr.envs }}" as="ne" hint-placeholder-count="4">
-                  <div sc-camel-on-click="{{ ne.onClick }}" title="{{ ne.name }} · {{ ne.phase }} · {{ ne.rangeLabel }}" style="display:flex; align-items:center; gap:6px; padding:5px 7px; border-radius:7px; cursor:pointer; background:{{ ne.bg }};">
-                    <span style="width:7px; height:7px; border-radius:2px; background:{{ ne.envColor }}; flex-shrink:0;"></span>
-                    <span style="flex:1; min-width:0; font-size:11.5px; font-weight:600; color:var(--tx-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ ne.name }}</span>
-                    <span style="flex-shrink:0; background:{{ ne.phaseBg }}; color:{{ ne.phaseColor }}; border-radius:4px; padding:1px 5px; font-size:7.5px; font-weight:700; white-space:nowrap;">{{ ne.phase }}</span>
-                  </div>
-                </sc-for>
-              </div>
-            </sc-if>
+          <div sc-camel-on-click="{{ nr.onSelect }}" title="{{ nr.envCountLabel }} &#183; {{ nr.rangeLabel }}" style="flex-shrink:0; display:flex; align-items:center; gap:8px; padding:6px 12px; border-radius:99px; cursor:pointer; background:{{ nr.rowBg }}; border:1px solid {{ nr.chipBrd }};">
+            <span style="color:{{ nr.dotColor }}; font-size:8px; line-height:1;">{{ nr.dot }}</span>
+            <span style="font-size:12.5px; font-weight:{{ nr.rowWeight }}; color:{{ nr.rowTx }}; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ nr.version }}</span>
+            <span style="background:{{ nr.statusBg }}; color:{{ nr.statusColor }}; border-radius:5px; padding:2px 6px; font-size:7.5px; font-weight:800; letter-spacing:0.08em; white-space:nowrap;">{{ nr.statusLabel }}</span>
+            <span style="font-size:9.5px; color:var(--tx-faint); font-variant-numeric:tabular-nums; white-space:nowrap;">{{ nr.rangeLabel }}</span>
           </div>
         </sc-for>
       </div>
-
       <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
-        <div style="padding:9px 9px 11px; border-top:1px solid var(--brd-sub);">
-          <button sc-camel-on-click="{{ openRelManager }}" title="Create, edit, duplicate or delete releases and their environments" style="width:100%; background:linear-gradient(90deg,#7ba00f,#95c11f); border:none; border-radius:9px; padding:9px 10px; color:#16210a; cursor:pointer; font-family:Rubik,sans-serif; font-size:11.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:6px;">⚙ Manage Releases</button>
-        </div>
+        <button sc-camel-on-click="{{ openRelManager }}" title="Create, edit, duplicate or delete releases and their environments" style="flex-shrink:0; background:linear-gradient(90deg,#7ba00f,#95c11f); border:none; border-radius:99px; padding:7px 14px; color:#16210a; cursor:pointer; font-family:Rubik,sans-serif; font-size:11px; font-weight:700; white-space:nowrap;">&#9881; Manage Releases</button>
       </sc-if>
-    </sc-if>
+    </div>
 
-    <sc-if value="{{ navCollapsed }}" hint-placeholder-val="{{ false }}">
-      <div style="padding:10px 0; display:flex; flex-direction:column; align-items:center; gap:9px;">
-        <sc-for list="{{ navReleases }}" as="nr" hint-placeholder-count="3">
-          <div sc-camel-on-click="{{ nr.onSelect }}" title="{{ nr.version }} · {{ nr.statusLabel }} · {{ nr.rangeLabel }}" style="width:34px; height:34px; border-radius:9px; cursor:pointer; background:{{ nr.rowBg }}; border:1px solid {{ nr.rowBrd }}; display:flex; align-items:center; justify-content:center; color:{{ nr.dotColor }}; font-size:13px;">{{ nr.dot }}</div>
-        </sc-for>
+    <sc-if value="{{ navHasEnvs }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex; align-items:center; gap:12px; min-width:0; border-top:1px solid var(--brd-sub); padding-top:8px;">
+        <span style="flex-shrink:0; font-size:9.5px; font-weight:700; letter-spacing:0.14em; color:var(--tx-fnt); text-transform:uppercase;">Environments</span>
+        <div data-rail="" style="flex:1; min-width:0; display:flex; align-items:center; gap:7px; overflow-x:auto; padding-bottom:2px;">
+          <sc-for list="{{ navEnvs }}" as="ne" hint-placeholder-count="5">
+            <div sc-camel-on-click="{{ ne.onClick }}" title="{{ ne.name }} &#183; {{ ne.phase }} &#183; {{ ne.rangeLabel }}" style="flex-shrink:0; display:flex; align-items:center; gap:7px; padding:5px 11px; border-radius:99px; cursor:pointer; background:{{ ne.bg }}; border:1px solid var(--brd-sub);">
+              <span style="width:7px; height:7px; border-radius:2px; background:{{ ne.envColor }};"></span>
+              <span style="font-size:11.5px; font-weight:600; color:var(--tx-soft); white-space:nowrap;">{{ ne.name }}</span>
+              <span style="background:{{ ne.phaseBg }}; color:{{ ne.phaseColor }}; border-radius:4px; padding:1px 6px; font-size:7.5px; font-weight:700; white-space:nowrap;">{{ ne.phase }}</span>
+              <span style="font-size:9.5px; color:var(--tx-faint); font-variant-numeric:tabular-nums; white-space:nowrap;">{{ ne.rangeLabel }}</span>
+            </div>
+          </sc-for>
+        </div>
       </div>
     </sc-if>
-  </aside>
+  </div>
 
-  <div id="report-body" style="flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:16px;">
 
   <!-- ===== SWIPE VIEWPORT ===== -->
   <div sc-camel-on-touch-start="{{ onTrackTouchStart }}" sc-camel-on-touch-end="{{ onTrackTouchEnd }}" sc-camel-on-pointer-down="{{ onTrackPtrDown }}" sc-camel-on-pointer-up="{{ onTrackPtrUp }}" style="overflow:clip; position:relative; border-radius:2px;">

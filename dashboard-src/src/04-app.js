@@ -2515,7 +2515,6 @@ class Component extends DCLogic {
       return { navOpen: o };
     });
   };
-  toggleNavPanel = () => this.setState(s => ({ navCollapsed: !s.navCollapsed }));
 
   // ─── release administration (admin role only) ─────────────────────────────
   relBlankResp(i) {
@@ -5561,6 +5560,7 @@ class Component extends DCLogic {
         dotColor: r.current ? '#95c11f' : stStyle.color,
         rowBg: sel ? 'var(--card-bg2)' : 'transparent',
         rowBrd: sel ? '#95c11f' : 'transparent',
+        chipBrd: sel ? '#95c11f' : 'var(--brd-sub)',
         rowTx: sel ? 'var(--tx-strong)' : 'var(--tx-mut)',
         rowWeight: sel ? 700 : 500,
         envCount: envs.length,
@@ -5584,11 +5584,12 @@ class Component extends DCLogic {
         }),
       };
     });
-    const navCollapsed = !!this.state.navCollapsed;
-    const navToggleIcon = navCollapsed ? '»' : '«';
-    const navWidth = navCollapsed ? '58px' : '252px';
-    const navExpanded = !navCollapsed;
     const navReleaseCount = _relAll.length;
+    const navReleaseLabel = navReleaseCount + ' configured';
+    // The release bar reads left to right, so the selected release's environments
+    // are a strip of their own rather than a branch of a tree.
+    const navEnvs = (navReleases.find(r => r.isSelected) || { envs: [] }).envs;
+    const navHasEnvs = navEnvs.length > 0;
 
     // ── release overview KPIs ───────────────────────────────────────────
     const _relWin = this.relWindow(_relSel);
@@ -5931,7 +5932,7 @@ class Component extends DCLogic {
       })(),
       releaseVersion: relVersion,
       // ─── release management layer ───────────────────────────────────────
-      navReleases, navCollapsed, navExpanded, navToggleIcon, navWidth, navReleaseCount, toggleNavPanel: this.toggleNavPanel,
+      navReleases, navReleaseCount, navReleaseLabel, navEnvs, navHasEnvs,
       relVersion, relStatus, relStatusLabel, relStatusColor, relStatusBg, relIsCurrent,
       relPeriod, relEnvCount, relHasEnvs, relNoEnvs, relCurrentEnv, relCurrentPhase, relCurrentEnvRange,
       relPhaseColor, relPhaseBg, relProgressPct, relPassPct, relProgressLabel,

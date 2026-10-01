@@ -542,23 +542,19 @@
     #report-root *::-webkit-scrollbar-thumb:hover { background:var(--tx-faint); background-clip:content-box; }
     #report-root { scrollbar-width:thin; }
 
-    /* ── Release navigation: sticky beside the report, stacked on small screens ── */
-    #release-nav { scrollbar-width: thin; }
-    #release-nav ::-webkit-scrollbar, #release-nav::-webkit-scrollbar { width: 7px; }
-    #release-nav ::-webkit-scrollbar-thumb, #release-nav::-webkit-scrollbar-thumb { background: var(--brd-2); border-radius: 4px; }
-    @media (max-width: 1100px) {
-      #qa-shell { flex-direction: column; }
-      #release-nav { width: 100% !important; flex: 0 0 auto !important; position: static !important; max-height: 320px; }
-      #report-body { width: 100%; }
-    }
+    /* ── Release bar: one horizontal strip, scrolled sideways when it overflows ── */
+    #release-bar [data-rail] { scrollbar-width: thin; scroll-behavior: smooth; }
+    #release-bar [data-rail]::-webkit-scrollbar { height: 6px; }
+    #release-bar [data-rail]::-webkit-scrollbar-thumb { background: var(--brd-2); border-radius: 4px; }
     @media (max-width: 760px) {
-      #release-nav { max-height: 240px; }
+      /* no room for a label, a rail and a button side by side — let them stack */
+      #release-bar > div { flex-wrap: wrap; }
+      #release-bar [data-rail] { flex: 1 0 100% !important; }
       /* the timeline's trailing date column has no room — the row title carries it */
       #report-root [data-rel-timeline-dates] { display: none !important; }
     }
     @media print {
-      #release-nav { display: none !important; }
-      #qa-shell { display: block !important; }
+      #release-bar { display: none !important; }
     }
     @media print { body { background: white !important; padding: 0; } }
     /* ── PDF STATUS REPORT: on-screen hidden, isolated for print ── */
