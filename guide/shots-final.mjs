@@ -1,5 +1,5 @@
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
-import { ANN, FILE, BROWSER } from './lib.mjs';
+import { ANN, FILE, BROWSER, importQtest } from './lib.mjs';
 const b = await chromium.launch({ executablePath: BROWSER });
 const p = await (await b.newContext({ viewport:{width:1700,height:1100}, deviceScaleFactor:2 })).newPage();
 const errs=[]; p.on('pageerror',e=>errs.push(e.message));
@@ -7,8 +7,7 @@ await p.addInitScript(ANN);
 await p.goto(FILE,{waitUntil:'load'});
 await p.evaluate(()=>{sessionStorage.setItem('qa-session',JSON.stringify({name:'Arlind Sylaj',role:'admin',ts:Date.now()})); localStorage.setItem('qa-envview','cards');});
 await p.reload({waitUntil:'load'}); await p.waitForTimeout(2200);
-await (await p.$('label:has-text("Import XLS / CSV") input[type=file]')).setInputFiles('data/qtest_uneven.csv');
-await p.waitForTimeout(7000);
+await importQtest(p, 'data/qtest_uneven.csv', 7000);
 await (await p.$('label:has-text("Import Jira CSV") input[type=file]')).setInputFiles('data/jira_recurring.csv');
 await p.waitForTimeout(2500);
 

@@ -86,3 +86,30 @@ export const ANN = () => {
 export const LOGIN = { name: 'Arlind Sylaj', role: 'admin' };
 export const FILE = 'file:///home/user/bbthirteen/Testing_Report_Dashboard_v4.html';
 export const BROWSER = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+
+// The masthead toolbar moved inside the ⚙ Settings panel, so a script that wants
+// the qTest import has to open that panel first.
+export const openSettings = async (p) => {
+  await p.evaluate(() => {
+    const b = [...document.querySelectorAll('button')].find(x => /⚙/.test(x.textContent) && /Settings/.test(x.textContent));
+    if (!b) throw new Error('⚙ Settings button not found — are you signed in as an editor?');
+    b.click();
+  });
+  await p.waitForTimeout(700);
+};
+export const importQtest = async (p, file, settle = 6000) => {
+  await openSettings(p);
+  const input = await p.$('label:has-text("Import XLS / CSV") input[type=file], label:has-text("Import qTest") input[type=file]');
+  if (!input) throw new Error('import input not found inside the Settings panel');
+  await input.setInputFiles(file);
+  await p.waitForTimeout(settle);
+};
+export const openLayoutModal = async (p) => {
+  await openSettings(p);
+  await p.evaluate(() => {
+    const b = [...document.querySelectorAll('button')].find(x => /Layout & settings/.test(x.textContent || ''));
+    if (!b) throw new Error('"Layout & settings" not found inside the Settings panel');
+    b.click();
+  });
+  await p.waitForTimeout(900);
+};

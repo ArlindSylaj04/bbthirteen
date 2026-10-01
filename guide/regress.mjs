@@ -1,5 +1,5 @@
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
-import { ANN, FILE, BROWSER } from './lib.mjs';
+import { ANN, FILE, BROWSER, importQtest, openSettings } from './lib.mjs';
 import fs from 'node:fs';
 const OUT='/tmp/claude-0/-home-user-bbthirteen/01499b56-4d01-583a-b2d4-becbe79985be/scratchpad/dl2';
 fs.mkdirSync(OUT,{recursive:true});
@@ -13,17 +13,24 @@ const closeTop = async () => { await p.evaluate(()=>{const ovs=[...document.quer
 await p.goto(FILE,{waitUntil:'load'});
 await p.evaluate(()=>sessionStorage.setItem('qa-session',JSON.stringify({name:'Arlind Sylaj',role:'admin',ts:Date.now()})));
 await p.reload({waitUntil:'load'}); await p.waitForTimeout(2200);
-await (await p.$('label:has-text("Import XLS / CSV") input[type=file]')).setInputFiles('data/qtest_export_26.03.00.csv');
-await p.waitForTimeout(2600);
+await importQtest(p, 'data/qtest_export_26.03.00.csv', 2600);
 await (await p.$('label:has-text("Import Jira CSV") input[type=file]')).setInputFiles('data/jira_carryover_26.03.00.csv');
 await p.waitForTimeout(2200);
 console.log('1. imports ok');
 
-// modal sweep
-for (const t of ['Layout','Users','Top Bugs','Manage Releases','Go / No-Go','History']) {
-  const ok = await p.evaluate(x=>{const b=[...document.querySelectorAll('button,label,div')].find(e=>(e.textContent||'').trim().includes(x)&&e.getBoundingClientRect().width>0); if(b){b.click(); return true;} return false;}, t);
+// modal sweep — the first three now live inside the ⚙ Settings panel
+const click = (x) => p.evaluate(t=>{const b=[...document.querySelectorAll('button,label,div')].find(e=>(e.textContent||'').trim().includes(t)&&e.getBoundingClientRect().width>0); if(b){b.click(); return true;} return false;}, x);
+for (const t of ['Layout & settings','Go / No-Go','Manage Releases']) {
+  await openSettings(p);
+  const ok = await click(t);
   await p.waitForTimeout(1100);
-  console.log('   modal:', t, ok?'opened':'(skip)');
+  console.log('   modal:', t, ok?'opened':'(SKIP — not in Settings)');
+  await closeTop();
+}
+for (const t of ['Users','Top Bugs','History']) {
+  const ok = await click(t);
+  await p.waitForTimeout(1100);
+  console.log('   modal:', t, ok?'opened':'(SKIP)');
   await closeTop();
 }
 // defect course / aging should now have real dates

@@ -1,5 +1,5 @@
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
-import { ANN, FILE, BROWSER } from './lib.mjs';
+import { ANN, FILE, BROWSER, importQtest, openLayoutModal } from './lib.mjs';
 const b = await chromium.launch({ executablePath: BROWSER });
 const p = await (await b.newContext({ viewport:{width:1680,height:1050}, deviceScaleFactor:2 })).newPage();
 const errs=[]; p.on('pageerror',e=>errs.push('P: '+e.message)); p.on('console',m=>{if(m.type()==='error')errs.push('C: '+m.text());});
@@ -7,8 +7,7 @@ await p.addInitScript(ANN);
 await p.goto(FILE,{waitUntil:'load'});
 await p.evaluate(()=>sessionStorage.setItem('qa-session',JSON.stringify({name:'Arlind Sylaj',role:'admin',ts:Date.now()})));
 await p.reload({waitUntil:'load'}); await p.waitForTimeout(2200);
-await (await p.$('label:has-text("Import XLS / CSV") input[type=file]')).setInputFiles('data/qtest_export_26.03.00.csv');
-await p.waitForTimeout(2600);
+await importQtest(p, 'data/qtest_export_26.03.00.csv', 2600);
 await (await p.$('label:has-text("Import Jira CSV") input[type=file]')).setInputFiles('data/jira_recurring.csv');
 await p.waitForTimeout(2200);
 console.log('vfx attr:', await p.evaluate(()=>document.documentElement.getAttribute('data-vfx')));
@@ -21,8 +20,7 @@ await p.screenshot({path:'shots/p-glass-light.png'});
 // flat
 await p.evaluate(()=>{const x=[...document.querySelectorAll('button')].find(e=>/^[☀☾]$/.test((e.textContent||'').trim())); x&&x.click();});
 await p.waitForTimeout(1000);
-await p.evaluate(()=>{const b=[...document.querySelectorAll('button')].find(e=>/Layout/.test(e.textContent||'')); b&&b.click();});
-await p.waitForTimeout(1000);
+await openLayoutModal(p);
 await p.evaluate(()=>{const b=[...document.querySelectorAll('button')].find(e=>/^(Glass|Flat)$/.test((e.textContent||'').trim())); b&&b.click();});
 await p.waitForTimeout(900);
 console.log('after toggle:', await p.evaluate(()=>document.documentElement.getAttribute('data-vfx')));

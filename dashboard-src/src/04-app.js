@@ -5815,6 +5815,20 @@ class Component extends DCLogic {
         (dfArea && dfArea !== 'All') ? 'Area: ' + dfArea : '', dfSearch ? 'Search: ' + dfSearch : ''].filter(Boolean).join(' · '),
       shown: defectRows.length, jiraFile: this.state.jiraFile || '',
     };
+    // ── Settings: the one gear in the masthead holds what the toolbar held ──
+    // Every action closes the panel first, so a print dialog or a file picker
+    // never opens behind it.
+    const cockpitOpen = !!this.state.cockpitOpen;
+    const openCockpit = () => this.setState({ cockpitOpen: true });
+    const closeCockpit = () => this.setState({ cockpitOpen: false });
+    const ckRun = (fn) => (e) => { this.setState({ cockpitOpen: false }); fn(e); };
+    const onCockpitFile = ckRun(this.onFile);
+    const ckPdfEnv = ckRun(exportPdfEnv);
+    const ckPdfOverall = ckRun(exportPdfOverall);
+    const ckGng = ckRun(this.openGng);
+    const ckQtest = ckRun(openQtestManager);
+    const ckLayout = ckRun(this.openLayout);
+    const ckReleases = ckRun(this.openRelManager);
     return {
       theme, toggleTheme, themeIcon, themeLabel,
       reportDate, overallStatus, headerAccent,
@@ -5916,6 +5930,7 @@ class Component extends DCLogic {
       })(),
       ...this.chainVals(),
       layoutOpen: !!this.state.layoutOpen, openLayout: this.openLayout, closeLayout: this.closeLayout, resetLayout: this.resetLayout,
+      cockpitOpen, openCockpit, closeCockpit, onCockpitFile, ckPdfEnv, ckPdfOverall, ckGng, ckQtest, ckLayout, ckReleases,
       ...(() => {
         const w = this.workCfg();
         return {

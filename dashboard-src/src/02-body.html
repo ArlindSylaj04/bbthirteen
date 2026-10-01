@@ -67,8 +67,8 @@
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:5px;">
             <h1 style="font-size:24px; font-weight:650; color:#fff; letter-spacing:-0.015em; line-height:1.15;">GC SAP Upgrade <span style="color:var(--hd-tx-mut); font-weight:400;">Rel.</span> <span style="font-variant-numeric:tabular-nums;">{{ releaseVersion }}</span></h1>
             <span style="background:{{ relStatusBg }}; color:{{ relStatusColor }}; border-radius:var(--r-xs); padding:3px 9px; font-size:8.5px; font-weight:800; letter-spacing:0.1em; white-space:nowrap;">{{ relStatusLabel }}</span>
-            <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
-              <button sc-camel-on-click="{{ openRelManager }}" class="qb qb-quiet qb-sm" title="Create, edit, duplicate or delete releases"><span class="qb-ico">⚙</span>Releases</button>
+            <sc-if value="{{ isEditor }}" hint-placeholder-val="{{ false }}">
+              <button sc-camel-on-click="{{ openCockpit }}" class="qb qb-quiet qb-sm" title="Import, exports, Go / No-Go, qTest links, layout and releases"><span class="qb-ico">⚙</span>Settings</button>
             </sc-if>
           </div>
         </div>
@@ -94,24 +94,6 @@
         <button sc-camel-on-click="{{ toggleTheme }}" class="qb qb-quiet qb-sm qb-icon" title="{{ themeLabel }}">{{ themeIcon }}</button>
       </div>
     </div>
-
-    <!-- ── toolbar ── -->
-    <sc-if value="{{ isEditor }}" hint-placeholder-val="{{ false }}">
-      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:0 24px 14px;">
-        <label class="qb qb-primary" title="Import a qTest test-execution export (XLS or CSV)"><span class="qb-ico">⬆</span>{{ importBtnLabel }}<input type="file" accept="{{ importAccept }}" sc-camel-on-change="{{ onFile }}" style="display:none;"></label>
-        <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
-          <span class="qb-group">
-            <button sc-camel-on-click="{{ exportPdfEnv }}" class="qb qb-soft" title="PDF · Test environment status, time-burn, all bugs and new bugs since yesterday 15:00"><span class="qb-ico">🗎</span>PDF · Environments</button>
-            <button sc-camel-on-click="{{ exportPdfOverall }}" class="qb qb-soft" title="PDF · Overall project status, time-burn and all bugs">Overall</button>
-          </span>
-        </sc-if>
-        <button sc-camel-on-click="{{ openGng }}" class="qb qb-gate" title="Go / No-Go decision pack for a phase exit meeting — review on screen, admins export as editable PowerPoint"><span class="qb-ico">🚦</span>Go / No-Go</button>
-        <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
-          <button sc-camel-on-click="{{ openQtestManager }}" class="qb qb-quiet" title="Manage the qTest links behind each test suite"><span class="qb-ico">🔗</span>qTest Links</button>
-        </sc-if>
-        <button sc-camel-on-click="{{ openLayout }}" class="qb qb-quiet" title="Show, hide or reorder sections · set the working time"><span class="qb-ico">⇅</span>Layout</button>
-      </div>
-    </sc-if>
 
     <!-- ── live context ── -->
     <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:11px 24px 13px; border-top:1px solid var(--hd-brd); background:rgba(0,0,0,0.2);">
@@ -2152,6 +2134,102 @@
   </sc-if>
 
   <!-- SECTION LAYOUT MODAL -->
+  <!-- ═══════════════ SETTINGS (everything the old toolbar held) ═══════════════ -->
+  <sc-if value="{{ cockpitOpen }}" hint-placeholder-val="{{ false }}">
+    <div data-noedit="" style="position:fixed; inset:0; background:rgba(8,15,30,0.55); z-index:1100; display:flex; align-items:flex-start; justify-content:center; padding:24px;">
+      <div style="background:var(--modal-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.4); width:560px; max-width:100%; max-height:calc(100vh - 48px); overflow-y:auto; border:1px solid var(--brd-2); margin-top:56px;">
+        <div style="background:linear-gradient(135deg,#0f1e3c,#1a3360); padding:18px 20px; display:flex; align-items:center; justify-content:space-between;">
+          <div>
+            <div style="font-size:15px; font-weight:600; color:#fff;">&#9881; Settings &#183; Rel. {{ relVersion }}</div>
+            <div style="font-size:11px; color:#8fa3cc; margin-top:2px;">Import, exports, the decision pack, qTest links, layout and the releases themselves</div>
+          </div>
+          <button sc-camel-on-click="{{ closeCockpit }}" style="background:transparent; border:none; color:#ffffffcc; font-size:20px; cursor:pointer; padding:0 6px; line-height:1;">&#215;</button>
+        </div>
+        <div style="padding:16px 20px 20px; display:flex; flex-direction:column; gap:14px;">
+
+          <div>
+            <div style="font-size:9.5px; font-weight:700; letter-spacing:0.12em; color:var(--tx-fnt); text-transform:uppercase; margin-bottom:7px;">Data</div>
+            <label data-ck-row="" title="Import a qTest test-execution export (XLS or CSV)" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--brd-2); border-radius:11px; background:var(--card-bg2); cursor:pointer;">
+              <span style="font-size:17px; line-height:1; flex-shrink:0;">&#11014;</span>
+              <span style="flex:1; min-width:0;">
+                <span style="display:block; font-size:12.5px; font-weight:700; color:var(--tx-strong);">{{ importBtnLabel }}</span>
+                <span style="display:block; font-size:11px; color:var(--tx-mut); margin-top:2px;">The qTest export for this release &#8212; test runs, suites, teams and their defect links</span>
+              </span>
+              <input type="file" accept="{{ importAccept }}" sc-camel-on-change="{{ onCockpitFile }}" style="display:none;">
+            </label>
+          </div>
+
+          <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="font-size:9.5px; font-weight:700; letter-spacing:0.12em; color:var(--tx-fnt); text-transform:uppercase; margin-bottom:7px;">Reports</div>
+            <div style="display:flex; flex-direction:column; gap:7px;">
+              <button sc-camel-on-click="{{ ckPdfEnv }}" title="PDF &#183; Test environment status, time-burn, all bugs and new bugs since yesterday 15:00" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--brd-2); border-radius:11px; background:var(--card-bg2); cursor:pointer; text-align:left; font-family:Rubik,sans-serif;">
+                <span style="font-size:17px; line-height:1; flex-shrink:0;">&#128462;</span>
+                <span style="flex:1; min-width:0;">
+                  <span style="display:block; font-size:12.5px; font-weight:700; color:var(--tx-strong);">PDF &#183; Environments</span>
+                  <span style="display:block; font-size:11px; color:var(--tx-mut); margin-top:2px;">Status per test environment, time-burn, all bugs and what is new since yesterday</span>
+                </span>
+              </button>
+              <button sc-camel-on-click="{{ ckPdfOverall }}" title="PDF &#183; Overall project status, time-burn and all bugs" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--brd-2); border-radius:11px; background:var(--card-bg2); cursor:pointer; text-align:left; font-family:Rubik,sans-serif;">
+                <span style="font-size:17px; line-height:1; flex-shrink:0;">&#128202;</span>
+                <span style="flex:1; min-width:0;">
+                  <span style="display:block; font-size:12.5px; font-weight:700; color:var(--tx-strong);">PDF &#183; Overall</span>
+                  <span style="display:block; font-size:11px; color:var(--tx-mut); margin-top:2px;">The whole release on one page &#8212; progress, time-burn and the defect picture</span>
+                </span>
+              </button>
+            </div>
+          </div>
+          </sc-if>
+
+          <div>
+            <div style="font-size:9.5px; font-weight:700; letter-spacing:0.12em; color:var(--tx-fnt); text-transform:uppercase; margin-bottom:7px;">Decisions &amp; links</div>
+            <div style="display:flex; flex-direction:column; gap:7px;">
+              <button sc-camel-on-click="{{ ckGng }}" title="Go / No-Go decision pack for a phase exit meeting" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid #d97706; border-radius:11px; background:var(--card-bg2); cursor:pointer; text-align:left; font-family:Rubik,sans-serif;">
+                <span style="font-size:17px; line-height:1; flex-shrink:0;">&#128678;</span>
+                <span style="flex:1; min-width:0;">
+                  <span style="display:block; font-size:12.5px; font-weight:700; color:#d97706;">Go / No-Go</span>
+                  <span style="display:block; font-size:11px; color:var(--tx-mut); margin-top:2px;">The phase-exit pack &#8212; review on screen, admins export it as editable PowerPoint</span>
+                </span>
+              </button>
+              <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+                <button sc-camel-on-click="{{ ckQtest }}" title="Manage the qTest links behind each test suite" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--brd-2); border-radius:11px; background:var(--card-bg2); cursor:pointer; text-align:left; font-family:Rubik,sans-serif;">
+                  <span style="font-size:17px; line-height:1; flex-shrink:0;">&#128279;</span>
+                  <span style="flex:1; min-width:0;">
+                    <span style="display:block; font-size:12.5px; font-weight:700; color:var(--tx-strong);">qTest Links</span>
+                    <span style="display:block; font-size:11px; color:var(--tx-mut); margin-top:2px;">Which qTest folder sits behind each test suite</span>
+                  </span>
+                </button>
+              </sc-if>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:9.5px; font-weight:700; letter-spacing:0.12em; color:var(--tx-fnt); text-transform:uppercase; margin-bottom:7px;">This report</div>
+            <div style="display:flex; flex-direction:column; gap:7px;">
+              <button sc-camel-on-click="{{ ckLayout }}" title="Show, hide or reorder sections &#183; set the working time" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--brd-2); border-radius:11px; background:var(--card-bg2); cursor:pointer; text-align:left; font-family:Rubik,sans-serif;">
+                <span style="font-size:17px; line-height:1; flex-shrink:0;">&#8645;</span>
+                <span style="flex:1; min-width:0;">
+                  <span style="display:block; font-size:12.5px; font-weight:700; color:var(--tx-strong);">Layout &amp; settings</span>
+                  <span style="display:block; font-size:11px; color:var(--tx-mut); margin-top:2px;">Sections, order, visual style, background lights and the working time</span>
+                </span>
+              </button>
+              <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+                <button sc-camel-on-click="{{ ckReleases }}" title="Create, edit, duplicate or delete releases and their environments" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid #95c11f; border-radius:11px; background:var(--card-bg2); cursor:pointer; text-align:left; font-family:Rubik,sans-serif;">
+                  <span style="font-size:17px; line-height:1; flex-shrink:0;">&#9881;</span>
+                  <span style="flex:1; min-width:0;">
+                    <span style="display:block; font-size:12.5px; font-weight:700; color:var(--accent-tx);">Manage Releases</span>
+                    <span style="display:block; font-size:11px; color:var(--tx-mut); margin-top:2px;">Create, edit, duplicate or delete releases, their environments and the dates</span>
+                  </span>
+                </button>
+              </sc-if>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ layoutOpen }}" hint-placeholder-val="{{ false }}">
     <div data-noedit="" style="position:fixed; inset:0; background:rgba(8,15,30,0.55); z-index:1100; display:flex; align-items:center; justify-content:center; padding:24px;">
       <div style="background:var(--modal-bg); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.4); width:520px; max-width:100%; max-height:calc(100vh - 48px); overflow-y:auto; border:1px solid var(--brd-2);">

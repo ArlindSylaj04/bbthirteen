@@ -1,5 +1,5 @@
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
-import { ANN, FILE, BROWSER } from './lib.mjs';
+import { ANN, FILE, BROWSER, importQtest } from './lib.mjs';
 const b = await chromium.launch({ executablePath: BROWSER });
 const ctx = await b.newContext({ viewport:{width:1680,height:1050} });
 const p = await ctx.newPage();
@@ -9,8 +9,7 @@ await p.goto(FILE,{waitUntil:'load'});
 await p.evaluate(()=>sessionStorage.setItem('qa-session',JSON.stringify({name:'Arlind Sylaj',role:'admin',ts:Date.now()})));
 await p.reload({waitUntil:'load'}); await p.waitForTimeout(2200);
 
-await (await p.$('label:has-text("Import XLS / CSV") input[type=file]')).setInputFiles('data/qtest_export_26.03.00.csv');
-await p.waitForTimeout(6000);
+await importQtest(p, 'data/qtest_export_26.03.00.csv', 6000);
 const after = await p.evaluate(()=>document.body.innerText);
 console.log('1. after import — header says:', (after.match(/\d+ tests[^\n]*/)||['(none)'])[0].slice(0,80));
 console.log('   planned/passed:', (after.match(/(\d+)\s*\nPLANNED/)||['?'])[0].replace(/\n/g,' '), '|', (after.match(/(\d+)\s*\nPASSED/)||['?'])[0].replace(/\n/g,' '));

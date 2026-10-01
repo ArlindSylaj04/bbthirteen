@@ -1,5 +1,5 @@
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
-import { ANN, FILE, BROWSER } from './lib.mjs';
+import { ANN, FILE, BROWSER, importQtest } from './lib.mjs';
 const b = await chromium.launch({ executablePath: BROWSER });
 const p = await (await b.newContext({ viewport:{width:1680,height:1050}, deviceScaleFactor:2 })).newPage();
 const errs=[]; p.on('pageerror',e=>errs.push('P: '+e.message)); p.on('console',m=>{if(m.type()==='error')errs.push('C: '+m.text());});
@@ -7,8 +7,7 @@ await p.addInitScript(ANN);
 await p.goto(FILE,{waitUntil:'load'});
 await p.evaluate(()=>sessionStorage.setItem('qa-session',JSON.stringify({name:'Arlind Sylaj',role:'admin',ts:Date.now()})));
 await p.reload({waitUntil:'load'}); await p.waitForTimeout(2200);
-await (await p.$('label:has-text("Import XLS / CSV") input[type=file]')).setInputFiles('data/qtest_uneven.csv');
-await p.waitForTimeout(6000);
+await importQtest(p, 'data/qtest_uneven.csv', 6000);
 const shot = async (name) => {
   await p.evaluate(()=>{const h=[...document.querySelectorAll('div')].find(x=>/^Test environments$/.test((x.textContent||'').trim()));
     if(h) window.scrollTo(0,h.getBoundingClientRect().top+window.scrollY-30);});
