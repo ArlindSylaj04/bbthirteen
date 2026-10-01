@@ -703,7 +703,7 @@ class Component extends DCLogic {
     { k: 'tcf',       label: 'Testfallfinalisierung',     col: 'Main column' },
     { k: 'backlog',   label: 'Release Backlog × Testing Link', col: 'Main column' },
     { k: 'xenv',      label: 'Recurring Defects across Environments', col: 'Main column' },
-    { k: 'countdown', label: 'Release Countdown',         col: 'Side column' },
+    { k: 'countdown', label: 'Release Countdown',         col: 'Header' },
     { k: 'workflow',  label: 'Testing Workflow Timeline', col: 'Side column' },
     { k: 'defects',   label: 'Defect Overview',           col: 'Side column' },
     { k: 'dump',      label: 'Bug Dump Report',           col: 'Side column' },
@@ -5846,7 +5846,7 @@ class Component extends DCLogic {
         const cols = {};
         l.order.forEach(k => { const sd = this.SECTIONS.find(s => s.k === k); if (!sd) return; cols[sd.col] = (cols[sd.col] || 0) + 1; out['ord_' + k] = cols[sd.col]; out['dsp_' + k] = l.hidden[k] ? 'none' : 'flex'; });
         const rows = [];
-        ['Main column', 'Side column'].forEach(col => {
+        ['Header', 'Main column', 'Side column'].forEach(col => {
           const keys = l.order.filter(k => (this.SECTIONS.find(s => s.k === k) || {}).col === col);
           keys.forEach((k, i) => {
             const sd = this.SECTIONS.find(s => s.k === k);

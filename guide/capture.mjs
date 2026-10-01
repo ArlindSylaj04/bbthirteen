@@ -1,5 +1,5 @@
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
-import { ANN, FILE, BROWSER } from './lib.mjs';
+import { ANN, FILE, BROWSER, openReleaseManager } from './lib.mjs';
 import fs from 'node:fs';
 
 const OUT = 'shots'; fs.mkdirSync(OUT, { recursive: true });
@@ -60,7 +60,7 @@ await shot('s03-release-nav', { x: 8, y: 20, width: 760, height: 430 });
 await clear();
 
 // ══════════ 3 · MANAGE RELEASES ══════════
-await p.click('text=⚙ Manage Releases'); await p.waitForTimeout(800);
+await openReleaseManager(p);
 await ann([{ txt: '+ New release', n: 1, pos: 'tl' }, { txt: 'Duplicate', n: 2, pos: 'br' }]);
 await shot('s04-manage-releases', pad(await panel('ALL RELEASES'), 30));
 await clear();

@@ -113,3 +113,12 @@ export const openLayoutModal = async (p) => {
   });
   await p.waitForTimeout(900);
 };
+export const openReleaseManager = async (p) => {
+  await openSettings(p);
+  await p.evaluate(() => {
+    const b = [...document.querySelectorAll('button')].find(x => /Manage Releases/.test(x.textContent || '') && x.getBoundingClientRect().width > 0);
+    if (!b) throw new Error('"Manage Releases" not found inside the Settings panel');
+    b.click();
+  });
+  await p.waitForTimeout(800);
+};

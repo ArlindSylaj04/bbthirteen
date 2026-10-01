@@ -1,5 +1,5 @@
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
-import { ANN, FILE, BROWSER } from './lib.mjs';
+import { ANN, FILE, BROWSER, openReleaseManager } from './lib.mjs';
 const b = await chromium.launch({ executablePath: BROWSER });
 const ctx = await b.newContext({ viewport:{width:1680,height:1050}, deviceScaleFactor:2 });
 const p = await ctx.newPage();
@@ -10,7 +10,7 @@ await p.evaluate(()=>sessionStorage.setItem('qa-session',JSON.stringify({name:'A
 await p.reload({waitUntil:'load'}); await p.waitForTimeout(2200);
 
 // build the same 26.03.00 release (IR1 / QC1 / IR3) so "today" sits inside QC1
-await p.click('text=⚙ Manage Releases'); await p.waitForTimeout(700);
+await openReleaseManager(p);
 await p.click('button:has-text("New release")'); await p.waitForTimeout(600);
 await p.fill('input[placeholder="26.02.05"]', '26.03.00');
 let d = await p.$$('input[type=date]');
