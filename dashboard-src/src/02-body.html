@@ -24,9 +24,6 @@
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:5px;">
             <h1 style="font-size:24px; font-weight:650; color:#fff; letter-spacing:-0.015em; line-height:1.15;">GC SAP Upgrade <span style="color:var(--hd-tx-mut); font-weight:400;">Rel.</span> <span style="font-variant-numeric:tabular-nums;">{{ releaseVersion }}</span></h1>
             <span style="background:{{ relStatusBg }}; color:{{ relStatusColor }}; border-radius:var(--r-xs); padding:3px 9px; font-size:8.5px; font-weight:800; letter-spacing:0.1em; white-space:nowrap;">{{ relStatusLabel }}</span>
-            <sc-if value="{{ isEditor }}" hint-placeholder-val="{{ false }}">
-              <button sc-camel-on-click="{{ openCockpit }}" class="qb qb-quiet qb-sm" title="Import, exports, Go / No-Go, qTest links, layout and releases"><span class="qb-ico">⚙</span>Settings</button>
-            </sc-if>
           </div>
         </div>
       </div>
@@ -56,12 +53,14 @@
             <span style="font-size:8.5px; color:var(--hd-tx-faint); letter-spacing:0.1em; text-transform:uppercase;">time-burnt</span>
           </div>
         </sc-if>
+        <button sc-camel-on-click="{{ goDefects }}" class="qb qb-quiet qb-sm qb-icon" title="How to raise a bug &#8212; the defect process, the roles, and the current defect status" aria-label="How to raise a bug">?</button>
         <sc-if value="{{ isEditor }}" hint-placeholder-val="{{ false }}">
-          <span style="display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--hd-tx-mut); background:var(--hd-soft); border:1px solid var(--hd-brd); border-radius:var(--r-pill); padding:5px 12px;"><span class="qchip-dot" style="background:var(--brand);"></span>{{ roleBadge }}</span>
+          <span title="{{ roleBadge }}" style="display:inline-flex; align-items:center; gap:7px; font-size:11.5px; font-weight:600; color:var(--hd-tx); background:var(--hd-soft); border:1px solid var(--hd-brd); border-radius:var(--r-pill); padding:4px 12px 4px 4px;"><span style="width:22px; height:22px; border-radius:50%; background:linear-gradient(135deg,#95c11f,#7ba00f); color:#16210a; font-size:9.5px; font-weight:800; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">{{ userInitials }}</span>{{ roleBadge }}</span>
+          <button sc-camel-on-click="{{ openCockpit }}" class="qb qb-quiet qb-sm qb-icon" title="Settings &#8212; import, exports, Go / No-Go, qTest links, layout and releases" aria-label="Settings">&#9881;</button>
           <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
-            <button sc-camel-on-click="{{ openPin }}" class="qb qb-quiet qb-sm" title="Manage users and PINs"><span class="qb-ico">👤</span>Users</button>
+            <button sc-camel-on-click="{{ openPin }}" class="qb qb-quiet qb-sm qb-icon" title="Manage users and PINs" aria-label="Users">👤</button>
           </sc-if>
-          <button sc-camel-on-click="{{ doLogout }}" class="qb qb-quiet qb-sm" title="Sign out">Log out</button>
+          <button sc-camel-on-click="{{ doLogout }}" class="qb qb-quiet qb-sm qb-icon" title="Sign out" aria-label="Sign out"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></button>
         </sc-if>
         <sc-if value="{{ isViewer }}" hint-placeholder-val="{{ true }}">
           <button sc-camel-on-click="{{ openLogin }}" class="qb qb-soft qb-sm" title="Sign in to edit"><span class="qb-ico">🔒</span>Editor Login</button>
@@ -1494,7 +1493,6 @@
           </sc-if>
         </sc-if>
         <button sc-camel-on-click="{{ openTriage }}" title="Bugs that need discussion in today’s defect call" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:10px; padding:10px 15px; color:var(--tx); cursor:pointer; font-family:Rubik,sans-serif; font-size:12px; font-weight:700; display:flex; align-items:center; gap:8px; transition:border-color .16s var(--ease), color .16s var(--ease);" style-hover="border-color:#ef4444; color:#ef4444;"><span style="width:7px; height:7px; border-radius:50%; background:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,0.18);"></span>{{ triageBtnLabel }}</button>
-        <button sc-camel-on-click="{{ goDefects }}" title="Open the Defect Manager Dashboard for this release" style="background:#95c11f; border:1px solid #7ba00f; border-radius:10px; padding:10px 17px; color:#16210a; cursor:pointer; font-family:Rubik,sans-serif; font-size:12.5px; font-weight:700; display:flex; align-items:center; gap:8px; letter-spacing:0.01em; transition:background .16s var(--ease), transform .16s var(--ease);" style-hover="background:#a3d024; transform:translateY(-1px);">Defect Manager Dashboard<span style="font-weight:800;">&#8594;</span></button>
       </div>
     </div>
     <sc-if value="{{ jiraHasError }}" hint-placeholder-val="{{ false }}">
@@ -1772,7 +1770,7 @@
 
   </div><!-- end panel 0 -->
 
-  <!-- ===== PANEL 1: DEFECT MANAGER DASHBOARD ===== -->
+  <!-- ===== PANEL 1: HOW TO RAISE A BUG (defect process + status) ===== -->
   <div style="width:50%; flex-shrink:0; display:flex; flex-direction:column; gap:12px; max-height:{{ panel1MaxH }}; overflow:{{ panel1Ov }};">
     <div style="border-radius:16px; overflow:hidden; box-shadow:var(--shadow);">
       <dc-import name="Defect Center" role="{{ role }}" editor-name="{{ editorName }}" release-id="{{ relSelectedIdProp }}" release-version="{{ relVersion }}" embedded="{{ true }}" overview-only="{{ true }}" active="{{ defectPanelActive }}" hint-size="100%,1000px"></dc-import>

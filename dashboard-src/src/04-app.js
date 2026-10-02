@@ -3157,6 +3157,9 @@ class Component extends DCLogic {
     const isEditor = isAdmin || role === 'editor';
     const isViewer = !isEditor;
     const roleBadge = (this.state.editorName ? this.state.editorName + ' · ' : '') + (isAdmin ? 'Admin' : 'Editor');
+    // Initials for the avatar beside the name, the way a user menu usually shows it.
+    const userInitials = (String(this.state.editorName || '').trim().split(/\s+/).filter(Boolean)
+      .slice(0, 2).map(w => w[0]).join('') || (isAdmin ? 'A' : 'E')).toUpperCase();
     const xlsxOk = typeof window.XLSX !== 'undefined';
     const importAccept = xlsxOk ? '.xlsx,.xls,.csv' : '.csv';
     const importBtnLabel = xlsxOk ? 'Import XLS / CSV' : 'Import CSV';
@@ -5903,7 +5906,7 @@ class Component extends DCLogic {
       setRelFormStart: this.relFormSet('startDate'), setRelFormEnd: this.relFormSet('endDate'),
       setRelFormCurrent: this.relToggleForm('current'), setRelFormNotes: this.relFormSet('notes'),
       relCancelForm: () => this.setState({ relForm: null, relDirty: false, relFormErr: '' }),
-      role, isEditor, isViewer, isAdmin, roleBadge, editorName, editors, focusPhase,
+      role, isEditor, isViewer, isAdmin, roleBadge, userInitials, editorName, editors, focusPhase,
       qtestUrl: this.state.qtestUrl || '', setQtestUrl: this.setQtestUrl, refreshFromQtest: this.refreshFromQtest,
       qHasUrl: !!(this.state.qtestUrl && this.state.qtestUrl.trim()),
       qActualiseIcon: this.state.qsyncing ? '\u2026' : '\u27f3', qActualiseLabel: this.state.qsyncing ? 'Actualising\u2026' : 'Actualise',

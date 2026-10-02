@@ -27,8 +27,10 @@ for (const t of ['Layout & settings','Go / No-Go','Manage Releases']) {
   console.log('   modal:', t, ok?'opened':'(SKIP — not in Settings)');
   await closeTop();
 }
+// Users is an icon button in the masthead now, so it goes by aria-label
+const clickLabel = (l) => p.evaluate(x=>{const b=[...document.querySelectorAll('header button')].find(e=>e.getAttribute('aria-label')===x); if(b){b.click(); return true;} return false;}, l);
 for (const t of ['Users','Top Bugs','History']) {
-  const ok = await click(t);
+  const ok = t === 'Users' ? await clickLabel(t) : await click(t);
   await p.waitForTimeout(1100);
   console.log('   modal:', t, ok?'opened':'(SKIP)');
   await closeTop();

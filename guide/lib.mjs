@@ -91,8 +91,9 @@ export const BROWSER = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 // the qTest import has to open that panel first.
 export const openSettings = async (p) => {
   await p.evaluate(() => {
-    const b = [...document.querySelectorAll('button')].find(x => /⚙/.test(x.textContent) && /Settings/.test(x.textContent));
-    if (!b) throw new Error('⚙ Settings button not found — are you signed in as an editor?');
+    const b = [...document.querySelectorAll('header button')].find(x => x.getAttribute('aria-label') === 'Settings')
+      || [...document.querySelectorAll('button')].find(x => /⚙/.test(x.textContent) && /Settings/.test(x.textContent));
+    if (!b) throw new Error('Settings button not found — are you signed in as an editor?');
     b.click();
   });
   await p.waitForTimeout(700);
