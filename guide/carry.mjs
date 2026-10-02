@@ -55,13 +55,23 @@ await p.waitForTimeout(1000);
 // panel shot in BOTH themes
 for (const mode of ['dark','light']) {
   if (mode === 'light') { await p.evaluate(()=>{const b=[...document.querySelectorAll('button')].find(x=>/^[☀☾]$/.test((x.textContent||'').trim())); b&&b.click();}); await p.waitForTimeout(1200); }
-  const r = await p.evaluate(()=>{const h=[...document.querySelectorAll('div')].reverse().find(x=>/^Defect Overview/.test((x.textContent||'').trim())&&x.textContent.length<60);
-    if(!h) return null; let e=h; for(let i=0;i<9&&e;i++){ e=e.parentElement; const b=e.getBoundingClientRect(); if(b.width>300&&b.height>500) break; }
-    e.scrollIntoView({block:'start'}); return 1;});
-  await p.waitForTimeout(800);
-  const box = await p.evaluate(()=>{const h=[...document.querySelectorAll('div')].reverse().find(x=>/^Defect Overview/.test((x.textContent||'').trim())&&x.textContent.length<60);
-    let e=h; for(let i=0;i<9&&e;i++){ e=e.parentElement; const b=e.getBoundingClientRect(); if(b.width>300&&b.height>400) { return {x:b.x,y:b.y,w:b.width,h:Math.min(b.height,640)}; } } return null;});
-  if (box) { await p.screenshot({path:`shots/c3-panel-${mode}.png`, clip:{x:Math.max(0,box.x-16),y:Math.max(0,box.y-16),width:Math.min(1680,box.w+32),height:box.h+32}}); console.log('  ✓ panel', mode); }
+  // tag the panel, then let Playwright scroll to it and measure it
+  await p.evaluate(() => {
+    const card = [...document.querySelectorAll('div[data-glass]')].find(d => /^Defect Overview/.test((d.textContent || '').trim()));
+    if (card) card.id = 'probe-defov';
+  });
+  const el = await p.$('#probe-defov');
+  if (el) {
+    await el.scrollIntoViewIfNeeded();
+    await p.waitForTimeout(700);
+    const box = await el.boundingBox();
+    const vw = p.viewportSize().width, vh = p.viewportSize().height;
+    const x = Math.max(0, Math.min(box.x - 16, vw - 200));
+    const y = Math.max(0, Math.min(box.y - 16, vh - 200));
+    await p.screenshot({ path: `shots/c3-panel-${mode}.png`,
+      clip: { x, y, width: Math.min(box.width + 32, vw - x), height: Math.min(box.height + 32, vh - y) } });
+    console.log('  ✓ panel', mode, Math.round(box.width) + 'x' + Math.round(box.height));
+  }
 }
 console.log('errors:', errs.length?errs:'none');
 await b.close();

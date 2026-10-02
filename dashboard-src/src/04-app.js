@@ -706,7 +706,7 @@ class Component extends DCLogic {
     { k: 'attend',    label: 'Cutover Attendance',          col: 'Main column' },
     { k: 'countdown', label: 'Release Countdown',         col: 'Header' },
     { k: 'workflow',  label: 'Testing Workflow Timeline', col: 'Side column' },
-    { k: 'defects',   label: 'Defect Overview',           col: 'Side column' },
+    { k: 'defects',   label: 'Defect Overview',           col: 'Main column' },
     { k: 'dump',      label: 'Bug Dump Report',           col: 'Side column' },
     { k: 'milestone', label: 'Next Milestone + Info',     col: 'Side column' },
   ];
