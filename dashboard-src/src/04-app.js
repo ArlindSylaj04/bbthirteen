@@ -705,10 +705,10 @@ class Component extends DCLogic {
     { k: 'xenv',      label: 'Recurring Defects across Environments', col: 'Main column' },
     { k: 'attend',    label: 'Cutover Attendance',          col: 'Main column' },
     { k: 'countdown', label: 'Release Countdown',         col: 'Header' },
-    { k: 'workflow',  label: 'Testing Workflow Timeline', col: 'Side column' },
+    { k: 'workflow',  label: 'Testing Workflow Timeline', col: 'Main column' },
     { k: 'defects',   label: 'Defect Overview',           col: 'Main column' },
-    { k: 'dump',      label: 'Bug Dump Report',           col: 'Side column' },
-    { k: 'milestone', label: 'Next Milestone + Info',     col: 'Side column' },
+    { k: 'dump',      label: 'Bug Dump Report',           col: 'Main column' },
+    { k: 'milestone', label: 'Next Milestone + Info',     col: 'Main column' },
   ];
   // The release blocks are administration context, not day-to-day reporting —
   // they are available in the layout settings but off by default.
@@ -5975,7 +5975,7 @@ class Component extends DCLogic {
         const cols = {};
         l.order.forEach(k => { const sd = this.SECTIONS.find(s => s.k === k); if (!sd) return; cols[sd.col] = (cols[sd.col] || 0) + 1; out['ord_' + k] = cols[sd.col]; out['dsp_' + k] = l.hidden[k] ? 'none' : 'flex'; });
         const rows = [];
-        ['Header', 'Main column', 'Side column'].forEach(col => {
+        ['Header', 'Main column'].forEach(col => {
           const keys = l.order.filter(k => (this.SECTIONS.find(s => s.k === k) || {}).col === col);
           keys.forEach((k, i) => {
             const sd = this.SECTIONS.find(s => s.k === k);
