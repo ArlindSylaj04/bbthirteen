@@ -4540,6 +4540,7 @@ class Component extends DCLogic {
     ['key', 'summary', 'priority', 'status', 'assignee', 'reporter', 'created', 'updated', 'resolved', 'environment', 'component', 'release'].forEach(k => { sortHandlers[k] = sortDefBy(k); });
     const byStatusBars = statusOptions.filter(s => s !== 'All').map(s => ({ label: s, count: jd.filter(d => d.status === s).length, closed: isClosed(s) })).sort((a, b) => b.count - a.count);
     const bsMax = Math.max(1, ...byStatusBars.map(s => s.count)); byStatusBars.forEach(s => { s.pct = Math.round(s.count / bsMax * 100); s.barColor = s.closed ? '#4caf2f' : '#ef4444'; });
+    const _envChartById2 = {}; (envCharts || []).forEach(c => { _envChartById2[c.id] = c; });
     const _plMax = Math.max(1, ...phaseDetails.map(pd => (pd.tests || []).reduce((a, t) => a + num(t.planned || 0), 0)));
     const byPriorityBars = ['Highest', 'High', 'Medium', 'Low'].map(p => ({ label: p, count: prCnt[p], ...defPriStyle(p) }));
     const bpMax = Math.max(1, ...byPriorityBars.map(p => p.count)); byPriorityBars.forEach(p => { p.pct = Math.round(p.count / bpMax * 100); });
@@ -4589,6 +4590,21 @@ class Component extends DCLogic {
       pd.testsLabel = ((pd.tests || []).length) + ' tests';
       // A 36-run environment must not draw the same bar as a 3646-run one.
       pd.scaleW = Math.max(2, Math.round(pl / _plMax * 100));
+      // A burn-down beside every environment: the ideal line against what was
+      // really executed, cropped to the plot area of the full chart so the two
+      // never disagree. The colour is the same verdict the big chart gives.
+      const _bdOf = _envChartById2[pd.id];
+      pd.bdHas = !!(_bdOf && _bdOf.planned > 0);
+      if (pd.bdHas) {
+        pd.bdIdeal = _bdOf.idealPts;
+        pd.bdActual = _bdOf.actualPts;
+        pd.bdColor = _bdOf.gapColor;
+        pd.bdTodayShow = _bdOf.bdTodayShow;
+        pd.bdTodayX = _bdOf.bdTodayX;
+        pd.bdLeft = _bdOf.remaining + ' left';
+        pd.bdBurn = _bdOf.timeBurnPct + '% of the time';
+        pd.bdTitle = pd.id + ' \u00b7 ' + _bdOf.winLabel + ' \u00b7 ' + _bdOf.verdict;
+      }
       pd.shareLabel = Math.round(pl / Math.max(1, phaseDetails.reduce((a, x) => a + (x.tests || []).reduce((b, t) => b + num(t.planned || 0), 0), 0)) * 100) + '% of the release';
       pd.ariaExpanded = pd.expanded ? 'true' : 'false';
       pd.onOpenCoverage = (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.openCoverage(pd.id); };

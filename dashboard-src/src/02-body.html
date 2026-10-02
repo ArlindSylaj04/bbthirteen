@@ -411,37 +411,7 @@
       <div style="font-size:15.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em;">Overall Progress Summary</div>
       <button sc-camel-on-click="{{ maximizeBurndown }}" title="Show Burn-down" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:8px; padding:5px 11px; color:var(--tx); cursor:pointer; font-family:Rubik,sans-serif; font-size:10px; font-weight:600; display:flex; align-items:center; gap:6px;">Burn-down ›</button>
     </div>
-    <div data-summary-grid="" style="display:grid; grid-template-columns:auto auto 1px minmax(0,1fr); gap:20px 40px; align-items:center;">
-      <!-- Donut 1: Executed -->
-      <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
-        <div style="position:relative; width:130px; height:130px;">
-        <svg sc-camel-view-box="0 0 100 100" width="130" height="130">
-          <circle cx="50" cy="50" r="38" fill="none" style="stroke:var(--track)" stroke-width="11"></circle>
-          <circle cx="50" cy="50" r="38" fill="none" stroke="{{ summary.testedColor }}" stroke-width="11" stroke-dasharray="{{ summary.testedDash }} 999" stroke-linecap="round" transform="rotate(-90 50 50)"></circle>
-        </svg>
-        <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;"><span style="font-size:24px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ summary.testedPct }}%</span><span style="font-size:8px; font-weight:700; color:var(--tx-fnt); letter-spacing:0.1em; margin-top:3px;">EXECUTED</span></div>
-        </div>
-        <div style="text-align:center;">
-          <div style="font-size:12px; font-weight:600; color:var(--tx-strong);">{{ summary.tested }} <span style="font-weight:400; color:var(--tx-fnt);">/ {{ summary.planned }}</span></div>
-          <div style="font-size:10px; color:var(--tx-fnt);">Tests Executed / Planned</div>
-        </div>
-      </div>
-      <!-- Donut 2: Passed -->
-      <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
-        <div style="position:relative; width:130px; height:130px;">
-        <svg sc-camel-view-box="0 0 100 100" width="130" height="130">
-          <circle cx="50" cy="50" r="38" fill="none" style="stroke:var(--track)" stroke-width="11"></circle>
-          <circle cx="50" cy="50" r="38" fill="none" stroke="{{ summary.passedColor }}" stroke-width="11" stroke-dasharray="{{ summary.passedDash }} 999" stroke-linecap="round" transform="rotate(-90 50 50)"></circle>
-        </svg>
-        <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;"><span style="font-size:24px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ summary.passedPct }}%</span><span style="font-size:8px; font-weight:700; color:var(--tx-fnt); letter-spacing:0.1em; margin-top:3px;">PASSED</span></div>
-        </div>
-        <div style="text-align:center;">
-          <div style="font-size:12px; font-weight:600; color:var(--tx-strong);">{{ summary.passed }} <span style="font-weight:400; color:var(--tx-fnt);">/ {{ summary.tested }}</span></div>
-          <div style="font-size:10px; color:var(--tx-fnt);">Tests Passed / Executed</div>
-        </div>
-      </div>
-      <!-- Divider -->
-      <div style="background:var(--brd-2); height:100%; min-height:120px;"></div>
+    <div data-summary-grid="" style="display:grid; grid-template-columns:minmax(0,1fr); gap:20px; align-items:center;">
       <!-- Stats grid -->
       <div style="display:flex; flex-direction:column; gap:14px; min-width:0;">
       <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px;">
@@ -642,13 +612,47 @@
     </div>
   </sc-if>
 
-  <!-- COMPACT: one aligned row per environment, bar scaled to real size -->
+  <!-- COMPACT: release totals on the left, one aligned row per environment -->
   <sc-if value="{{ envCompact }}" hint-placeholder-val="{{ false }}">
   <sc-if value="{{ hasEnvData }}" hint-placeholder-val="{{ false }}">
-    <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:10px 10px 1px; box-shadow:var(--shadow);">
+    <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:10px 10px 1px; box-shadow:var(--shadow); display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap;">
+      <sc-if value="{{ hasCharts }}" hint-placeholder-val="{{ false }}">
+        <div title="The release as a whole, across every environment below" style="flex:0 0 auto; display:flex; flex-direction:column; gap:14px; padding:12px 14px 14px; border:1px solid var(--brd-sub); border-radius:12px; background:var(--card-bg2); align-self:flex-start;">
+          <div style="font-size:8.5px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.12em; text-align:center;">Release total</div>
+      <!-- Donut 1: Executed -->
+      <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+        <div style="position:relative; width:112px; height:112px;">
+        <svg sc-camel-view-box="0 0 100 100" width="112" height="112">
+          <circle cx="50" cy="50" r="38" fill="none" style="stroke:var(--track)" stroke-width="11"></circle>
+          <circle cx="50" cy="50" r="38" fill="none" stroke="{{ summary.testedColor }}" stroke-width="11" stroke-dasharray="{{ summary.testedDash }} 999" stroke-linecap="round" transform="rotate(-90 50 50)"></circle>
+        </svg>
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;"><span style="font-size:24px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ summary.testedPct }}%</span><span style="font-size:8px; font-weight:700; color:var(--tx-fnt); letter-spacing:0.1em; margin-top:3px;">EXECUTED</span></div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:12px; font-weight:600; color:var(--tx-strong);">{{ summary.tested }} <span style="font-weight:400; color:var(--tx-fnt);">/ {{ summary.planned }}</span></div>
+          <div style="font-size:10px; color:var(--tx-fnt);">Tests Executed / Planned</div>
+        </div>
+      </div>
+      <!-- Donut 2: Passed -->
+      <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+        <div style="position:relative; width:112px; height:112px;">
+        <svg sc-camel-view-box="0 0 100 100" width="112" height="112">
+          <circle cx="50" cy="50" r="38" fill="none" style="stroke:var(--track)" stroke-width="11"></circle>
+          <circle cx="50" cy="50" r="38" fill="none" stroke="{{ summary.passedColor }}" stroke-width="11" stroke-dasharray="{{ summary.passedDash }} 999" stroke-linecap="round" transform="rotate(-90 50 50)"></circle>
+        </svg>
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;"><span style="font-size:24px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ summary.passedPct }}%</span><span style="font-size:8px; font-weight:700; color:var(--tx-fnt); letter-spacing:0.1em; margin-top:3px;">PASSED</span></div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:12px; font-weight:600; color:var(--tx-strong);">{{ summary.passed }} <span style="font-weight:400; color:var(--tx-fnt);">/ {{ summary.tested }}</span></div>
+          <div style="font-size:10px; color:var(--tx-fnt);">Tests Passed / Executed</div>
+        </div>
+      </div>
+        </div>
+      </sc-if>
+      <div style="flex:1 1 560px; min-width:0;">
       <sc-for list="{{ phaseDetails }}" as="pd">
         <div id="envrow-{{ pd.id }}" style="scroll-margin-top:90px; background:var(--card-bg2); border:1px solid var(--brd-sub); border-radius:12px; margin-bottom:9px; overflow:hidden;">
-        <div sc-camel-on-click="{{ pd.onToggle }}" sc-camel-on-key-down="{{ pd.onKey }}" role="button" tabindex="0" aria-expanded="{{ pd.ariaExpanded }}" title="Open this environment to see every test suite, team and test run" style="display:grid; grid-template-columns:132px 86px minmax(170px,1fr) 72px 72px 196px 132px; gap:11px; align-items:center; padding:13px 10px; cursor:pointer; user-select:none;">
+        <div sc-camel-on-click="{{ pd.onToggle }}" sc-camel-on-key-down="{{ pd.onKey }}" role="button" tabindex="0" aria-expanded="{{ pd.ariaExpanded }}" title="Open this environment to see every test suite, team and test run" style="display:grid; grid-template-columns:124px 84px minmax(150px,1fr) 66px 72px 176px 158px 112px; gap:11px; align-items:center; padding:13px 10px; cursor:pointer; user-select:none;">
           <div style="display:flex; align-items:center; gap:8px; min-width:0;">
             <span style="display:inline-block; color:var(--tx-fnt); font-size:10px; transform:rotate({{ pd.chevronRotate }}deg); transition:transform 0.2s; width:12px; text-align:center; flex-shrink:0;">&#9660;</span>
             <span style="width:4px; height:26px; border-radius:3px; background:{{ pd.envColor }}; flex-shrink:0;"></span>
@@ -688,6 +692,21 @@
             <div style="font-size:10.5px; font-weight:600; color:var(--tx); font-variant-numeric:tabular-nums; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ pd.dateMain }}</div>
             <sc-if value="{{ pd.hasDateSub }}" hint-placeholder-val="{{ true }}">
               <div style="font-size:9.5px; color:var(--tx-fnt); font-variant-numeric:tabular-nums; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ pd.dateSub }}</div>
+            </sc-if>
+          </div>
+          <div title="{{ pd.bdTitle }}" style="min-width:0;">
+            <sc-if value="{{ pd.bdHas }}" hint-placeholder-val="{{ true }}">
+              <svg width="100%" height="40" sc-camel-view-box="36 6 264 102" sc-camel-preserve-aspect-ratio="none" style="display:block; overflow:visible;">
+                <polyline points="{{ pd.bdIdeal }}" fill="none" stroke="var(--brd-2)" stroke-width="2" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"></polyline>
+                <polyline points="{{ pd.bdActual }}" fill="none" stroke="{{ pd.bdColor }}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
+                <sc-if value="{{ pd.bdTodayShow }}" hint-placeholder-val="{{ true }}">
+                  <line x1="{{ pd.bdTodayX }}" y1="6" x2="{{ pd.bdTodayX }}" y2="108" stroke="#ef4444" stroke-width="1.5" vector-effect="non-scaling-stroke"></line>
+                </sc-if>
+              </svg>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-top:3px;">
+                <span style="font-size:8px; font-weight:700; color:var(--tx-fnt); letter-spacing:0.06em; text-transform:uppercase; white-space:nowrap;">Burn-down</span>
+                <span style="font-size:9px; font-weight:700; color:{{ pd.bdColor }}; white-space:nowrap;">{{ pd.bdLeft }}</span>
+              </div>
             </sc-if>
           </div>
           <div style="display:flex; align-items:center; justify-content:flex-end; gap:6px;">
@@ -773,6 +792,7 @@
         </sc-if>
         </div>
       </sc-for>
+      </div>
     </div>
   </sc-if>
   </sc-if>
