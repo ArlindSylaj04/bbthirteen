@@ -1432,6 +1432,88 @@
   </div>
 
 
+  <!-- CUTOVER ATTENDANCE -->
+  <div style="order:{{ ord_attend }}; display:{{ dsp_attend }}; flex-direction:column; gap:16px; min-width:0;">
+    <div class="glass-card" style="background:var(--card-bg); border-radius:16px; padding:20px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+        <div style="min-width:0;">
+          <div style="font-size:15.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em;">Cutover Attendance<span data-rel-chip="" style="margin-left:9px; background:var(--tile-bg); border:1px solid var(--brd-2); border-radius:6px; padding:2px 8px; font-size:8.5px; font-weight:700; color:var(--tx-mut); letter-spacing:0.06em; white-space:nowrap;">Rel. {{ relVersion }} &#183; {{ attEnvSel }}</span></div>
+          <div style="font-size:12px; color:var(--tx-mut); margin-top:3px;">A production run needs everyone on the call &#8212; tick who is taking part, and who has finished their testing. The roll is everyone who has run a test in this release; the numbers are for {{ attEnvSel }}.</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:7px;">
+          <span style="font-size:10px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em;">Environment</span>
+          <sc-raw-select value="{{ attEnvSel }}" sc-camel-on-change="{{ setAttEnv }}" title="Which environment this roll call is for" style="padding:8px 12px; border:1px solid var(--brd-2); border-radius:9px; background:var(--card-bg); color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:12px;">
+            <sc-for list="{{ attEnvOpts }}" as="ev" hint-placeholder-count="5"><option value="{{ ev }}">{{ ev }}</option></sc-for>
+          </sc-raw-select>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:10px; margin-bottom:16px;">
+        <sc-for list="{{ attKpis }}" as="k" hint-placeholder-count="4">
+          <div class="glass-tile" style="background:var(--card-bg2); border:1px solid var(--brd-sub); border-top:2px solid {{ k.color }}; border-radius:var(--r-md); padding:13px 15px;">
+            <div style="font-size:26px; font-weight:700; color:{{ k.color }}; line-height:1;">{{ k.value }}</div>
+            <div style="font-size:9.5px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.05em; margin-top:6px;">{{ k.label }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ attNone }}" hint-placeholder-val="{{ true }}">
+        <div style="border:1.5px dashed var(--brd-2); border-radius:12px; padding:26px; text-align:center; color:var(--tx-mut); font-size:12.5px; line-height:1.7;">
+          <div style="font-weight:700; color:var(--tx-strong); margin-bottom:5px;">Nobody on the roll yet</div>
+          <div>Import the qTest export and everyone who has run a test in this release appears here, or add a name below.</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ attHas }}" hint-placeholder-val="{{ false }}">
+        <div style="max-width:1020px; display:grid; grid-template-columns:minmax(160px,1fr) minmax(120px,0.8fr) 110px 152px 84px 34px; gap:9px; padding:0 10px 8px; border-bottom:1px solid var(--brd-sub); font-size:9px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.07em;">
+          <span>Person</span><span>Team</span><span style="text-align:right;">Runs done</span><span style="text-align:center;">Taking part</span><span style="text-align:center;">Finished</span><span></span>
+        </div>
+        <div style="display:flex; flex-direction:column;">
+          <sc-for list="{{ attRows }}" as="a" hint-placeholder-count="5">
+            <div style="max-width:1020px; display:grid; grid-template-columns:minmax(160px,1fr) minmax(120px,0.8fr) 110px 152px 84px 34px; gap:9px; align-items:center; padding:9px 10px; border-bottom:1px solid var(--brd-sub);">
+              <div style="min-width:0;">
+                <div style="font-size:12.5px; font-weight:650; color:var(--tx-strong); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ a.name }}</div>
+                <sc-if value="{{ a.hasBy }}" hint-placeholder-val="{{ false }}">
+                  <div title="Who set this, and when" style="font-size:9px; color:var(--tx-fnt); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ a.by }}</div>
+                </sc-if>
+              </div>
+              <span style="font-size:11.5px; color:var(--tx-mut); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ a.team }}</span>
+              <div style="text-align:right;">
+                <sc-if value="{{ a.hasRuns }}" hint-placeholder-val="{{ true }}">
+                  <span title="Test runs this person has executed in {{ attEnvSel }}, out of the ones assigned to them" style="font-size:11.5px; font-weight:700; color:var(--tx); font-variant-numeric:tabular-nums;">{{ a.runs }}</span>
+                </sc-if>
+                <sc-if value="{{ a.isManual }}" hint-placeholder-val="{{ false }}">
+                  <span title="Added by hand &#8212; this person owns no test run in the import" style="font-size:9.5px; color:var(--tx-fnt);">added by hand</span>
+                </sc-if>
+              </div>
+              <sc-if value="{{ isEditor }}" hint-placeholder-val="{{ false }}">
+                <button sc-camel-on-click="{{ a.onPart }}" title="Click to cycle: no answer &#8594; taking part &#8594; not taking part" style="background:{{ a.partBg }}; border:1px solid {{ a.partBrd }}; border-radius:99px; padding:6px 10px; color:{{ a.partColor }}; cursor:pointer; font-family:Rubik,sans-serif; font-size:11px; font-weight:700; white-space:nowrap;">{{ a.partLabel }}</button>
+                <button sc-camel-on-click="{{ a.onDone }}" title="{{ a.doneTitle }}" aria-label="{{ a.doneTitle }}" style="justify-self:center; width:30px; height:30px; background:{{ a.doneBg }}; border:1.5px solid {{ a.doneBrd }}; border-radius:8px; color:{{ a.doneColor }}; cursor:pointer; font-family:Rubik,sans-serif; font-size:15px; font-weight:800; line-height:1; display:flex; align-items:center; justify-content:center;">{{ a.doneTick }}&#8203;</button>
+                <sc-if value="{{ a.isManual }}" hint-placeholder-val="{{ false }}">
+                  <button sc-camel-on-click="{{ a.onRemove }}" title="Remove this person from the roll" style="justify-self:center; width:26px; height:26px; background:transparent; border:1px solid var(--brd-2); border-radius:8px; color:var(--tx-fnt); cursor:pointer; font-family:Rubik,sans-serif; font-size:12px; line-height:1; display:flex; align-items:center; justify-content:center;">&#215;</button>
+                </sc-if>
+              </sc-if>
+              <sc-if value="{{ isViewer }}" hint-placeholder-val="{{ true }}">
+                <span style="text-align:center; font-size:11px; font-weight:700; color:{{ a.partColor }}; background:{{ a.partBg }}; border:1px solid {{ a.partBrd }}; border-radius:99px; padding:5px 10px; white-space:nowrap;">{{ a.partLabel }}</span>
+                <span style="justify-self:center; font-size:15px; font-weight:800; color:{{ a.doneColor }};">{{ a.doneTick }}&#8203;</span>
+                <span></span>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isEditor }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:14px; padding-top:13px; border-top:1px solid var(--brd-sub);">
+          <input type="text" value="{{ attName }}" sc-camel-on-change="{{ setAttName }}" placeholder="Name &#8212; someone not in the qTest export" style="flex:1 1 230px; min-width:0; padding:9px 12px; border:1px solid var(--brd-2); border-radius:9px; background:var(--input-bg); color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:12px;">
+          <input type="text" value="{{ attTeam }}" sc-camel-on-change="{{ setAttTeam }}" placeholder="Team or role" style="flex:0 1 180px; min-width:0; padding:9px 12px; border:1px solid var(--brd-2); border-radius:9px; background:var(--input-bg); color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:12px;">
+          <button sc-camel-on-click="{{ attendAdd }}" title="Add this person to the {{ attEnvSel }} roll" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:9px; padding:9px 16px; color:var(--tx-strong); cursor:pointer; font-family:Rubik,sans-serif; font-size:12px; font-weight:700; white-space:nowrap;">+ Add person</button>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+
   </div>
 
   <div data-noedit="" style="display:flex; flex-direction:column; gap:16px; position:sticky; top:16px; align-self:start;">

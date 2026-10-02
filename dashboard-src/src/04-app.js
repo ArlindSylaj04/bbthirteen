@@ -47,7 +47,7 @@ class Component extends DCLogic {
     'qa-tcf-issues': 1, 'qa-tcf-file': 1,
     'qa-cases-latest': 1, 'qa-history': 1, 'qa-exec-ledger': 1, 'qa-chain-claims': 1,
     'qa-comments': 1, 'qa-topics': 1, 'qa-defect-notes': 1, 'qa-qtest-links': 1,
-    'qa-milestone': 1, 'qa-milestone-date': 1, 'qa-info': 1,
+    'qa-milestone': 1, 'qa-milestone-date': 1, 'qa-info': 1, 'qa-attend': 1,
     'qa-req-baseline': 1, 'qa-suite-order': 1, 'qa-testing-start': 1, 'qa-app-map': 1,
     // ('qa-resp-names' was the old global store — responsibilities now live on the release record)
   };
@@ -703,6 +703,7 @@ class Component extends DCLogic {
     { k: 'tcf',       label: 'Testfallfinalisierung',     col: 'Main column' },
     { k: 'backlog',   label: 'Release Backlog × Testing Link', col: 'Main column' },
     { k: 'xenv',      label: 'Recurring Defects across Environments', col: 'Main column' },
+    { k: 'attend',    label: 'Cutover Attendance',          col: 'Main column' },
     { k: 'countdown', label: 'Release Countdown',         col: 'Header' },
     { k: 'workflow',  label: 'Testing Workflow Timeline', col: 'Side column' },
     { k: 'defects',   label: 'Defect Overview',           col: 'Side column' },
@@ -1021,6 +1022,61 @@ class Component extends DCLogic {
       text: last.id + ' (' + last.label + ') is the final gate of this release, ending ' + this.relFmt(last.end) + '.', meta: '' });
     return out;
   }
+  // ─── cutover attendance ───────────────────────────────────────────────────
+  // PC1 is run against production, so before it starts someone has to see who is
+  // actually there. The people come from the qTest import — whoever owns a test
+  // run in that environment — and only the two ticks are stored, so a fresh
+  // import brings new testers in without anyone re-typing the list.
+  loadAttend() { try { const s = JSON.parse(this.lsGet('qa-attend') || 'null'); return (s && typeof s === 'object') ? s : {}; } catch (e) { return {}; } }
+  persistAttend(map) { try { this.lsSet('qa-attend', JSON.stringify(map)); } catch (e) {} this.setState({ attend: map }); }
+  attendMap() { return this.state.attend || this.loadAttend(); }
+  attendEntry(env, name) { return ((this.attendMap()[env] || {})[name]) || {}; }
+  attendWrite(env, name, patch) {
+    if (!this.can('editor')) { console.warn('QA Cockpit: rejected \u2014 editor role required'); return; }
+    const map = { ...this.attendMap() };
+    const forEnv = { ...(map[env] || {}) };
+    const now = { ...(forEnv[name] || {}), ...patch, by: this.state.editorName || 'Editor', ts: Date.now() };
+    forEnv[name] = now; map[env] = forEnv;
+    this.persistAttend(map);
+  }
+  // Taking part cycles: no answer -> taking part -> not taking part -> no answer.
+  attendCyclePart = (env, name) => () => {
+    const cur = this.attendEntry(env, name).part || '';
+    this.attendWrite(env, name, { part: cur === '' ? 'in' : cur === 'in' ? 'out' : '' });
+  };
+  attendToggleDone = (env, name) => () => {
+    const e = this.attendEntry(env, name);
+    this.attendWrite(env, name, { done: !e.done });
+  };
+  attendAdd = () => {
+    const env = this.attendEnvSel();
+    const name = String(this.state.attName || '').trim();
+    if (!env || !name) return;
+    this.attendWrite(env, name, { manual: true, team: String(this.state.attTeam || '').trim() });
+    this.setState({ attName: '', attTeam: '' });
+  };
+  // Only a hand-added person can be removed — someone who owns a test run in the
+  // import stays on the list, with their ticks cleared.
+  attendRemove = (env, name) => () => {
+    if (!this.can('editor')) { console.warn('QA Cockpit: rejected \u2014 editor role required'); return; }
+    const map = { ...this.attendMap() };
+    const forEnv = { ...(map[env] || {}) };
+    delete forEnv[name]; map[env] = forEnv;
+    this.persistAttend(map);
+  };
+  // The roll defaults to the cutover environment, so nothing is stored until
+  // someone picks a different one — which is why adding a person has to resolve
+  // the environment the same way the panel does, not read the empty state.
+  attendEnvSel() {
+    const order = this.relOrder();
+    const cur = this.state.attEnv;
+    if (order.indexOf(cur) >= 0) return cur;
+    return order.find(id => /^PC/i.test(id)) || order[order.length - 1] || '';
+  }
+  setAttEnv = (e) => this.setState({ attEnv: e.target.value });
+  setAttName = (e) => this.setState({ attName: e.target.value });
+  setAttTeam = (e) => this.setState({ attTeam: e.target.value });
+
   loadTopics() { try { const s = JSON.parse(this.lsGet('qa-topics') || 'null'); return Array.isArray(s) ? s : this._defaultTopics(); } catch (e) { return this._defaultTopics(); } }
   persistTopics(list) { try { this.lsSet('qa-topics', JSON.stringify(list)); } catch (e) {} this.setState({ topics: list }); }
   saveTopic = () => {
@@ -2429,7 +2485,7 @@ class Component extends DCLogic {
     const jiraDefects = this.loadDefects();
     this.setState({
       milestone, milestoneDate, infoNote, suiteOrder: suiteOrder || {},
-      comments: this.loadComments(), topics: this.loadTopics(),
+      comments: this.loadComments(), topics: this.loadTopics(), attend: this.loadAttend(),
       qtestLinks: this.loadQtestLinks(), qtestUrl: this.loadQtestFolder(), history,
       importedRows: latest ? latest.rows : null,
       importedCases: (latest && latest.cases && latest.cases.length) ? latest.cases : this.loadCasesLatest(),
@@ -5752,6 +5808,76 @@ class Component extends DCLogic {
         (dfArea && dfArea !== 'All') ? 'Area: ' + dfArea : '', dfSearch ? 'Search: ' + dfSearch : ''].filter(Boolean).join(' · '),
       shown: defectRows.length, jiraFile: this.state.jiraFile || '',
     };
+    // ── Cutover attendance ────────────────────────────────────────────────
+    // Who is on the call for the production run, and who has finished their part.
+    // The roll comes from the qTest import: every tester who owns a run in the
+    // chosen environment is on it the moment the export lands.
+    const attEnvOpts = this.relOrder();
+    const attEnvSel = this.attendEnvSel();
+    const attHasEnv = !!attEnvSel;
+    const _attMap = (this.attendMap()[attEnvSel] || {});
+    // At the start of a cutover nothing has been executed yet, so a roll built
+    // only from that environment would be empty on the day it is needed. Take
+    // everyone who has run a test anywhere in this release, and show their
+    // numbers for the chosen environment.
+    const _attStat = {};   // runs in the chosen environment
+    const _attSeen = {};   // anyone who tested anywhere in this release -> their team
+    (this.state.importedCases || []).forEach(c => {
+      const who = String(c.tester || '').trim();
+      if (!who || who === '\u2014') return;
+      if (_attSeen[who] == null) _attSeen[who] = c.team || '';
+      if (c.phase !== attEnvSel) return;
+      const r = _attStat[who] = _attStat[who] || { planned: 0, done: 0, team: '' };
+      r.planned++; if (!c.unex) r.done++;
+      if (!r.team && c.team) r.team = c.team;
+    });
+    const _attNames = Array.from(new Set(Object.keys(_attSeen).concat(Object.keys(_attMap))))
+      .sort((a, b) => a.localeCompare(b));
+    const _attPartStyle = {
+      in:  { label: '\u2713 Taking part', color: '#4caf2f', bg: 'var(--soft-ok)',  brd: '#4caf2f' },
+      out: { label: '\u2715 Not taking part', color: '#ef4444', bg: 'var(--soft-bad)', brd: '#ef4444' },
+      '':  { label: '\u2013 No answer', color: 'var(--tx-mut)', bg: 'var(--tile-bg)', brd: 'var(--brd-2)' },
+    };
+    const attRows = _attNames.map(name => {
+      const e = _attMap[name] || {};
+      const st = _attStat[name] || { planned: 0, done: 0, team: '' };
+      const part = e.part === 'in' || e.part === 'out' ? e.part : '';
+      const ps = _attPartStyle[part];
+      const runs = st.planned ? (st.done + ' / ' + st.planned) : '\u2014';
+      return {
+        name, team: st.team || _attSeen[name] || e.team || '\u2014',
+        runs, hasRuns: st.planned > 0,
+        runPct: st.planned ? Math.round(st.done / st.planned * 100) : 0,
+        allRunsDone: st.planned > 0 && st.done === st.planned,
+        partLabel: ps.label, partColor: ps.color, partBg: ps.bg, partBrd: ps.brd,
+        doneTick: e.done ? '\u2713' : '', doneColor: e.done ? '#4caf2f' : 'var(--tx-fnt)',
+        doneBg: e.done ? 'var(--soft-ok)' : 'var(--tile-bg)',
+        doneBrd: e.done ? '#4caf2f' : 'var(--brd-2)',
+        doneTitle: e.done ? 'Marked finished with testing' : 'Mark as finished with testing',
+        isManual: !!e.manual && !st.planned,
+        by: e.by ? (e.by + ' \u00b7 ' + this.relFmt(e.ts)) : '',
+        hasBy: !!e.by,
+        onPart: this.attendCyclePart(attEnvSel, name),
+        onDone: this.attendToggleDone(attEnvSel, name),
+        onRemove: this.attendRemove(attEnvSel, name),
+      };
+    });
+    const attTotal = attRows.length;
+    const attIn = attRows.filter(r => r.partColor === '#4caf2f').length;
+    const attOut = attRows.filter(r => r.partColor === '#ef4444').length;
+    const attNoAnswer = attTotal - attIn - attOut;
+    const attDone = _attNames.filter(n => (_attMap[n] || {}).done).length;
+    const attHas = attTotal > 0;
+    const attNone = !attHas;
+    const attKpis = [
+      { label: 'Taking part', value: attIn, color: '#4caf2f' },
+      { label: 'Not taking part', value: attOut, color: '#ef4444' },
+      { label: 'No answer yet', value: attNoAnswer, color: '#d97706' },
+      { label: 'Finished testing', value: attDone, color: '#2563eb' },
+    ];
+    const attName = this.state.attName || '';
+    const attTeam = this.state.attTeam || '';
+
     // ── Settings: the one gear in the masthead holds what the toolbar held ──
     // Every action closes the panel first, so a print dialog or a file picker
     // never opens behind it.
@@ -5868,6 +5994,8 @@ class Component extends DCLogic {
       ...this.chainVals(),
       layoutOpen: !!this.state.layoutOpen, openLayout: this.openLayout, closeLayout: this.closeLayout, resetLayout: this.resetLayout,
       cockpitOpen, openCockpit, closeCockpit, onCockpitFile, ckPdfEnv, ckPdfOverall, ckGng, ckQtest, ckLayout, ckReleases,
+      attRows, attHas, attNone, attKpis, attTotal, attEnvOpts, attEnvSel, attHasEnv,
+      attName, attTeam, setAttEnv: this.setAttEnv, setAttName: this.setAttName, setAttTeam: this.setAttTeam, attendAdd: this.attendAdd,
       ...(() => {
         const w = this.workCfg();
         return {
