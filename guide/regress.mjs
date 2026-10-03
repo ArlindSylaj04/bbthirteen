@@ -30,7 +30,9 @@ for (const t of ['Layout & settings','Go / No-Go','Manage Releases']) {
 // Users is an icon button in the masthead now, so it goes by aria-label
 const clickLabel = (l) => p.evaluate(x=>{const b=[...document.querySelectorAll('header button')].find(e=>e.getAttribute('aria-label')===x); if(b){b.click(); return true;} return false;}, l);
 for (const t of ['Users','Top Bugs','History']) {
-  const ok = t === 'Users' ? await clickLabel(t) : await click(t);
+  // Users now lives in the account menu, History is an icon in the masthead
+  if (t === 'Users') { await clickLabel('Account'); await p.waitForTimeout(500); }
+  const ok = t === 'Users' ? await click('Users & PINs') : t === 'History' ? await clickLabel('History') : await click(t);
   await p.waitForTimeout(1100);
   console.log('   modal:', t, ok?'opened':'(SKIP)');
   await closeTop();

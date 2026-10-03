@@ -3212,6 +3212,7 @@ class Component extends DCLogic {
     const isEditor = isAdmin || role === 'editor';
     const isViewer = !isEditor;
     const roleBadge = (this.state.editorName ? this.state.editorName + ' · ' : '') + (isAdmin ? 'Admin' : 'Editor');
+    const roleLabel = isAdmin ? 'Administrator' : 'Editor';
     // Initials for the avatar beside the name, the way a user menu usually shows it.
     const userInitials = (String(this.state.editorName || '').trim().split(/\s+/).filter(Boolean)
       .slice(0, 2).map(w => w[0]).join('') || (isAdmin ? 'A' : 'E')).toUpperCase();
@@ -5908,6 +5909,15 @@ class Component extends DCLogic {
     const attName = this.state.attName || '';
     const attTeam = this.state.attTeam || '';
 
+    // ── the account menu behind the avatar ────────────────────────────────
+    const userMenuOpen = !!this.state.userMenuOpen;
+    const openUserMenu = () => this.setState({ userMenuOpen: true });
+    const closeUserMenu = () => this.setState({ userMenuOpen: false });
+    const umRun = (fn) => () => { this.setState({ userMenuOpen: false }); fn(); };
+    const umUsers = umRun(openPin);
+    const umTheme = umRun(toggleTheme);
+    const umLogout = umRun(this.doLogout);
+
     // ── Burn-down: one environment at a time, opened from its row ─────────
     const bdPick = (envCharts || []).find(c => c.id === this.state.bdOpen) || null;
     const bdPickHas = !!bdPick;
@@ -6039,6 +6049,7 @@ class Component extends DCLogic {
       layoutOpen: !!this.state.layoutOpen, openLayout: this.openLayout, closeLayout: this.closeLayout, resetLayout: this.resetLayout,
       cockpitOpen, openCockpit, closeCockpit, onCockpitFile, ckPdfEnv, ckPdfOverall, ckGng, ckQtest, ckLayout, ckReleases,
       bdPick, bdPickHas, bdPickId, closeBurn, relTotals,
+      userMenuOpen, openUserMenu, closeUserMenu, umUsers, umTheme, umLogout,
       attRows, attHas, attNone, attKpis, attTotal, attEnvOpts, attEnvSel, attHasEnv,
       attName, attTeam, setAttEnv: this.setAttEnv, setAttName: this.setAttName, setAttTeam: this.setAttTeam, attendAdd: this.attendAdd,
       ...(() => {
@@ -6079,7 +6090,7 @@ class Component extends DCLogic {
       setRelFormStart: this.relFormSet('startDate'), setRelFormEnd: this.relFormSet('endDate'),
       setRelFormCurrent: this.relToggleForm('current'), setRelFormNotes: this.relFormSet('notes'),
       relCancelForm: () => this.setState({ relForm: null, relDirty: false, relFormErr: '' }),
-      role, isEditor, isViewer, isAdmin, roleBadge, userInitials, editorName, editors, focusPhase,
+      role, isEditor, isViewer, isAdmin, roleBadge, roleLabel, userInitials, editorName, editors, focusPhase,
       qtestUrl: this.state.qtestUrl || '', setQtestUrl: this.setQtestUrl, refreshFromQtest: this.refreshFromQtest,
       qHasUrl: !!(this.state.qtestUrl && this.state.qtestUrl.trim()),
       qActualiseIcon: this.state.qsyncing ? '\u2026' : '\u27f3', qActualiseLabel: this.state.qsyncing ? 'Actualising\u2026' : 'Actualise',
