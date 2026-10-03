@@ -5864,12 +5864,14 @@ class Component extends DCLogic {
     });
     const _attNames = Array.from(new Set(Object.keys(_attSeen).concat(Object.keys(_attMap))))
       .sort((a, b) => a.localeCompare(b));
+    // No answer is an open item, not a neutral one, so it is amber and dashed
+    // rather than grey — it should look like something still to be done.
     const _attPartStyle = {
-      in:  { label: '\u2713 Taking part', color: '#4caf2f', bg: 'var(--soft-ok)',  brd: '#4caf2f' },
-      out: { label: '\u2715 Not taking part', color: '#ef4444', bg: 'var(--soft-bad)', brd: '#ef4444' },
-      '':  { label: '\u2013 No answer', color: 'var(--tx-mut)', bg: 'var(--tile-bg)', brd: 'var(--brd-2)' },
+      in:  { label: '\u2713 Taking part', color: '#4caf2f', bg: 'var(--soft-ok)',  brd: '#4caf2f', dash: 'solid' },
+      out: { label: '\u2715 Not taking part', color: '#ef4444', bg: 'var(--soft-bad)', brd: '#ef4444', dash: 'solid' },
+      '':  { label: 'Needs answer', color: '#d97706', bg: 'transparent', brd: '#d97706', dash: 'dashed' },
     };
-    const attRows = _attNames.map(name => {
+    let attRows = _attNames.map(name => {
       const e = _attMap[name] || {};
       const st = _attStat[name] || { planned: 0, done: 0, team: '' };
       const part = e.part === 'in' || e.part === 'out' ? e.part : '';
@@ -5880,7 +5882,8 @@ class Component extends DCLogic {
         runs, hasRuns: st.planned > 0,
         runPct: st.planned ? Math.round(st.done / st.planned * 100) : 0,
         allRunsDone: st.planned > 0 && st.done === st.planned,
-        partLabel: ps.label, partColor: ps.color, partBg: ps.bg, partBrd: ps.brd,
+        partLabel: ps.label, partColor: ps.color, partBg: ps.bg, partBrd: ps.brd, partDash: ps.dash,
+        rowBg: part === 'in' ? 'rgba(76,175,47,0.06)' : part === 'out' ? 'rgba(239,68,68,0.05)' : 'var(--card-bg2)',
         doneTick: e.done ? '\u2713' : '', doneColor: e.done ? '#4caf2f' : 'var(--tx-fnt)',
         doneBg: e.done ? 'var(--soft-ok)' : 'var(--tile-bg)',
         doneBrd: e.done ? '#4caf2f' : 'var(--brd-2)',
@@ -5893,9 +5896,43 @@ class Component extends DCLogic {
         onRemove: this.attendRemove(attEnvSel, name),
       };
     });
-    const attTotal = attRows.length;
-    const attIn = attRows.filter(r => r.partColor === '#4caf2f').length;
-    const attOut = attRows.filter(r => r.partColor === '#ef4444').length;
+    // With a release-wide roll this list runs to a hundred-plus people, so it
+    // folds away and can be narrowed before anyone scrolls it.
+    const attCollapsed = !!this.state.attMin;
+    const attOpen = !attCollapsed;
+    const attChevron = attCollapsed ? '\u25b8' : '\u25be';
+    const toggleAttMin = () => this.setState(st => ({ attMin: !st.attMin }));
+    const attQ = this.state.attQ || '';
+    const setAttQ = (e) => this.setState({ attQ: e.target.value });
+    const _attTeams = Array.from(new Set(attRows.map(r => r.team))).sort((a, b) => a.localeCompare(b));
+    const attTeamOpts = ['All teams'].concat(_attTeams);
+    const attTeamSel = _attTeams.indexOf(this.state.attTeamF) >= 0 ? this.state.attTeamF : 'All teams';
+    const setAttTeamF = (e) => this.setState({ attTeamF: e.target.value });
+    const ATT_STATES = ['Everyone', 'Taking part', 'Not taking part', 'Needs answer', 'Finished', 'Not finished'];
+    const attStateSel = ATT_STATES.indexOf(this.state.attStateF) > 0 ? this.state.attStateF : 'Everyone';
+    const attStateOpts = ATT_STATES;
+    const setAttStateF = (e) => this.setState({ attStateF: e.target.value });
+    const _attQ = attQ.trim().toLowerCase();
+    const _attMatch = (r) => {
+      if (_attQ && (r.name + ' ' + r.team).toLowerCase().indexOf(_attQ) < 0) return false;
+      if (attTeamSel !== 'All teams' && r.team !== attTeamSel) return false;
+      if (attStateSel === 'Taking part') return r.partColor === '#4caf2f';
+      if (attStateSel === 'Not taking part') return r.partColor === '#ef4444';
+      if (attStateSel === 'Needs answer') return r.partColor === '#d97706';
+      if (attStateSel === 'Finished') return !!r.doneTick;
+      if (attStateSel === 'Not finished') return !r.doneTick;
+      return true;
+    };
+    const attAllRows = attRows;
+    attRows = attAllRows.filter(_attMatch);
+    const attFiltered = attRows.length !== attAllRows.length;
+    const attShownLabel = attFiltered ? (attRows.length + ' of ' + attAllRows.length + ' shown') : (attAllRows.length + ' on the roll');
+    const attNoMatch = attAllRows.length > 0 && attRows.length === 0;
+    const clearAttFilter = () => this.setState({ attQ: '', attTeamF: 'All teams', attStateF: 'Everyone' });
+    const attTotal = attAllRows.length;
+    // the counters are about the whole roll, never about what the filter leaves
+    const attIn = attAllRows.filter(r => r.partColor === '#4caf2f').length;
+    const attOut = attAllRows.filter(r => r.partColor === '#ef4444').length;
     const attNoAnswer = attTotal - attIn - attOut;
     const attDone = _attNames.filter(n => (_attMap[n] || {}).done).length;
     const attHas = attTotal > 0;
@@ -6051,6 +6088,8 @@ class Component extends DCLogic {
       bdPick, bdPickHas, bdPickId, closeBurn, relTotals,
       userMenuOpen, openUserMenu, closeUserMenu, umUsers, umTheme, umLogout,
       attRows, attHas, attNone, attKpis, attTotal, attEnvOpts, attEnvSel, attHasEnv,
+      attCollapsed, attOpen, attChevron, toggleAttMin, attShownLabel, attNoMatch, attFiltered, clearAttFilter,
+      attQ, setAttQ, attTeamOpts, attTeamSel, setAttTeamF, attStateOpts, attStateSel, setAttStateF,
       attName, attTeam, setAttEnv: this.setAttEnv, setAttName: this.setAttName, setAttTeam: this.setAttTeam, attendAdd: this.attendAdd,
       ...(() => {
         const w = this.workCfg();
