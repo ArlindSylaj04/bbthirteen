@@ -5336,29 +5336,136 @@ class Component extends DCLogic {
     const notLinkedN = _backlog.filter(d => !_linkedQtest(d) && !_hasQaLabel(d)).length;
     const _relColor = (d) => _linkedQtest(d) ? '#4caf2f' : (_hasQaLabel(d) ? '#38bdf8' : (_isOlderBug(d) ? '#f6b73c' : '#8b95ab'));
     const _relTag = (d) => _linkedQtest(d) ? (_runsForKey(d) ? _runsForKey(d) + ' qTest run' + (_runsForKey(d) > 1 ? 's' : '') : 'qTest linked') : (_hasQaLabel(d) ? (/(testfrei|test-?free)/i.test(d.labels) ? 'Testfrei' : 'QA+') : (_isOlderBug(d) ? 'Pre-existing' : 'No test link'));
-    const backlogFilterOpts = ['All', 'qTest linked', 'QA+ / Testfrei', 'Pre-existing bugs', 'No test link', 'Flagged'];
     const backlogFilter = this.state.backlogFilter || 'All';
     const _flags = this.loadBacklogFlags();
     const _isFlagged = (d) => !!_flags[d.key];
     const _matchBF = (d) => backlogFilter === 'All' ? true : backlogFilter === 'qTest linked' ? _linkedQtest(d) : backlogFilter === 'QA+ / Testfrei' ? _hasQaLabel(d) : backlogFilter === 'Pre-existing bugs' ? _isOlderBug(d) : backlogFilter === 'No test link' ? (!_linkedQtest(d) && !_hasQaLabel(d)) : backlogFilter === 'Flagged' ? _isFlagged(d) : true;
-    const backlogStatusOpts = ['All statuses'].concat(Array.from(new Set(_backlog.map(d => d.status || 'Unknown'))).sort());
     // Assignee: who the ticket sits with. "Unassigned" always sorts last.
     const _asgOf = (d) => String(d.assignee || '').trim() || 'Unassigned';
-    const _asgNames = Array.from(new Set(_backlog.map(_asgOf)))
-      .sort((a, b) => a === 'Unassigned' ? 1 : b === 'Unassigned' ? -1 : a.localeCompare(b));
-    const backlogAsgOpts = ['All assignees'].concat(_asgNames);
-    const backlogAsg = this.state.backlogAsg || 'All assignees';
-    const _matchAsg = (d) => backlogAsg === 'All assignees' ? true : _asgOf(d) === backlogAsg;
-    const setBacklogAsg = (e) => this.setState({ backlogAsg: e.target.value });
-    const backlogStatus = this.state.backlogStatus || 'All statuses';
-    const _matchStatus = (d) => backlogStatus === 'All statuses' ? true : (d.status || 'Unknown') === backlogStatus;
     const flaggedN = _backlog.filter(_isFlagged).length;
+
     const backlogQuery = this.state.backlogQuery || '';
     const _bq = backlogQuery.trim().toLowerCase();
     const _matchQ = (d) => !_bq ? true : ((d.summary || '') + ' ' + (d.key || '') + ' ' + (d.labels || '') + ' ' + (d.component || '') + ' ' + (d.status || '') + ' ' + (d.issueType || '')).toLowerCase().includes(_bq);
     const setBacklogQuery = (e) => this.setState({ backlogQuery: e.target.value });
     const clearBacklogQuery = () => this.setState({ backlogQuery: '' });
-    const backlogRows = _backlog.filter(_matchBF).filter(_matchStatus).filter(_matchAsg).filter(_matchQ).map(d => ({
+    // ─── the table itself: every column sorts, and the ones with a fixed set
+    // of values filter. One funnel opens a chooser above the table (a popup
+    // would be clipped by the scrolling box), values are multi-select, and the
+    // counts beside them are what each value would leave once the other
+    // columns' filters are applied — the way Jira and SAP tables behave.
+    const _blLabelsOf = (d) => String(d.labels || '').split(/[,;]+/).map(x => x.trim()).filter(Boolean);
+    const _blTagOf = (d) => _linkedQtest(d) ? 'qTest linked' : (_hasQaLabel(d) ? 'QA+ / Testfrei' : (_isOlderBug(d) ? 'Pre-existing' : 'No test link'));
+    const _blValsOf = (k, d) => {
+      if (k === 'flag') return [_isFlagged(d) ? 'Flagged' : 'Not flagged'];
+      if (k === 'key') return [String(d.key || '')];
+      if (k === 'summary') return [String(d.summary || '')];
+      if (k === 'type') return [_isStory(d) ? (d.issueType || 'Story') : (d.issueType || 'Bug')];
+      if (k === 'area') return [String(d.component || '').trim() || '\u2014'];
+      if (k === 'labels') { const l = _blLabelsOf(d); return l.length ? l : ['\u2014']; }
+      if (k === 'status') return [String(d.status || 'Unknown')];
+      if (k === 'assignee') return [_asgOf(d)];
+      if (k === 'created') return [String(d.created || '')];
+      if (k === 'tag') return [_blTagOf(d)];
+      return [''];
+    };
+    const BL_COLS = [
+      { k: 'flag',     label: '\u2691',       sortable: true, filter: true  },
+      { k: 'key',      label: 'Ticket',       sortable: true, filter: false },
+      { k: 'summary',  label: 'Summary',      sortable: true, filter: false },
+      { k: 'type',     label: 'Type',         sortable: true, filter: true  },
+      { k: 'area',     label: 'Area',         sortable: true, filter: true  },
+      { k: 'labels',   label: 'Labels',       sortable: true, filter: true  },
+      { k: 'status',   label: 'Status',       sortable: true, filter: true  },
+      { k: 'assignee', label: 'Assignee',     sortable: true, filter: true  },
+      { k: 'created',  label: 'Created',      sortable: true, filter: false },
+      { k: 'tag',      label: 'Testing link', sortable: true, filter: true  },
+    ];
+    const blSel = this.state.blSel || {};
+    const blMenu = this.state.blMenu || '';
+    const blSortCol = this.state.blSortCol || '';
+    const blSortDir = this.state.blSortDir === 'desc' ? 'desc' : 'asc';
+    // every column filter except `skip` — used both for the rows and for the
+    // counts in the chooser, so a value never offers a count it cannot deliver
+    const _blPassBut = (d, skip) => BL_COLS.every(c => {
+      if (!c.filter || c.k === skip) return true;
+      const sel = blSel[c.k];
+      if (!sel || !sel.length) return true;
+      return _blValsOf(c.k, d).some(v => sel.indexOf(v) >= 0);
+    });
+    const _blPass = (d) => _blPassBut(d, null);
+    const _blSetSel = (k, vals) => this.setState(st => {
+      const m = {}; const cur = st.blSel || {};
+      Object.keys(cur).forEach(x => { m[x] = cur[x]; });
+      if (vals && vals.length) m[k] = vals; else delete m[k];
+      return { blSel: m };
+    });
+    const _blNum = (v) => { const m = String(v).match(/(\d+)\s*$/); return m ? +m[1] : 0; };
+    const _blCmp = (a, b) => {
+      if (blSortCol === 'created') { const da = _parseD(a.created), db = _parseD(b.created); return (da ? da.getTime() : 0) - (db ? db.getTime() : 0); }
+      if (blSortCol === 'key') { const pa = String(a.key || '').replace(/\d+$/, ''), pb = String(b.key || '').replace(/\d+$/, ''); return pa === pb ? _blNum(a.key) - _blNum(b.key) : pa.localeCompare(pb); }
+      if (blSortCol === 'flag') { return (_isFlagged(a) ? 0 : 1) - (_isFlagged(b) ? 0 : 1); }
+      return String(_blValsOf(blSortCol, a)[0]).localeCompare(String(_blValsOf(blSortCol, b)[0]), undefined, { numeric: true });
+    };
+    const backlogCols = BL_COLS.map(c => {
+      const sel = blSel[c.k] || [];
+      const sorted = blSortCol === c.k;
+      return {
+        label: c.label,
+        title: 'Sort by ' + (c.k === 'flag' ? 'flag' : c.label).toLowerCase() + (sorted ? (blSortDir === 'asc' ? ' \u00b7 now A\u2192Z, click for Z\u2192A' : ' \u00b7 now Z\u2192A, click to clear') : ''),
+        sortMark: sorted ? (blSortDir === 'asc' ? '\u25b4' : '\u25be') : '\u21c5',
+        sortColor: sorted ? 'var(--tx-strong)' : 'var(--brd-2)',
+        labelColor: (sorted || sel.length) ? 'var(--tx-strong)' : 'var(--tx-fnt)',
+        canFilter: !!c.filter,
+        filterColor: sel.length ? '#7c3aed' : 'var(--brd-2)',
+        filterTitle: sel.length ? (sel.length + ' value' + (sel.length > 1 ? 's' : '') + ' picked \u2014 click to change') : ('Filter by ' + (c.k === 'flag' ? 'flag' : c.label).toLowerCase()),
+        onSort: () => this.setState(st => (st.blSortCol === c.k && st.blSortDir === 'desc')
+          ? { blSortCol: '', blSortDir: 'asc' }
+          : { blSortCol: c.k, blSortDir: (st.blSortCol === c.k && st.blSortDir === 'asc') ? 'desc' : 'asc' }),
+        onMenu: () => this.setState(st => ({ blMenu: st.blMenu === c.k ? '' : c.k })),
+      };
+    });
+    const _blMenuCol = BL_COLS.filter(c => c.k === blMenu)[0] || null;
+    const blMenuOpen = !!_blMenuCol;
+    const blMenuLabel = _blMenuCol ? (_blMenuCol.k === 'flag' ? 'Flag' : _blMenuCol.label) : '';
+    const blMenuVals = (() => {
+      if (!_blMenuCol) return [];
+      const k = _blMenuCol.k, counts = {};
+      _backlog.filter(_matchBF).filter(d => _blPassBut(d, k)).filter(_matchQ).forEach(d => _blValsOf(k, d).forEach(v => { counts[v] = (counts[v] || 0) + 1; }));
+      const sel = blSel[k] || [];
+      sel.forEach(v => { if (counts[v] == null) counts[v] = 0; });
+      return Object.keys(counts).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).map(v => {
+        const on = sel.indexOf(v) >= 0;
+        return {
+          v, n: counts[v], on,
+          bg: on ? 'var(--soft-info)' : 'var(--card-bg)',
+          brd: on ? '#7c3aed' : 'var(--brd-2)',
+          color: on ? '#7c3aed' : 'var(--tx)',
+          onPick: () => _blSetSel(k, on ? sel.filter(x => x !== v) : sel.concat([v])),
+        };
+      });
+    })();
+    const blMenuHint = _blMenuCol ? (blMenuVals.length + ' value' + (blMenuVals.length === 1 ? '' : 's') + ' \u00b7 pick as many as you need') : '';
+    const closeBlMenu = () => this.setState({ blMenu: '' });
+    const clearBlCol = () => { const k = blMenu; if (k) _blSetSel(k, []); };
+    // the KPI tile above the table is a filter too, so it belongs in the same
+    // chip row and comes off the same way
+    const _blTileChip = backlogFilter === 'All' ? [] : [{
+      label: 'Showing: ' + backlogFilter,
+      onDrop: () => this.setState({ backlogFilter: 'All' }),
+    }];
+    const blActive = _blTileChip.concat(BL_COLS.filter(c => (blSel[c.k] || []).length).map(c => {
+      const sel = blSel[c.k];
+      return {
+        label: (c.k === 'flag' ? 'Flag' : c.label) + ': ' + (sel.length > 2 ? sel.length + ' picked' : sel.join(', ')),
+        onDrop: () => _blSetSel(c.k, []),
+      };
+    }));
+    const blHasFilters = blActive.length > 0;
+    const clearBlAll = () => this.setState({ blSel: {}, blMenu: '', backlogFilter: 'All' });
+    let _blRows = _backlog.filter(_matchBF).filter(_blPass).filter(_matchQ);
+    if (blSortCol) { _blRows = _blRows.slice().sort((a, b) => blSortDir === 'asc' ? _blCmp(a, b) : -_blCmp(a, b)); }
+    const backlogRows = _blRows.map(d => ({
       key: d.key, summary: d.summary || '—', type: _isStory(d) ? (d.issueType || 'Story') : (d.issueType || 'Bug'),
       area: d.component || '—', labels: d.labels || '—', created: d.created || '—', status: d.status || 'Unknown',
       assignee: _asgOf(d), assigneeColor: _asgOf(d) === 'Unassigned' ? 'var(--tx-fnt)' : 'var(--tx)',
@@ -5367,9 +5474,8 @@ class Component extends DCLogic {
       keyHref: (jiraBase && d.key) ? this.jiraTicketUrl(jiraBase, d.key) : '#',
       onOpen: (e) => { if (!jiraBase) { if (e && e.preventDefault) e.preventDefault(); this.openJira(d.key); } },
     }));
-    const setBacklogFilter = (e) => this.setState({ backlogFilter: e.target.value });
     const setBacklogStatus = (e) => this.setState({ backlogStatus: e.target.value });
-    const pickBacklog = (v) => () => this.setState({ backlogFilter: v });
+    const pickBacklog = (v) => () => this.setState({ backlogFilter: v, blSel: {}, blMenu: '' });
     const pickAll = pickBacklog('All'), pickLinked = pickBacklog('qTest linked'), pickQa = pickBacklog('QA+ / Testfrei'), pickOlder = pickBacklog('Pre-existing bugs'), pickNone = pickBacklog('No test link'), pickFlagged = pickBacklog('Flagged');
     const onBacklogCsvFile = this.onBacklogCsvFile; const clearBacklog = this.clearBacklog;
     const setTestStart = (e) => { if (!this.can('editor')) return; const v = e.target.value; try { this.lsSet('qa-testing-start', v); } catch (er) {} this.setState({ testStart: v }); };
@@ -6253,10 +6359,11 @@ class Component extends DCLogic {
       reqRunOpen, closeReqRun, reqRunTitle, reqRunName, reqRunList,
       dmdDrillOpen, dmdDrillTitle, dmdDrillColor, dmdDrillRows, dmdDrillCount, closeDmdDrill,
       backlogHasData, backlogStories, backlogBugs, linkedQtestN, qaLabelN, olderBugsN, notLinkedN,
-      backlogRows, backlogFilterOpts, backlogFilter, setBacklogFilter, testStart, setTestStart, backlogTotal,
+      backlogRows, backlogFilter, testStart, setTestStart, backlogTotal,
+      backlogCols, blMenuOpen, blMenuLabel, blMenuHint, blMenuVals, closeBlMenu, clearBlCol,
+      blActive, blHasFilters, clearBlAll,
       onBacklogCsvFile, clearBacklog, backlogFile, backlogError, backlogShow, backlogNoData, backlogFileInfo, pickBacklog,
-      pickAll, pickLinked, pickQa, pickOlder, pickNone, pickFlagged, flaggedN, backlogStatusOpts, backlogStatus, setBacklogStatus,
-      backlogAsgOpts, backlogAsg, setBacklogAsg,
+      pickAll, pickLinked, pickQa, pickOlder, pickNone, pickFlagged, flaggedN,
       backlogQuery, setBacklogQuery, clearBacklogQuery, backlogShownN: backlogRows.length, backlogHasQuery: !!_bq,
       exportPdf, exportPdfEnv, exportPdfOverall, rptTitle, rptIsEnv,
       rptPaceShow, rptPaceRows, rptPaceSub, rptPaceNote, rptPaceDaysLeft, rptPaceOpen, rptPaceTotal, rptPacePerDay,
