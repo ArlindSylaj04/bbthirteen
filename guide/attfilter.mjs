@@ -9,6 +9,9 @@ await p.goto(FILE,{waitUntil:'load'});
 await p.evaluate(()=>sessionStorage.setItem('qa-session',JSON.stringify({name:'Arlind Sylaj',role:'admin',ts:Date.now()})));
 await p.reload({waitUntil:'load'}); await p.waitForTimeout(2600);
 await importQtest(p,'data/qtest_pc1.csv',6500);
+// the filters are worth exercising on the wide roll, so open it first
+await p.evaluate(()=>[...document.querySelectorAll('button')].find(x=>/Switch between the testers/.test(x.title||'')).click());
+await p.waitForTimeout(800);
 const st = () => p.evaluate(()=>{const t=document.body.innerText; const m=t.match(/(\d+ of \d+ shown|\d+ on the roll)/);
   return (m?m[0]:'-') + ' · ' + [...document.querySelectorAll('button')].filter(b=>(b.title||'').indexOf('Click to cycle')===0).length + ' rows';});
 const setSel = (v) => p.evaluate(x=>{const s=[...document.querySelectorAll('select')].find(y=>[...y.options].some(o=>o.value===x));

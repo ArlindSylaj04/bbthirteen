@@ -404,7 +404,7 @@
       </div>
     <div style="display:flex; align-items:stretch; gap:16px; overflow-x:auto; scroll-snap-type:x mandatory; padding:13px 0 8px; -webkit-overflow-scrolling:touch;">
       <sc-for list="{{ phases }}" as="phase">
-        <div id="phasecard-{{ phase.id }}" sc-camel-on-click="{{ phase.onFocus }}" title="Show this phase's results" style="position:relative; scroll-margin-top:90px; scroll-snap-align:start; flex:0 0 clamp(250px, 22vw, 330px); background:{{ phase.bg }}; border:2px solid {{ phase.border }}; border-radius:16px; padding:20px 22px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:transform 0.15s, box-shadow 0.15s;" style-hover="transform:translateY(-3px); box-shadow:0 8px 20px rgba(15,23,42,0.12);">
+        <div id="phasecard-{{ phase.id }}" sc-camel-on-click="{{ phase.onFocus }}" title="Show this phase's results" style="position:relative; scroll-margin-top:90px; scroll-snap-align:start; flex:1 0 clamp(250px, 22vw, 330px); background:{{ phase.bg }}; border:2px solid {{ phase.border }}; border-radius:16px; padding:20px 22px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:transform 0.15s, box-shadow 0.15s;" style-hover="transform:translateY(-3px); box-shadow:0 8px 20px rgba(15,23,42,0.12);">
           <sc-if value="{{ phase.isCurrent }}" hint-placeholder-val="{{ false }}">
             <span title="Today falls inside this environment's window" style="position:absolute; top:-9px; left:20px; background:#ef4444; color:#fff; font-size:8.5px; font-weight:800; letter-spacing:0.09em; padding:2px 9px; border-radius:99px;">TODAY</span>
           </sc-if>
@@ -1400,7 +1400,10 @@
       <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
         <div style="min-width:0;">
           <div style="font-size:15.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em;">Cutover Attendance<span data-rel-chip="" style="margin-left:9px; background:var(--tile-bg); border:1px solid var(--brd-2); border-radius:6px; padding:2px 8px; font-size:8.5px; font-weight:700; color:var(--tx-mut); letter-spacing:0.06em; white-space:nowrap;">Rel. {{ relVersion }} &#183; {{ attEnvSel }}</span></div>
-          <div style="font-size:12px; color:var(--tx-mut); margin-top:3px;">A production run needs everyone on the call &#8212; tick who is taking part, and who has finished their testing. The roll is everyone who has run a test in this release; the numbers are for {{ attEnvSel }}.</div>
+          <div style="font-size:12px; color:var(--tx-mut); margin-top:3px;">A production run needs everyone on the call &#8212; tick who is taking part, and who has finished their testing.</div>
+          <sc-if value="{{ attScopeHasNote }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:11px; color:var(--tx-fnt); margin-top:5px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#d97706; flex-shrink:0;"></span>{{ attScopeNote }}</div>
+          </sc-if>
         </div>
         <div style="display:flex; align-items:center; gap:7px;">
           <span style="font-size:11px; font-weight:700; color:var(--tx-mut); white-space:nowrap;">{{ attShownLabel }}</span>
@@ -1408,6 +1411,9 @@
           <sc-raw-select value="{{ attEnvSel }}" sc-camel-on-change="{{ setAttEnv }}" title="Which environment this roll call is for" style="padding:8px 12px; border:1px solid var(--brd-2); border-radius:9px; background:var(--card-bg); color:var(--tx-strong); font-family:Rubik,sans-serif; font-size:12px;">
             <sc-for list="{{ attEnvOpts }}" as="ev" hint-placeholder-count="5"><option value="{{ ev }}">{{ ev }}</option></sc-for>
           </sc-raw-select>
+          <sc-if value="{{ attScopeCanPick }}" hint-placeholder-val="{{ true }}">
+            <button sc-camel-on-click="{{ toggleAttScope }}" title="Switch between the testers assigned to this environment and everyone who has tested in the release" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:9px; padding:8px 13px; color:var(--tx); cursor:pointer; font-family:Rubik,sans-serif; font-size:11px; font-weight:700; white-space:nowrap;">&#8644; {{ attScopeBtn }}</button>
+          </sc-if>
           <button sc-camel-on-click="{{ toggleAttMin }}" title="Fold the roll away or open it again" aria-label="Minimise or maximise the roll" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:9px; width:32px; height:32px; color:var(--tx); cursor:pointer; font-family:Rubik,sans-serif; font-size:12px; line-height:1;">{{ attChevron }}</button>
         </div>
       </div>

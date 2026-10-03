@@ -5920,18 +5920,53 @@ class Component extends DCLogic {
     // only from that environment would be empty on the day it is needed. Take
     // everyone who has run a test anywhere in this release, and show their
     // numbers for the chosen environment.
-    const _attStat = {};   // runs in the chosen environment
-    const _attSeen = {};   // anyone who tested anywhere in this release -> their team
+    const _attStat = {};     // runs in the chosen environment, per tester
+    const _attSeen = {};     // anyone who tested anywhere in this release -> their team
+    const _attEnvTeams = {}; // the folders the chosen environment actually covers
     (this.state.importedCases || []).forEach(c => {
+      const inEnv = c.phase === attEnvSel;
+      if (inEnv && c.team) _attEnvTeams[c.team] = 1;
       const who = String(c.tester || '').trim();
       if (!who || who === '\u2014') return;
       if (_attSeen[who] == null) _attSeen[who] = c.team || '';
-      if (c.phase !== attEnvSel) return;
+      if (!inEnv) return;
       const r = _attStat[who] = _attStat[who] || { planned: 0, done: 0, team: '' };
       r.planned++; if (!c.unex) r.done++;
       if (!r.team && c.team) r.team = c.team;
     });
-    const _attNames = Array.from(new Set(Object.keys(_attSeen).concat(Object.keys(_attMap))))
+    // Who belongs on the roll. A release-wide list runs to a hundred-plus names
+    // that have nothing to do with the production run, so the roll narrows to
+    // the chosen environment in three steps: the testers who own a run there;
+    // failing that (nothing is assigned on the morning a cutover starts) the
+    // testers of the folders that environment covers; failing that, everyone.
+    // The wide list stays one click away.
+    const _attEnvNames = Object.keys(_attStat);
+    const _attRelNames = Object.keys(_attSeen);
+    const _attTeamNames = _attRelNames.filter(n => _attEnvTeams[_attSeen[n]]);
+    const _attMode = _attEnvNames.length ? 'runs' : (_attTeamNames.length ? 'teams' : 'release');
+    const _attScoped = _attMode === 'runs' ? _attEnvNames : _attMode === 'teams' ? _attTeamNames : _attRelNames;
+    const attEnvCount = _attScoped.length;
+    const attRelCount = _attRelNames.length;
+    const attScopeCanPick = _attMode !== 'release' && attEnvCount < attRelCount;
+    const attScopeAll = !attScopeCanPick || !!this.state.attScopeAll;
+    const toggleAttScope = () => this.setState(st => ({ attScopeAll: !st.attScopeAll }));
+    const _attFolders = Object.keys(_attEnvTeams).sort((a, b) => a.localeCompare(b));
+    const _attFolderList = _attFolders.slice(0, 3).join(', ') + (_attFolders.length > 3 ? ' +' + (_attFolders.length - 3) + ' more' : '');
+    const attScopeBtn = attScopeAll
+      ? ('Only ' + attEnvSel + ' \u00b7 ' + attEnvCount)
+      : ('Whole release \u00b7 ' + attRelCount);
+    const attScopeNote = attScopeAll
+      ? (attScopeCanPick
+        ? ('Everyone who has run a test in this release \u2014 ' + attEnvCount + ' of them are in scope for ' + attEnvSel + '.')
+        : (_attMode === 'release'
+          ? ('No tester and no folder of ' + attEnvSel + ' matches the qTest export yet, so the roll shows everyone who has run a test in this release (' + attRelCount + ').')
+          : ('Everyone who has run a test in this release is in scope for ' + attEnvSel + ' (' + attRelCount + ').')))
+      : (_attMode === 'runs'
+        ? ('The ' + attEnvCount + ' testers who own a run in ' + attEnvSel + ' \u2014 the release has ' + attRelCount + ' in total.')
+        : ('Nobody is assigned to a ' + attEnvSel + ' run yet, so the roll is the ' + attEnvCount + ' testers of the folders ' + attEnvSel + ' covers (' + _attFolderList + ') \u2014 the release has ' + attRelCount + ' in total.'));
+    const attScopeHasNote = attRelCount > 0;
+    const _attBase = attScopeAll ? _attRelNames : _attScoped;
+    const _attNames = Array.from(new Set(_attBase.concat(Object.keys(_attMap))))
       .sort((a, b) => a.localeCompare(b));
     // No answer is an open item, not a neutral one, so it is amber and dashed
     // rather than grey — it should look like something still to be done.
@@ -6157,6 +6192,8 @@ class Component extends DCLogic {
       bdPick, bdPickHas, bdPickId, closeBurn, relTotals,
       userMenuOpen, openUserMenu, closeUserMenu, umUsers, umTheme, umLogout,
       attRows, attHas, attNone, attKpis, attTotal, attEnvOpts, attEnvSel, attHasEnv,
+      attScopeAll, attScopeBtn, attScopeNote, attScopeHasNote, attScopeCanPick,
+      attEnvCount, attRelCount, toggleAttScope,
       attCollapsed, attOpen, attChevron, toggleAttMin, attShownLabel, attNoMatch, attFiltered, clearAttFilter,
       attQ, setAttQ, attTeamOpts, attTeamSel, setAttTeamF, attStateOpts, attStateSel, setAttStateF,
       attName, attTeam, setAttEnv: this.setAttEnv, setAttName: this.setAttName, setAttTeam: this.setAttTeam, attendAdd: this.attendAdd,

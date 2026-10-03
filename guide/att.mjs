@@ -22,14 +22,25 @@ const kpis = () => p.evaluate(()=>{const t=document.body.innerText; const m=t.ma
 console.log('1. environment  :', await envSel(), '(expect PC1)');
 console.log('2. roll from the import:');
 (await roll()).forEach(r=>console.log('   ', r));
-console.log('3. counters     :', await kpis());
+console.log('3. counters     :', await kpis(), '(scoped to the chosen environment)');
+
+// the roll is scoped to the people who own a run in the chosen environment;
+// one click widens it to everyone who has tested in the release
+const scope = () => p.evaluate(()=>{const b=[...document.querySelectorAll('button')].find(x=>/Switch between the testers/.test(x.title||'')); return b? b.textContent.trim() : '(no scope button)';});
+console.log('3b. scope button:', await scope());
+await p.evaluate(()=>[...document.querySelectorAll('button')].find(x=>/Switch between the testers/.test(x.title||'')).click());
+await p.waitForTimeout(700);
+console.log('3c. whole release:', (await roll()).length, 'rows ·', await scope());
+await p.evaluate(()=>[...document.querySelectorAll('button')].find(x=>/Switch between the testers/.test(x.title||'')).click());
+await p.waitForTimeout(700);
+console.log('3d. back to env  :', (await roll()).length, 'rows');
 
 const cycle = (i) => p.evaluate(n=>{const bs=[...document.querySelectorAll('button')].filter(b=>(b.title||'').indexOf('Click to cycle')===0); bs[n].click();}, i);
 const finish = (i) => p.evaluate(n=>{const bs=[...document.querySelectorAll('button')].filter(b=>/finished with testing$/.test(b.title||'')); bs[n].click();}, i);
 await cycle(0); await p.waitForTimeout(450);
 await cycle(1); await p.waitForTimeout(450); await cycle(1); await p.waitForTimeout(450);
 await finish(0); await p.waitForTimeout(600);
-console.log('4. after ticks  :', await kpis(), '(expect in:1 out:1 none:4 done:1)');
+console.log('4. after ticks  :', await kpis(), '(expect in:1 out:1 none:0 done:1)');
 await p.reload({waitUntil:'load'}); await p.waitForTimeout(3500);
 console.log('5. after reload :', await kpis());
 
