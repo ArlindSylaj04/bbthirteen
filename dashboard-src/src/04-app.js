@@ -3373,7 +3373,13 @@ class Component extends DCLogic {
           const pv = prevMap[id + '||' + tn] || { passed: 0, failed: 0, blocked: 0 };
           const execPct = a.planned > 0 ? Math.round(a.tested / a.planned * 100) : 0;
           const passPct = a.tested > 0 ? Math.round(a.passed / a.tested * 100) : 0;
-          return { name: tn, tested: a.tested, planned: a.planned, passed: a.passed, failed: a.failed, blocked: a.blocked, notRelevant: a.notRelevant, pct, execPct, passPct, folderLabel: '', status: st, ...ts(st), teams, hasPrev, dPassed: fmtDelta(a.passed - pv.passed), dFailed: fmtDelta(a.failed - pv.failed), dBlocked: fmtDelta(a.blocked - pv.blocked), onOpenCases: () => this.setState({ tcModal: { phase: id, test: tn } }), onPassed: () => this.setState({ tcModal: { phase: id, test: tn, status: 'Passed' } }), onFailed: () => this.setState({ tcModal: { phase: id, test: tn, status: 'Failed' } }), onBlocked: () => this.setState({ tcModal: { phase: id, test: tn, status: 'Blocked' } }), onNr: () => this.setState({ tcModal: { phase: id, test: tn, status: 'Not relevant' } }) };
+          return { name: tn, tested: a.tested, planned: a.planned, passed: a.passed, failed: a.failed, blocked: a.blocked, notRelevant: a.notRelevant, pct, execPct, passPct, folderLabel: '', status: st, ...ts(st), teams, hasPrev, dPassed: fmtDelta(a.passed - pv.passed), dFailed: fmtDelta(a.failed - pv.failed), dBlocked: fmtDelta(a.blocked - pv.blocked), onOpenCases: () => this.setState({ tcModal: { phase: id, test: tn } }), onPassed: () => this.setState({ tcModal: { phase: id, test: tn, status: 'Passed' } }), onFailed: () => this.setState({ tcModal: { phase: id, test: tn, status: 'Failed' } }), onBlocked: () => this.setState({ tcModal: { phase: id, test: tn, status: 'Blocked' } }), onNr: () => this.setState({ tcModal: { phase: id, test: tn, status: 'Not relevant' } }),
+            // The folders inside the suite stay folded until someone asks for them.
+            teamCount: teams.length, hasTeams: teams.length > 0,
+            moreOpen: !!(this.state.suiteOpen || {})[id + '||' + tn],
+            moreLabel: ((this.state.suiteOpen || {})[id + '||' + tn] ? 'Hide folders' : (teams.length + ' folder' + (teams.length === 1 ? '' : 's'))),
+            onToggleMore: (e) => { if (e && e.stopPropagation) e.stopPropagation();
+              this.setState(st => { const m = { ...(st.suiteOpen || {}) }; const k = id + '||' + tn; m[k] = !m[k]; return { suiteOpen: m }; }); } };
         });
         const n = tests.length; const gridCols = n >= 2 ? 'repeat(auto-fit,minmax(min(300px,100%),1fr))' : '1fr';
         const namesNow = tests.map(t => t.name);

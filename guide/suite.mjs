@@ -1,0 +1,35 @@
+// The expanded environment shows the suite cards; the folders inside a suite
+// only appear after its own button is clicked.
+import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import { ANN, FILE, BROWSER, importQtest } from './lib.mjs';
+const b = await chromium.launch({ executablePath: BROWSER });
+const p = await (await b.newContext({ viewport:{width:1680,height:1100}, deviceScaleFactor:2 })).newPage();
+const errs=[]; p.on('pageerror',e=>errs.push('P: '+e.message)); p.on('console',m=>{if(m.type()==='error')errs.push('C: '+m.text());});
+await p.addInitScript(ANN);
+await p.goto(FILE,{waitUntil:'load'});
+await p.evaluate(()=>sessionStorage.setItem('qa-session',JSON.stringify({name:'Arlind Sylaj',role:'admin',ts:Date.now()})));
+await p.reload({waitUntil:'load'}); await p.waitForTimeout(2600);
+await importQtest(p,'data/qtest_export_26.03.00.csv',6500);
+await p.evaluate(()=>document.getElementById('envrow-IR1').querySelector('[role=button]').click());
+await p.waitForTimeout(1400);
+const folders = () => p.evaluate(()=>{const r=document.getElementById('envrow-IR1');
+  return [...r.querySelectorAll('button')].filter(b=>/folder/.test(b.textContent||'')).map(b=>b.textContent.trim()).join(' | ');});
+const teamRows = () => p.evaluate(()=>{const r=document.getElementById('envrow-IR1');
+  return [...r.querySelectorAll('div')].filter(d=>(d.title||'')==='View test runs for this folder').length;});
+console.log('1. countdown env badge:', await p.evaluate(()=>{const s=[...document.querySelectorAll('header span')].find(x=>/^(DF1|IR1|IR2|IR3|QC1|PC1)$/.test(x.textContent.trim()));
+  return s.textContent.trim()+' @ '+getComputedStyle(s).fontSize;}));
+console.log('2. folder buttons   :', await folders());
+console.log('3. folders hidden   :', await teamRows(), 'rows (expect 0)');
+await p.evaluate(()=>{const r=document.getElementById('envrow-IR1');
+  [...r.querySelectorAll('button')].find(b=>/folder/.test(b.textContent||'')).click();});
+await p.waitForTimeout(900);
+console.log('4. after More click :', await teamRows(), 'rows ·', await folders());
+await p.evaluate(()=>{const r=document.getElementById('envrow-IR1');
+  [...r.querySelectorAll('button')].find(b=>/Hide folders/.test(b.textContent||'')).click();});
+await p.waitForTimeout(900);
+console.log('5. after hide       :', await teamRows(), 'rows (expect 0)');
+const el = await p.$('#envrow-IR1'); await el.scrollIntoViewIfNeeded(); await p.waitForTimeout(700);
+const bb = await el.boundingBox();
+await p.screenshot({path:'out/suite.png', clip:{x:Math.max(0,bb.x-26), y:Math.max(0,bb.y-26), width:1540, height:Math.min(820, 1100-Math.max(0,bb.y-26))}});
+console.log('errors:', errs.length?errs:'none');
+await b.close();
