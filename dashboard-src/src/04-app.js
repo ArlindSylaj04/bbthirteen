@@ -4604,6 +4604,15 @@ class Component extends DCLogic {
         pd.bdLeft = _bdOf.remaining + ' left';
         pd.bdBurn = _bdOf.timeBurnPct + '% of the time';
         pd.bdTitle = pd.id + ' \u00b7 ' + _bdOf.winLabel + ' \u00b7 ' + _bdOf.verdict;
+        // The row says how it stands; the button opens the real chart for this
+        // environment in the Burn-down panel and scrolls to it.
+        pd.onOpenBurn = (e) => {
+          if (e && e.stopPropagation) e.stopPropagation();
+          this.setState({ panelMax: 'burndown', bdOpen: pd.id }, () => setTimeout(() => {
+            const el = document.getElementById('bdcard-' + pd.id);
+            if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 120, behavior: 'smooth' });
+          }, 90));
+        };
       }
       pd.shareLabel = Math.round(pl / Math.max(1, phaseDetails.reduce((a, x) => a + (x.tests || []).reduce((b, t) => b + num(t.planned || 0), 0), 0)) * 100) + '% of the release';
       pd.ariaExpanded = pd.expanded ? 'true' : 'false';
