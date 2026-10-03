@@ -370,8 +370,30 @@
   <div data-noedit="" style="background:var(--card-bg); border-radius:16px; padding:20px 28px 18px; box-shadow:var(--shadow); transition:background 0.25s;">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
       <div style="font-size:15.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em;">Test Phase Timeline<span data-rel-chip="" style="margin-left:9px; background:var(--tile-bg); border:1px solid var(--brd-2); border-radius:6px; padding:2px 8px; font-size:8.5px; font-weight:700; color:var(--tx-mut); letter-spacing:0.06em; text-transform:none; white-space:nowrap;" title="This section shows data for the selected release and its active environment">Rel. {{ relVersion }} · {{ relCurrentEnv }}</span></div>
-      <span style="font-size:10px; color:var(--tx-fnt);">← swipe / scroll →</span>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:10px; color:var(--tx-fnt);">&#8592; swipe / scroll &#8594;</span>
+        <button sc-camel-on-click="{{ openTimelineModal }}" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:8px; padding:6px 13px; color:var(--tx); cursor:pointer; font-family:Rubik,sans-serif; font-size:10px; font-weight:600; display:flex; align-items:center; gap:6px; white-space:nowrap;">&#10530; Weekly calendar</button>
+      </div>
     </div>
+    <!-- the release on one time axis: who runs when, where today falls -->
+      <div style="position:relative; height:56px; margin-bottom:18px;">
+        <sc-for list="{{ timeline }}" as="seg">
+          <div sc-camel-on-click="{{ seg.onFocus }}" title="Show this phase's results" style="position:absolute; top:0; height:56px; left:{{ seg.left }}%; width:{{ seg.width }}%; padding:0 3px; cursor:pointer;">
+            <div style="position:relative; height:100%; border-radius:9px; background:{{ seg.color }}; opacity:{{ seg.op }}; box-shadow:{{ seg.ring }}; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; overflow:visible; transition:all 0.3s;">
+              <span style="font-size:14px; font-weight:800; line-height:1; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,0.45);">{{ seg.id }}</span>
+              <span style="font-size:8px; opacity:0.9; margin-top:3px; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,0.45);">{{ seg.days }} days</span>
+              <sc-if value="{{ seg.hasGrey }}" hint-placeholder-val="{{ false }}">
+                <div title="Bug fixing &amp; retest window" style="position:absolute; top:0; bottom:0; left:{{ seg.greyLeft }}%; width:{{ seg.greyWidth }}%; background:repeating-linear-gradient(135deg, rgba(255,255,255,0.30) 0 5px, rgba(255,255,255,0.10) 5px 10px); border-left:2px dashed rgba(255,255,255,0.75); border-radius:0 9px 9px 0;"></div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ todayInRange }}" hint-placeholder-val="{{ true }}">
+          <div style="position:absolute; top:-7px; bottom:-7px; left:{{ todayPct }}%; width:2px; background:#ef4444; z-index:2;">
+            <div style="position:absolute; top:-14px; left:50%; transform:translateX(-50%); background:#ef4444; color:#fff; font-size:8px; font-weight:700; padding:1px 6px; border-radius:99px; white-space:nowrap;">TODAY</div>
+          </div>
+        </sc-if>
+      </div>
     <div style="display:flex; align-items:stretch; gap:16px; overflow-x:auto; scroll-snap-type:x mandatory; padding:13px 0 8px; -webkit-overflow-scrolling:touch;">
       <sc-for list="{{ phases }}" as="phase">
         <div id="phasecard-{{ phase.id }}" sc-camel-on-click="{{ phase.onFocus }}" title="Show this phase's results" style="position:relative; scroll-margin-top:90px; scroll-snap-align:start; flex:0 0 clamp(250px, 22vw, 330px); background:{{ phase.bg }}; border:2px solid {{ phase.border }}; border-radius:16px; padding:20px 22px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:transform 0.15s, box-shadow 0.15s;" style-hover="transform:translateY(-3px); box-shadow:0 8px 20px rgba(15,23,42,0.12);">
@@ -1676,43 +1698,6 @@
 
   </div>
 
-  <div style="order:{{ ord_workflow }}; display:{{ dsp_workflow }}; flex-direction:column; gap:16px; min-width:0;">
-  <!-- TESTING WORKFLOW TIMELINE -->
-  <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:20px 28px; box-shadow:var(--shadow); transition:background 0.25s;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-      <div style="font-size:10px; font-weight:600; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.12em;">Testing Workflow Timeline<span data-rel-chip="" style="margin-left:9px; background:var(--tile-bg); border:1px solid var(--brd-2); border-radius:6px; padding:2px 8px; font-size:8.5px; font-weight:700; color:var(--tx-mut); letter-spacing:0.06em; text-transform:none; white-space:nowrap;" title="This section shows data for the selected release and its active environment">Rel. {{ relVersion }} · {{ relCurrentEnv }}</span></div>
-      <button sc-camel-on-click="{{ openTimelineModal }}" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:8px; padding:6px 13px; color:var(--tx); cursor:pointer; font-family:Rubik,sans-serif; font-size:10px; font-weight:600; display:flex; align-items:center; gap:6px;">⤢ Weekly calendar</button>
-    </div>
-    <div style="position:relative; height:56px; margin-bottom:10px;">
-      <sc-for list="{{ timeline }}" as="seg">
-        <div sc-camel-on-click="{{ seg.onFocus }}" title="Show this phase's results" style="position:absolute; top:0; height:56px; left:{{ seg.left }}%; width:{{ seg.width }}%; padding:0 3px; cursor:pointer;">
-          <div style="position:relative; height:100%; border-radius:9px; background:{{ seg.color }}; opacity:{{ seg.op }}; box-shadow:{{ seg.ring }}; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; overflow:visible; transition:all 0.3s;">
-            <span style="font-size:14px; font-weight:800; line-height:1; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,0.45);">{{ seg.id }}</span>
-            <span style="font-size:8px; opacity:0.9; margin-top:3px; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,0.45);">{{ seg.days }} days</span>
-            <sc-if value="{{ seg.hasGrey }}" hint-placeholder-val="{{ false }}">
-              <div title="Bug fixing &amp; retest window" style="position:absolute; top:0; bottom:0; left:{{ seg.greyLeft }}%; width:{{ seg.greyWidth }}%; background:repeating-linear-gradient(135deg, rgba(255,255,255,0.30) 0 5px, rgba(255,255,255,0.10) 5px 10px); border-left:2px dashed rgba(255,255,255,0.75); border-radius:0 9px 9px 0;"></div>
-            </sc-if>
-          </div>
-        </div>
-      </sc-for>
-      <sc-if value="{{ todayInRange }}" hint-placeholder-val="{{ true }}">
-        <div style="position:absolute; top:-7px; bottom:-7px; left:{{ todayPct }}%; width:2px; background:#ef4444; z-index:2;">
-          <div style="position:absolute; top:-14px; left:50%; transform:translateX(-50%); background:#ef4444; color:#fff; font-size:8px; font-weight:700; padding:1px 6px; border-radius:99px; white-space:nowrap;">TODAY</div>
-        </div>
-      </sc-if>
-    </div>
-    <div style="display:flex; flex-wrap:wrap; gap:14px; margin-top:16px;">
-      <sc-for list="{{ timeline }}" as="seg">
-        <div style="display:flex; align-items:center; gap:6px;">
-          <div style="width:10px; height:10px; border-radius:3px; background:{{ seg.color }}; opacity:{{ seg.op }};"></div>
-          <span style="font-size:10px; color:var(--tx); font-weight:500;">{{ seg.id }}</span>
-          <span style="font-size:10px; color:var(--tx-fnt);">{{ seg.dateRange }}</span>
-        </div>
-      </sc-for>
-    </div>
-  </div>
-
-  </div>
   <div style="order:{{ ord_dump }}; display:{{ dsp_dump }}; flex-direction:column; gap:16px; min-width:0;">
   <!-- BUG DUMP REPORT -->
   <div data-glass="" style="background:var(--card-bg); border-radius:16px; padding:22px 28px; box-shadow:var(--shadow); transition:background 0.25s;">

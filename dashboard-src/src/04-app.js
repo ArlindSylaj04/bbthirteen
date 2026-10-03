@@ -696,7 +696,7 @@ class Component extends DCLogic {
     { k: 'reltl',     label: 'Release Timeline',           col: 'Main column' },
     { k: 'relsum',    label: 'Release Summary (schedule)', col: 'Main column' },
     { k: 'resp',      label: 'Responsibilities + Topics', col: 'Main column' },
-    { k: 'phases',    label: 'Test Phase Timeline',       col: 'Main column' },
+    { k: 'phases',    label: 'Test Phase Timeline',       col: 'Main column' },  // carries the workflow strip too
     { k: 'envs',      label: 'Phase / Environment Cards', col: 'Main column' },
     { k: 'chains',    label: 'E2E Chain Progress',        col: 'Main column' },
     { k: 'tcf',       label: 'Testfallfinalisierung',     col: 'Main column' },
@@ -704,7 +704,6 @@ class Component extends DCLogic {
     { k: 'xenv',      label: 'Recurring Defects across Environments', col: 'Main column' },
     { k: 'attend',    label: 'Cutover Attendance',          col: 'Main column' },
     { k: 'countdown', label: 'Release Countdown',         col: 'Header' },
-    { k: 'workflow',  label: 'Testing Workflow Timeline', col: 'Main column' },
     { k: 'defects',   label: 'Defect Overview',           col: 'Main column' },
     { k: 'dump',      label: 'Bug Dump Report',           col: 'Main column' },
     { k: 'milestone', label: 'Next Milestone + Info',     col: 'Main column' },
