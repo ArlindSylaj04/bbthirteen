@@ -697,7 +697,6 @@ class Component extends DCLogic {
     { k: 'relsum',    label: 'Release Summary (schedule)', col: 'Main column' },
     { k: 'resp',      label: 'Responsibilities + Topics', col: 'Main column' },
     { k: 'phases',    label: 'Test Phase Timeline',       col: 'Main column' },
-    { k: 'summary',   label: 'Overall Summary + Burn-down', col: 'Main column' },
     { k: 'envs',      label: 'Phase / Environment Cards', col: 'Main column' },
     { k: 'chains',    label: 'E2E Chain Progress',        col: 'Main column' },
     { k: 'tcf',       label: 'Testfallfinalisierung',     col: 'Main column' },
@@ -4608,9 +4607,9 @@ class Component extends DCLogic {
         // environment in the Burn-down panel and scrolls to it.
         pd.onOpenBurn = (e) => {
           if (e && e.stopPropagation) e.stopPropagation();
-          this.setState({ panelMax: 'burndown', bdOpen: pd.id }, () => setTimeout(() => {
-            const el = document.getElementById('bdcard-' + pd.id);
-            if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 120, behavior: 'smooth' });
+          this.setState(st => ({ bdOpen: st.bdOpen === pd.id ? null : pd.id }), () => setTimeout(() => {
+            const el = document.getElementById('burn-card');
+            if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 110, behavior: 'smooth' });
           }, 90));
         };
       }
@@ -5903,6 +5902,20 @@ class Component extends DCLogic {
     const attName = this.state.attName || '';
     const attTeam = this.state.attTeam || '';
 
+    // ── Burn-down: one environment at a time, opened from its row ─────────
+    const bdPick = (envCharts || []).find(c => c.id === this.state.bdOpen) || null;
+    const bdPickHas = !!bdPick;
+    const bdPickId = bdPick ? bdPick.id : '';
+    const closeBurn = () => this.setState({ bdOpen: null });
+    // Failed / blocked / not relevant / pending for the release as a whole: the
+    // donuts carry executed and passed, these four carried the rest.
+    const relTotals = [
+      { k: 'Failed', v: summary.failed, c: '#ef4444' },
+      { k: 'Blocked', v: summary.blocked, c: '#3b82f6' },
+      { k: 'Not relevant', v: summary.notRelevant, c: '#a855f7' },
+      { k: 'Pending', v: summary.pendingCnt, c: 'var(--tx-fnt)' },
+    ];
+
     // ── Settings: the one gear in the masthead holds what the toolbar held ──
     // Every action closes the panel first, so a print dialog or a file picker
     // never opens behind it.
@@ -6019,6 +6032,7 @@ class Component extends DCLogic {
       ...this.chainVals(),
       layoutOpen: !!this.state.layoutOpen, openLayout: this.openLayout, closeLayout: this.closeLayout, resetLayout: this.resetLayout,
       cockpitOpen, openCockpit, closeCockpit, onCockpitFile, ckPdfEnv, ckPdfOverall, ckGng, ckQtest, ckLayout, ckReleases,
+      bdPick, bdPickHas, bdPickId, closeBurn, relTotals,
       attRows, attHas, attNone, attKpis, attTotal, attEnvOpts, attEnvSel, attHasEnv,
       attName, attTeam, setAttEnv: this.setAttEnv, setAttName: this.setAttName, setAttTeam: this.setAttTeam, attendAdd: this.attendAdd,
       ...(() => {

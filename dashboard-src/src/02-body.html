@@ -394,208 +394,6 @@
   </div>
 
   </div>
-  <div style="order:{{ ord_summary }}; display:{{ dsp_summary }}; flex-direction:column; gap:16px; min-width:0;">
-  <!-- SUMMARY + BURN-DOWN SWITCHER -->
-  <div data-noedit="" sc-camel-on-pointer-down="{{ panelDown }}" sc-camel-on-pointer-up="{{ panelUp }}" style="display:flex; gap:16px; align-items:stretch;">
-  <div style="flex:{{ sumFlex }}; min-width:0; transition:flex 0.35s cubic-bezier(.4,0,.2,1); background:var(--card-bg); border-radius:16px; box-shadow:var(--shadow); overflow:hidden;">
-    <sc-if value="{{ sumCollapsed }}" hint-placeholder-val="{{ false }}">
-      <div sc-camel-on-click="{{ maximizeSummary }}" title="Show Overall Progress Summary" style="cursor:pointer; height:100%; min-height:240px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:16px 6px;">
-        <span style="font-size:18px; color:var(--tx-mut);">‹</span>
-        <span style="writing-mode:vertical-rl; transform:rotate(180deg); font-size:11px; font-weight:700; color:var(--tx); text-transform:uppercase; letter-spacing:0.14em; white-space:nowrap;">Overall Progress Summary</span>
-        <span style="font-size:16px; font-weight:700; color:#2563eb;">{{ summary.testedPct }}%</span>
-      </div>
-    </sc-if>
-    <sc-if value="{{ sumExpanded }}" hint-placeholder-val="{{ true }}">
-    <div style="padding:24px 32px;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-      <div style="font-size:15.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em;">Overall Progress Summary</div>
-      <button sc-camel-on-click="{{ maximizeBurndown }}" title="Show Burn-down" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:8px; padding:5px 11px; color:var(--tx); cursor:pointer; font-family:Rubik,sans-serif; font-size:10px; font-weight:600; display:flex; align-items:center; gap:6px;">Burn-down ›</button>
-    </div>
-    <div data-summary-grid="" style="display:grid; grid-template-columns:minmax(0,1fr); gap:20px; align-items:center;">
-      <!-- Stats grid -->
-      <div style="display:flex; flex-direction:column; gap:14px; min-width:0;">
-      <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px;">
-        <div style="background:var(--card-bg2); border-radius:10px; padding:14px 16px;">
-          <div style="font-size:26px; font-weight:700; color:var(--tx-strong);">{{ summary.planned }}</div>
-          <div style="font-size:10px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Planned</div>
-        </div>
-        <div style="background:var(--soft-ok); border-radius:10px; padding:14px 16px;">
-          <div style="font-size:26px; font-weight:700; color:#4caf2f;">{{ summary.passed }}</div>
-          <div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Passed</div>
-        </div>
-        <div style="background:var(--soft-bad); border-radius:10px; padding:14px 16px;">
-          <div style="font-size:26px; font-weight:700; color:#ef4444;">{{ summary.failed }}</div>
-          <div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Failed</div>
-        </div>
-        <div style="background:var(--card-bg2); border-radius:10px; padding:14px 16px;">
-          <div style="font-size:26px; font-weight:700; color:var(--tx-strong);">{{ summary.tested }}</div>
-          <div style="font-size:10px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Executed</div>
-        </div>
-        <div style="background:var(--soft-info); border-radius:10px; padding:14px 16px;">
-          <div style="font-size:26px; font-weight:700; color:#3b82f6;">{{ summary.blocked }}</div>
-          <div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Blocked</div>
-        </div>
-        <div style="background:var(--soft-purple); border-radius:10px; padding:14px 16px;">
-          <div style="font-size:26px; font-weight:700; color:#a855f7;">{{ summary.notRelevant }}</div>
-          <div style="font-size:10px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Not Relevant</div>
-        </div>
-      </div>
-      <!-- Status distribution bar -->
-      <div>
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:7px;">
-          <span style="font-size:10px; font-weight:600; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.1em;">Result Distribution</span>
-          <span style="font-size:11px; font-weight:700; color:var(--tx-soft);">{{ summary.pendingCnt }} pending</span>
-        </div>
-        <div style="display:flex; height:14px; border-radius:99px; overflow:hidden; background:var(--track);">
-          <div style="width:{{ summary.wPassed }}%; background:#4caf2f;" title="Passed"></div>
-          <div style="width:{{ summary.wFailed }}%; background:#ef4444;" title="Failed"></div>
-          <div style="width:{{ summary.wBlocked }}%; background:#3b82f6;" title="Blocked"></div>
-          <div style="width:{{ summary.wNr }}%; background:#a855f7;" title="Not Relevant"></div>
-        </div>
-        <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:8px;">
-          <span style="display:inline-flex; align-items:center; gap:5px; font-size:10px; color:var(--tx-mut);"><span style="width:8px; height:8px; border-radius:50%; background:#4caf2f;"></span>Passed {{ summary.passed }}</span>
-          <span style="display:inline-flex; align-items:center; gap:5px; font-size:10px; color:var(--tx-mut);"><span style="width:8px; height:8px; border-radius:50%; background:#ef4444;"></span>Failed {{ summary.failed }}</span>
-          <span style="display:inline-flex; align-items:center; gap:5px; font-size:10px; color:var(--tx-mut);"><span style="width:8px; height:8px; border-radius:50%; background:#3b82f6;"></span>Blocked {{ summary.blocked }}</span>
-          <span style="display:inline-flex; align-items:center; gap:5px; font-size:10px; color:var(--tx-mut);"><span style="width:8px; height:8px; border-radius:50%; background:#a855f7;"></span>Not Relevant {{ summary.notRelevant }}</span>
-          <span style="display:inline-flex; align-items:center; gap:5px; font-size:10px; color:var(--tx-mut);"><span style="width:8px; height:8px; border-radius:50%; background:var(--tx-faint);"></span>Pending {{ summary.pendingCnt }}</span>
-        </div>
-      </div>
-      </div>
-    </div>
-    </div>
-    </sc-if>
-  </div>
-  <div style="flex:{{ bdFlex }}; min-width:0; transition:flex 0.35s cubic-bezier(.4,0,.2,1); background:var(--card-bg); border-radius:16px; box-shadow:var(--shadow); overflow:hidden;">
-    <sc-if value="{{ bdCollapsed }}" hint-placeholder-val="{{ true }}">
-      <div sc-camel-on-click="{{ maximizeBurndown }}" title="Show Burn-down" style="cursor:pointer; height:100%; min-height:240px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:16px 6px;">
-        <span style="font-size:18px; color:var(--tx-mut);">›</span>
-        <span style="writing-mode:vertical-rl; font-size:11px; font-weight:700; color:var(--tx); text-transform:uppercase; letter-spacing:0.14em; white-space:nowrap;">Burn-down — Time vs Remaining</span>
-        <span style="font-size:16px; font-weight:700; color:#64748b;">{{ bdTimeBurn }}%</span>
-      </div>
-    </sc-if>
-    <sc-if value="{{ bdExpanded }}" hint-placeholder-val="{{ false }}">
-    <div style="padding:20px 28px;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
-      <div style="font-size:15.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em;">Burn-down — Time vs Remaining Tests</div>
-      <button sc-camel-on-click="{{ maximizeSummary }}" title="Show Overall Progress Summary" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:8px; padding:5px 11px; color:var(--tx); cursor:pointer; font-family:Rubik,sans-serif; font-size:10px; font-weight:600; display:flex; align-items:center; gap:6px;">‹ Summary</button>
-    </div>
-    <sc-if value="{{ hasCharts }}" hint-placeholder-val="{{ false }}">
-      <div style="background:var(--card-bg2); border-radius:10px; padding:14px 16px; margin-bottom:12px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-          <div>
-            <div style="font-size:13px; font-weight:700; color:var(--tx-strong);">{{ overallEnv.label }}</div>
-            <div style="font-size:9px; color:var(--tx-fnt);">{{ overallEnv.dateRange }} · {{ overallEnv.executed }} / {{ overallEnv.planned }} executed</div>
-          </div>
-          <div style="display:flex; gap:14px; text-align:right;">
-            <div><div style="font-size:19px; font-weight:700; color:#64748b;">{{ overallEnv.timeBurnPct }}%</div><div style="font-size:8px; color:var(--tx-fnt); letter-spacing:0.06em;">TIME-BURNT</div></div>
-            <div><div style="font-size:19px; font-weight:700; color:#2563eb;">{{ overallEnv.executedPct }}%</div><div style="font-size:8px; color:var(--tx-fnt); letter-spacing:0.06em;">EXECUTED</div></div>
-            <div><div style="font-size:19px; font-weight:700; color:#4caf2f;">{{ overallEnv.passedPct }}%</div><div style="font-size:8px; color:var(--tx-fnt); letter-spacing:0.06em;">PASSED</div></div>
-          </div>
-        </div>
-        <div style="position:relative;">
-          <svg sc-camel-view-box="0 0 316 120" width="100%" height="168" sc-camel-preserve-aspect-ratio="none">
-            <sc-for list="{{ overallEnv.bdGrid }}" as="g" hint-placeholder-count="3">
-              <line x1="{{ overallEnv.bdPlotL }}" x2="{{ overallEnv.bdPlotR }}" y1="{{ g.y }}" y2="{{ g.y }}" stroke="var(--brd-sub)" stroke-width="1" sc-camel-vector-effect="non-scaling-stroke"></line>
-            </sc-for>
-            <sc-if value="{{ overallEnv.bdTodayShow }}" hint-placeholder-val="{{ true }}">
-              <line x1="{{ overallEnv.bdTodayX }}" x2="{{ overallEnv.bdTodayX }}" y1="12" y2="104" stroke="#ef4444" stroke-width="1" stroke-dasharray="3 3" sc-camel-vector-effect="non-scaling-stroke"></line>
-            </sc-if>
-            <polyline points="{{ overallEnv.idealPts }}" fill="none" stroke="var(--brd-2)" stroke-width="1.5" stroke-dasharray="4 3" sc-camel-vector-effect="non-scaling-stroke"></polyline>
-            <polyline points="{{ overallEnv.actualPts }}" fill="none" stroke="{{ overallEnv.lineColor }}" stroke-width="2.5" stroke-linejoin="round" sc-camel-vector-effect="non-scaling-stroke"></polyline>
-          </svg>
-          <sc-for list="{{ overallEnv.bdGrid }}" as="g" hint-placeholder-count="3">
-            <div style="position:absolute; left:0; top:{{ g.topPct }}%; width:{{ overallEnv.bdGutterPct }}%; transform:translateY(-50%); text-align:right; padding-right:6px; font-size:10px; line-height:1; color:var(--tx-faint); font-variant-numeric:tabular-nums; pointer-events:none;">{{ g.label }}</div>
-          </sc-for>
-          <sc-if value="{{ overallEnv.bdTodayShow }}" hint-placeholder-val="{{ true }}">
-            <div style="position:absolute; left:{{ overallEnv.bdTodayPct }}%; top:0; transform:translateX(-50%); background:#ef4444; color:#fff; font-size:8px; font-weight:800; letter-spacing:0.08em; padding:1px 5px; border-radius:4px; pointer-events:none;">TODAY</div>
-          </sc-if>
-        </div>
-        <div style="position:relative; height:15px; margin-top:3px;">
-          <sc-for list="{{ overallEnv.bdTicks }}" as="t" hint-placeholder-count="5">
-            <div style="position:absolute; left:{{ t.leftPct }}%; transform:translateX(-50%); font-size:9.5px; line-height:1; color:var(--tx-faint); white-space:nowrap;">{{ t.label }}</div>
-          </sc-for>
-        </div>
-        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; font-size:10px; color:var(--tx-mut); margin-top:8px; padding-top:8px; border-top:1px solid var(--brd-sub);">
-          <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:0; border-top:2.5px solid {{ overallEnv.lineColor }};"></span>Tests still to run</span>
-          <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:0; border-top:2px dashed var(--brd-2);"></span>Ideal pace</span>
-          <sc-if value="{{ overallEnv.bdTodayShow }}" hint-placeholder-val="{{ true }}">
-            <span style="display:flex; align-items:center; gap:6px;"><span style="width:0; height:12px; border-left:2px dashed #ef4444;"></span>Today</span>
-          </sc-if>
-          <span style="margin-left:auto; color:var(--tx-soft); font-weight:600;">{{ overallEnv.bdRemainLabel }}</span>
-        </div>
-      </div>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px;">
-        <sc-for list="{{ envCharts }}" as="e" hint-placeholder-count="0">
-          <div id="bdcard-{{ e.id }}" sc-camel-on-click="{{ e.onToggle }}" title="{{ e.toggleTitle }}" style="scroll-margin-top:110px; background:var(--card-bg2); border:1px solid var(--brd-sub); border-radius:10px; padding:12px 14px; cursor:pointer; grid-column:{{ e.span }};" style-hover="border-color:var(--brd-2);">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-              <div>
-                <div style="font-size:12px; font-weight:700; color:var(--tx-strong);">{{ e.id }} <span style="font-size:9px; font-weight:600; color:var(--tx-mut);">{{ e.chevron }}</span></div>
-                <div style="font-size:8px; color:var(--tx-fnt);">{{ e.executed }} / {{ e.planned }}</div>
-              </div>
-              <div style="display:flex; gap:9px; text-align:right;">
-                <div><div style="font-size:15px; font-weight:800; color:#64748b;">{{ e.timeBurnPct }}%</div><div style="font-size:7px; color:var(--tx-fnt); letter-spacing:0.05em;">TIME</div></div>
-                <div><div style="font-size:15px; font-weight:800; color:#2563eb;">{{ e.executedPct }}%</div><div style="font-size:7px; color:var(--tx-fnt); letter-spacing:0.05em;">EXEC</div></div>
-                <div><div style="font-size:15px; font-weight:800; color:#4caf2f;">{{ e.passedPct }}%</div><div style="font-size:7px; color:var(--tx-fnt); letter-spacing:0.05em;">PASS</div></div>
-              </div>
-            </div>
-            <div style="position:relative;">
-              <svg sc-camel-view-box="0 0 316 120" width="100%" height="{{ e.chartH }}" sc-camel-preserve-aspect-ratio="none">
-                <sc-for list="{{ e.bdGrid }}" as="g" hint-placeholder-count="3">
-                  <line x1="{{ e.bdPlotL }}" x2="{{ e.bdPlotR }}" y1="{{ g.y }}" y2="{{ g.y }}" stroke="var(--brd-sub)" stroke-width="1" sc-camel-vector-effect="non-scaling-stroke"></line>
-                </sc-for>
-                <sc-if value="{{ e.bdTodayShow }}" hint-placeholder-val="{{ true }}">
-                  <line x1="{{ e.bdTodayX }}" x2="{{ e.bdTodayX }}" y1="12" y2="104" stroke="#ef4444" stroke-width="1" stroke-dasharray="3 3" sc-camel-vector-effect="non-scaling-stroke"></line>
-                </sc-if>
-                <polyline points="{{ e.idealPts }}" fill="none" stroke="var(--brd-2)" stroke-width="1.5" stroke-dasharray="4 3" sc-camel-vector-effect="non-scaling-stroke"></polyline>
-                <polyline points="{{ e.actualPts }}" fill="none" stroke="{{ e.lineColor }}" stroke-width="2" stroke-linejoin="round" sc-camel-vector-effect="non-scaling-stroke"></polyline>
-              </svg>
-              <sc-for list="{{ e.bdGrid }}" as="g" hint-placeholder-count="3">
-                <div style="position:absolute; left:0; top:{{ g.topPct }}%; width:{{ e.bdGutterPct }}%; transform:translateY(-50%); text-align:right; padding-right:5px; font-size:8.5px; line-height:1; color:var(--tx-faint); font-variant-numeric:tabular-nums; pointer-events:none;">{{ g.label }}</div>
-              </sc-for>
-            </div>
-            <div style="display:flex; justify-content:space-between; font-size:8.5px; color:var(--tx-faint); margin-top:3px; padding-left:{{ e.bdGutterPct }}%;">
-              <span>{{ e.bdStartLabel }}</span>
-              <sc-if value="{{ e.bdTodayShow }}" hint-placeholder-val="{{ true }}">
-                <span style="color:#ef4444; font-weight:700;">today</span>
-              </sc-if>
-              <span>{{ e.bdEndLabel }}</span>
-            </div>
-            <sc-if value="{{ e.open }}" hint-placeholder-val="{{ false }}">
-              <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--brd-sub);">
-                <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:10px; color:var(--tx-mut); margin-bottom:11px;">
-                  <span><strong style="color:var(--tx-strong); font-weight:700;">{{ e.winLabel }}</strong> · {{ e.dayLabel }}</span>
-                  <span>{{ e.lastExecLabel }}</span>
-                </div>
-                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(92px,1fr)); gap:8px; margin-bottom:11px;">
-                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ e.planned }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Planned</div></div>
-                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-top:2px solid #2563eb; border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:#2563eb; line-height:1;">{{ e.executed }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Executed</div></div>
-                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ e.remaining }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Remaining</div></div>
-                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-top:2px solid #4caf2f; border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:#4caf2f; line-height:1;">{{ e.passed }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Passed</div></div>
-                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-top:2px solid #ef4444; border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:#ef4444; line-height:1;">{{ e.failed }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Failed</div></div>
-                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-top:2px solid #38bdf8; border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:#38bdf8; line-height:1;">{{ e.blocked }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Blocked</div></div>
-                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ e.pace }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Ø / day so far</div></div>
-                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:{{ e.gapColor }}; line-height:1;">{{ e.needPerDay }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Needed / day</div></div>
-                </div>
-                <div style="border:1px solid var(--brd-sub); border-left:3px solid {{ e.gapColor }}; border-radius:9px; padding:9px 12px; font-size:11px; color:var(--tx-strong); line-height:1.55;">{{ e.verdict }}</div>
-              </div>
-            </sc-if>
-          </div>
-        </sc-for>
-      </div>
-    </sc-if>
-    <sc-if value="{{ noCharts }}" hint-placeholder-val="{{ true }}">
-      <div style="padding:34px 20px; text-align:center; border:1.5px dashed var(--brd-2); border-radius:12px; margin:8px 0;">
-        <div style="font-size:24px; margin-bottom:8px;">📉</div>
-        <div style="font-size:13px; font-weight:600; color:var(--tx);">No burn-down data yet</div>
-        <div style="font-size:11px; color:var(--tx-mut); margin-top:4px;">Import a qTest export to populate the burn-down charts.</div>
-      </div>
-    </sc-if>
-    </div>
-    </sc-if>
-  </div>
-  </div>
-
-  </div>
   <div style="order:{{ ord_envs }}; display:{{ dsp_envs }}; flex-direction:column; gap:16px; min-width:0;">
   <!-- PHASE DETAIL CARDS -->
   <sc-if value="{{ noEnvData }}" hint-placeholder-val="{{ true }}">
@@ -619,6 +417,16 @@
       <sc-if value="{{ hasCharts }}" hint-placeholder-val="{{ false }}">
         <div title="The release as a whole, across every environment below" style="flex:0 0 auto; display:flex; flex-direction:column; gap:14px; padding:12px 14px 14px; border:1px solid var(--brd-sub); border-radius:12px; background:var(--card-bg2); align-self:flex-start;">
           <div style="font-size:8.5px; font-weight:700; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.12em; text-align:center;">Release total</div>
+          <!-- the counts the Overall Progress Summary used to repeat -->
+          <div style="display:flex; flex-direction:column; gap:5px; order:9; margin-top:2px; padding-top:11px; border-top:1px solid var(--brd-sub);">
+            <sc-for list="{{ relTotals }}" as="rt" hint-placeholder-count="4">
+              <div style="display:flex; align-items:center; gap:7px;">
+                <span style="width:8px; height:8px; border-radius:2px; background:{{ rt.c }}; flex-shrink:0;"></span>
+                <span style="flex:1; font-size:10.5px; color:var(--tx-mut); white-space:nowrap;">{{ rt.k }}</span>
+                <span style="font-size:12px; font-weight:700; color:{{ rt.c }}; font-variant-numeric:tabular-nums;">{{ rt.v }}</span>
+              </div>
+            </sc-for>
+          </div>
       <!-- Donut 1: Executed -->
       <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
         <div style="position:relative; width:112px; height:112px;">
@@ -788,6 +596,66 @@
       </div>
     </div>
   </sc-if>
+  </sc-if>
+
+  <!-- BURN-DOWN for the environment whose row button was clicked -->
+  <sc-if value="{{ bdPickHas }}" hint-placeholder-val="{{ false }}">
+    <div id="burn-card" data-glass="" style="scroll-margin-top:110px; background:var(--card-bg); border-radius:16px; padding:18px 22px 20px; box-shadow:var(--shadow);">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+        <div style="font-size:14.5px; font-weight:650; color:var(--tx-strong); letter-spacing:-0.005em;">Burn-down &#183; {{ bdPickId }}<span style="font-weight:400; color:var(--tx-mut);"> &#8212; time vs remaining tests</span></div>
+        <button sc-camel-on-click="{{ closeBurn }}" title="Close the burn-down" style="background:var(--card-bg2); border:1px solid var(--brd-2); border-radius:8px; padding:5px 12px; color:var(--tx-mut); cursor:pointer; font-family:Rubik,sans-serif; font-size:11px; font-weight:700;">&#215; Close</button>
+      </div>
+          <div style="min-width:0;">
+            <div style="display:flex; align-items:center; justify-content:flex-end; margin-bottom:8px;">
+              <div style="display:flex; gap:9px; text-align:right;">
+                <div><div style="font-size:15px; font-weight:800; color:#64748b;">{{ bdPick.timeBurnPct }}%</div><div style="font-size:7px; color:var(--tx-fnt); letter-spacing:0.05em;">TIME</div></div>
+                <div><div style="font-size:15px; font-weight:800; color:#2563eb;">{{ bdPick.executedPct }}%</div><div style="font-size:7px; color:var(--tx-fnt); letter-spacing:0.05em;">EXEC</div></div>
+                <div><div style="font-size:15px; font-weight:800; color:#4caf2f;">{{ bdPick.passedPct }}%</div><div style="font-size:7px; color:var(--tx-fnt); letter-spacing:0.05em;">PASS</div></div>
+              </div>
+            </div>
+            <div style="position:relative;">
+              <svg sc-camel-view-box="0 0 316 120" width="100%" height="190" sc-camel-preserve-aspect-ratio="none">
+                <sc-for list="{{ bdPick.bdGrid }}" as="g" hint-placeholder-count="3">
+                  <line x1="{{ bdPick.bdPlotL }}" x2="{{ bdPick.bdPlotR }}" y1="{{ g.y }}" y2="{{ g.y }}" stroke="var(--brd-sub)" stroke-width="1" sc-camel-vector-effect="non-scaling-stroke"></line>
+                </sc-for>
+                <sc-if value="{{ bdPick.bdTodayShow }}" hint-placeholder-val="{{ true }}">
+                  <line x1="{{ bdPick.bdTodayX }}" x2="{{ bdPick.bdTodayX }}" y1="12" y2="104" stroke="#ef4444" stroke-width="1" stroke-dasharray="3 3" sc-camel-vector-effect="non-scaling-stroke"></line>
+                </sc-if>
+                <polyline points="{{ bdPick.idealPts }}" fill="none" stroke="var(--brd-2)" stroke-width="1.5" stroke-dasharray="4 3" sc-camel-vector-effect="non-scaling-stroke"></polyline>
+                <polyline points="{{ bdPick.actualPts }}" fill="none" stroke="{{ bdPick.lineColor }}" stroke-width="2" stroke-linejoin="round" sc-camel-vector-effect="non-scaling-stroke"></polyline>
+              </svg>
+              <sc-for list="{{ bdPick.bdGrid }}" as="g" hint-placeholder-count="3">
+                <div style="position:absolute; left:0; top:{{ g.topPct }}%; width:{{ bdPick.bdGutterPct }}%; transform:translateY(-50%); text-align:right; padding-right:5px; font-size:8.5px; line-height:1; color:var(--tx-faint); font-variant-numeric:tabular-nums; pointer-events:none;">{{ g.label }}</div>
+              </sc-for>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:8.5px; color:var(--tx-faint); margin-top:3px; padding-left:{{ bdPick.bdGutterPct }}%;">
+              <span>{{ bdPick.bdStartLabel }}</span>
+              <sc-if value="{{ bdPick.bdTodayShow }}" hint-placeholder-val="{{ true }}">
+                <span style="color:#ef4444; font-weight:700;">today</span>
+              </sc-if>
+              <span>{{ bdPick.bdEndLabel }}</span>
+            </div>
+            <sc-if value="{{ bdPickHas }}" hint-placeholder-val="{{ true }}">
+              <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--brd-sub);">
+                <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:10px; color:var(--tx-mut); margin-bottom:11px;">
+                  <span><strong style="color:var(--tx-strong); font-weight:700;">{{ bdPick.winLabel }}</strong> · {{ bdPick.dayLabel }}</span>
+                  <span>{{ bdPick.lastExecLabel }}</span>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(92px,1fr)); gap:8px; margin-bottom:11px;">
+                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ bdPick.planned }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Planned</div></div>
+                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-top:2px solid #2563eb; border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:#2563eb; line-height:1;">{{ bdPick.executed }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Executed</div></div>
+                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ bdPick.remaining }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Remaining</div></div>
+                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-top:2px solid #4caf2f; border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:#4caf2f; line-height:1;">{{ bdPick.passed }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Passed</div></div>
+                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-top:2px solid #ef4444; border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:#ef4444; line-height:1;">{{ bdPick.failed }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Failed</div></div>
+                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-top:2px solid #38bdf8; border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:#38bdf8; line-height:1;">{{ bdPick.blocked }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Blocked</div></div>
+                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:var(--tx-strong); line-height:1;">{{ bdPick.pace }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Ø / day so far</div></div>
+                  <div style="background:var(--card-bg); border:1px solid var(--brd-sub); border-radius:9px; padding:9px 11px;"><div style="font-size:17px; font-weight:700; color:{{ bdPick.gapColor }}; line-height:1;">{{ bdPick.needPerDay }}</div><div style="font-size:8px; color:var(--tx-fnt); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">Needed / day</div></div>
+                </div>
+                <div style="border:1px solid var(--brd-sub); border-left:3px solid {{ bdPick.gapColor }}; border-radius:9px; padding:9px 12px; font-size:11px; color:var(--tx-strong); line-height:1.55;">{{ bdPick.verdict }}</div>
+              </div>
+            </sc-if>
+          </div>
+    </div>
   </sc-if>
 
   <sc-if value="{{ envCards }}" hint-placeholder-val="{{ true }}">
