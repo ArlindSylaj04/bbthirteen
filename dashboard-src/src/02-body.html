@@ -388,6 +388,14 @@
             </div>
           </div>
         </sc-for>
+        <sc-for list="{{ timelineGaps }}" as="gp" hint-placeholder-count="2">
+          <div title="{{ gp.title }}" style="position:absolute; top:0; bottom:0; left:{{ gp.left }}%; width:{{ gp.width }}%; display:flex; align-items:center; justify-content:center;">
+            <div style="position:absolute; left:5%; right:5%; top:50%; border-top:{{ gp.line }};"></div>
+            <sc-if value="{{ gp.wide }}" hint-placeholder-val="{{ true }}">
+              <span style="position:relative; font-size:9px; font-weight:700; color:{{ gp.color }}; background:var(--card-bg); border-radius:99px; padding:1px 6px; white-space:nowrap;">{{ gp.label }}</span>
+            </sc-if>
+          </div>
+        </sc-for>
         <sc-if value="{{ todayInRange }}" hint-placeholder-val="{{ true }}">
           <div style="position:absolute; top:-7px; bottom:-7px; left:{{ todayPct }}%; width:2px; background:#ef4444; z-index:2;">
             <div style="position:absolute; top:-14px; left:50%; transform:translateX(-50%); background:#ef4444; color:#fff; font-size:8px; font-weight:700; padding:1px 6px; border-radius:99px; white-space:nowrap;">TODAY</div>

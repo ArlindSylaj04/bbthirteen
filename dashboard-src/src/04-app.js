@@ -3902,6 +3902,33 @@ class Component extends DCLogic {
         hasGrey: !!te, greyLeft: te ? ((te - s) / (e - s) * 100).toFixed(2) : '0', greyWidth: te ? ((e - te) / (e - s) * 100).toFixed(2) : '0',
         op: e < now ? 0.5 : 1, ring: cur ? ('0 0 0 2px var(--card-bg), 0 0 0 4px ' + segColor) : 'none',
         dateRange: fmtD(ph.start) + ' – ' + fmtD(ph.testEnd || ph.end) + (ph.testEnd ? ' · ' + (ph.greyNote || 'Fix & retest') + ' till ' + fmtD(ph.end) : ''), days: Math.round((e - s) / dayMs) + 1 }; });
+    // The blanks between the bars are the days nobody is testing — the buffer
+    // between one environment handing over and the next starting. They were
+    // simply empty; now each one says how long it is, and an overlap (a next
+    // environment starting before the previous one is done) is called out.
+    const timelineGaps = [];
+    for (let i = 1; i < SCHED.length; i++) {
+      const prevEnd = pEnd(SCHED[i - 1].end), nextStart = pStart(SCHED[i].start);
+      const span = nextStart - prevEnd;
+      const days = Math.round(Math.abs(span) / dayMs);
+      const a = SCHED[i - 1].id, b = SCHED[i].id;
+      if (span > dayMs * 0.5) {
+        const left = (prevEnd - tlStart) / tlSpan * 100;
+        const width = span / tlSpan * 100;
+        timelineGaps.push({ key: 'g' + i, left: left.toFixed(2), width: width.toFixed(2),
+          label: days + ' d', wide: width >= 2.6, narrow: width < 2.6, overlap: false,
+          color: 'var(--tx-fnt)', line: '1px dashed var(--brd-2)',
+          title: days + ' day' + (days === 1 ? '' : 's') + ' between ' + a + ' finishing and ' + b + ' starting \u2014 nothing scheduled' });
+      } else if (span < -dayMs * 0.5) {
+        const left = (nextStart - tlStart) / tlSpan * 100;
+        const width = -span / tlSpan * 100;
+        timelineGaps.push({ key: 'g' + i, left: left.toFixed(2), width: width.toFixed(2),
+          label: '\u26a0 ' + days + ' d', wide: width >= 2.6, narrow: width < 2.6, overlap: true,
+          color: '#d97706', line: '1px solid #d97706',
+          title: b + ' starts ' + days + ' day' + (days === 1 ? '' : 's') + ' before ' + a + ' is finished \u2014 the two overlap' });
+      }
+    }
+    const timelineHasGaps = timelineGaps.length > 0;
     const todayPct = Math.max(0, Math.min(100, (now - tlStart) / tlSpan * 100)).toFixed(2);
     const todayInRange = now >= tlStart && now <= tlEnd;
     (phases || []).forEach(p => { p.onFocus = () => this.focusPhase(p.id); });
@@ -6054,7 +6081,7 @@ class Component extends DCLogic {
       setTrfBug: (e) => this.setState({ trfBug: e.target.value }),
       qtestModalOpen, qtestGroups, qtestHasSuites, qtestNoSuites, openQtestManager, closeQtestManager, saveQtestManager,
       countdown,
-      timeline, todayPct, todayInRange, openTimelineModal, closeTimelineModal, timelineModalOpen, calDays, weekDayNames,
+      timeline, todayPct, todayInRange, timelineGaps, timelineHasGaps, openTimelineModal, closeTimelineModal, timelineModalOpen, calDays, weekDayNames,
       execHasData, execMonthName, execPrevMonth, execNextMonth, execGrid, execWeekDays, execPhaseLabel,
       execSelDay, execSelList, execSelLabel, execSelCount, execTotal, execCalOpen, closeExecCal, execNoSel,
       execStatChips, execFilterNote, execCalSub,
