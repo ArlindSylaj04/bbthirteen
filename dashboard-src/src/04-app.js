@@ -2919,12 +2919,15 @@ class Component extends DCLogic {
     const importInfo = this.state.importInfo;
     const importError = this.state.importError;
 
+    // Phase-card tones. These were fixed light colours, so in dark mode the card
+    // went pale while the text kept its dark-theme token and all but vanished.
+    // The soft-* tokens follow the theme, so the text stays legible in both.
     const ps = (s) => {
-      if (s === 'COMPLETE')    return { color: '#2e7d32', bg: '#eaf5e6', border: '#b6ddab', badgeBg: '#d8efce' };
-      if (s === 'IN PROGRESS') return { color: '#4caf2f', bg: '#f2fae8', border: '#c9e59a', badgeBg: '#e6f3c9' };
-      if (s === 'AT RISK')     return { color: '#d97706', bg: '#fffbeb', border: '#fde68a', badgeBg: '#fef9c3' };
-      if (s === 'OFF TRACK')   return { color: '#ef4444', bg: '#fef2f2', border: '#fecaca', badgeBg: '#fee2e2' };
-      return { color: '#94a3b8', bg: dark ? '#1f2d45' : '#f8fafc', border: dark ? '#263655' : '#e2e8f0', badgeBg: dark ? '#263655' : '#f1f5f9' };
+      if (s === 'COMPLETE')    return { color: '#4caf2f', bg: 'var(--soft-ok)',   border: 'rgba(76,175,47,0.45)',  badgeBg: 'var(--soft-ok)' };
+      if (s === 'IN PROGRESS') return { color: '#2563eb', bg: 'var(--soft-info)', border: 'rgba(37,99,235,0.40)',  badgeBg: 'var(--soft-info)' };
+      if (s === 'AT RISK')     return { color: '#d97706', bg: 'var(--soft-warn)', border: 'rgba(217,119,6,0.45)',  badgeBg: 'var(--soft-warn)' };
+      if (s === 'OFF TRACK')   return { color: '#ef4444', bg: 'var(--soft-bad)',  border: 'rgba(239,68,68,0.45)',  badgeBg: 'var(--soft-bad)' };
+      return { color: 'var(--tx-mut)', bg: 'var(--card-bg2)', border: 'var(--brd-sub)', badgeBg: 'var(--tile-bg)' };
     };
 
     // Phase strip = the environments configured for the selected release.
@@ -3393,14 +3396,54 @@ class Component extends DCLogic {
         });
         return { id, label: meta.label, alias: meta.alias, dateRange: meta.dateRange, headerBg: meta.headerBg, gridCols, tests, onOpenRuns: () => this.setState({ tcModal: { phase: id } }) };
       });
+      // The phase strip has to answer two questions at a glance: how far did this
+      // environment get, and is that where it should be by now. Execution alone
+      // answered neither — a window that closed with work left still read
+      // "IN PROGRESS", and a phase that finished with failures looked as green as
+      // one that finished clean.
+      const _phWin = this.relPhaseDates();
+      const _phNow = Date.now();
       phases = ORDER.map(id => {
         const meta = META[id]; const pd = phaseDetails.find(p => p.id === id);
-        if (!pd) return { id, label: meta.label, dateRange: meta.dateRange, status: 'PENDING', pct: 0, paPct: 0, ...ps('PENDING') };
+        const w = _phWin[id] || null;
+        const sMs = w ? this.relStart(w[0]) : null;
+        const eMs = w ? this.relStart(w[1]) : null;
+        const started = sMs == null ? false : _phNow >= sMs;
+        const closed = eMs == null ? false : _phNow > eMs + 86400000;
+        const current = started && !closed;
+        if (!pd) return { id, label: meta.label, dateRange: meta.dateRange, status: 'PENDING', pct: 0, paPct: 0,
+          segs: [], failedN: 0, hasFailed: false, isCurrent: current, notCurrent: !current, ring: 'none', ...ps('PENDING') };
         const pl = pd.tests.reduce((s, t) => s + t.planned, 0), te = pd.tests.reduce((s, t) => s + t.tested, 0), pa = pd.tests.reduce((s, t) => s + t.passed, 0);
+        const fa = pd.tests.reduce((s, t) => s + t.failed, 0), bl = pd.tests.reduce((s, t) => s + t.blocked, 0);
+        const nr = pd.tests.reduce((s, t) => s + (t.notRelevant || 0), 0);
+        const pend = Math.max(0, pl - te);
         const pct = pl > 0 ? Math.min(100, Math.round(te / pl * 100)) : 0;
         const paPct = te > 0 ? Math.round(pa / te * 100) : 0;
-        const st = pct >= 100 ? 'COMPLETE' : pct > 0 ? 'IN PROGRESS' : 'PENDING';
-        return { id, label: meta.label, dateRange: meta.dateRange, status: st, pct, paPct, ...ps(st) };
+        // What happened, in the badge …
+        const st = pl === 0 ? 'PENDING'
+          : pct >= 100 ? 'COMPLETE'
+          : closed ? 'WINDOW CLOSED'
+          : pct > 0 ? 'IN PROGRESS'
+          : started ? 'NOT STARTED' : 'PENDING';
+        // … and how it is going, in the colour. Failures drive it, not the pass
+        // ratio, because not-relevant runs sit in that ratio's denominator.
+        const failShare = te > 0 ? (fa / te * 100) : 0;
+        const tone = pl === 0 ? 'PENDING'
+          : (closed && pct < 100) ? 'OFF TRACK'
+          : failShare >= 10 ? 'AT RISK'
+          : pct >= 100 ? 'COMPLETE'
+          : pct > 0 ? 'IN PROGRESS' : 'PENDING';
+        const base = Math.max(1, pl);
+        const segs = [
+          { k: 'Passed', n: pa, w: (pa / base * 100).toFixed(2), c: '#4caf2f' },
+          { k: 'Failed', n: fa, w: (fa / base * 100).toFixed(2), c: '#ef4444' },
+          { k: 'Blocked', n: bl, w: (bl / base * 100).toFixed(2), c: '#3b82f6' },
+          { k: 'N/R', n: nr, w: (nr / base * 100).toFixed(2), c: '#a855f7' },
+        ].filter(x => x.n > 0);
+        const leftLabel = pend > 0 ? (pend + ' not executed') : '';
+        return { id, label: meta.label, dateRange: meta.dateRange, status: st, pct, paPct,
+          segs, failedN: fa, hasFailed: fa > 0, leftLabel, hasLeft: !!leftLabel,
+          isCurrent: current, notCurrent: !current, ...ps(tone) };
       });
       for (const pd of phaseDetails) { pd.collapsed = collapsed[pd.id]; pd.expanded = !pd.collapsed; pd.onToggle = () => toggleCollapse(pd.id); pd.chevronRotate = pd.collapsed ? -90 : 0; pd.testCount = pd.tests.length; attachQtest(pd); }
       // ─── Burn-down charts per environment + overall ───────────────────────
